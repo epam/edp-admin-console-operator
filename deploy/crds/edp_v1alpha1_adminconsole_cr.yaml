@@ -1,0 +1,7 @@
+apiVersion: edp.epam.com/v1alpha1
+kind: AdminConsole
+metadata:
+  name: example-adminconsole
+spec:
+  # Add fields here
+  size: 3

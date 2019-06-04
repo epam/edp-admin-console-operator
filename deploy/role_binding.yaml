@@ -1,0 +1,11 @@
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: admin-console-operator
+subjects:
+- kind: ServiceAccount
+  name: admin-console-operator
+roleRef:
+  kind: Role
+  name: admin-console-operator
+  apiGroup: rbac.authorization.k8s.io
