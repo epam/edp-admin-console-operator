@@ -6,16 +6,16 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/clientcmd"
 	"log"
-
 )
 
 type PlatformService interface {
-	CreateDeployConf(console v1alpha1.AdminConsole) error
-	CreateSecret(console v1alpha1.AdminConsole, name string, data map[string][]byte) error
-	CreateExternalEndpoint(console v1alpha1.AdminConsole) error
-	CreateService(console v1alpha1.AdminConsole) error
-	CreateServiceAccount(console v1alpha1.AdminConsole) (*coreV1Api.ServiceAccount, error)
+	CreateDeployConf(ac v1alpha1.AdminConsole) error
+	CreateSecret(ac v1alpha1.AdminConsole, name string, data map[string][]byte) error
+	CreateExternalEndpoint(ac v1alpha1.AdminConsole) error
+	CreateService(ac v1alpha1.AdminConsole) error
+	CreateServiceAccount(ac v1alpha1.AdminConsole) (*coreV1Api.ServiceAccount, error)
 	GetConfigmap(namespace string, name string) (map[string]string, error)
+	CreateUserRole(ac v1alpha1.AdminConsole) error
 }
 
 func NewPlatformService(scheme *runtime.Scheme) (PlatformService, error) {
@@ -23,7 +23,6 @@ func NewPlatformService(scheme *runtime.Scheme) (PlatformService, error) {
 		clientcmd.NewDefaultClientConfigLoadingRules(),
 		&clientcmd.ConfigOverrides{},
 	)
-
 	restConfig, err := config.ClientConfig()
 	if err != nil {
 		return nil, logErrorAndReturn(err)
@@ -42,7 +41,6 @@ func logErrorAndReturn(err error) error {
 	log.Printf("[ERROR] %v", err)
 	return err
 }
-
 
 func generateLabels(name string) map[string]string {
 	return map[string]string{

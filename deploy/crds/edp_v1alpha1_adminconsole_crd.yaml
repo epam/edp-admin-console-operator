@@ -28,7 +28,33 @@ spec:
         metadata:
           type: object
         spec:
+          properties:
+            edpSpec:
+              properties:
+                dnsWildcard:
+                  type: string
+                edpName:
+                  type: string
+                edpVersion:
+                  type: string
+              required:
+              - edpVersion
+              - edpName
+              - dnsWildcard
+              type: object
+            image:
+              type: string
+            version:
+              type: string
+          required:
+          - image
+          - version
+          - edpSpec
           type: object
         status:
           type: object
   version: v1alpha1
+  versions:
+  - name: v1alpha1
+    served: true
+    storage: true

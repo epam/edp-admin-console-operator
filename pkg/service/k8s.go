@@ -18,25 +18,25 @@ type K8SService struct {
 	coreClient coreV1Client.CoreV1Client
 }
 
-func (service K8SService) CreateDeployConf(console v1alpha1.AdminConsole) error {
+func (service K8SService) CreateDeployConf(ac v1alpha1.AdminConsole) error {
 	log.Printf("Not implemented.")
 	return nil
 }
 
-func (service K8SService) CreateSecret(console v1alpha1.AdminConsole, name string, data map[string][]byte) error {
-	labels := generateLabels(console.Name)
+func (service K8SService) CreateSecret(ac v1alpha1.AdminConsole, name string, data map[string][]byte) error {
+	labels := generateLabels(ac.Name)
 
 	consoleSecretObject := &coreV1Api.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
-			Namespace: console.Namespace,
+			Namespace: ac.Namespace,
 			Labels:    labels,
 		},
 		Data: data,
 		Type: "Opaque",
 	}
 
-	if err := controllerutil.SetControllerReference(&console, consoleSecretObject, service.scheme); err != nil {
+	if err := controllerutil.SetControllerReference(&ac, consoleSecretObject, service.scheme); err != nil {
 		return logErrorAndReturn(err)
 	}
 
@@ -59,40 +59,40 @@ func (service K8SService) CreateSecret(console v1alpha1.AdminConsole, name strin
 	return nil
 }
 
-func (service K8SService) CreateExternalEndpoint(console v1alpha1.AdminConsole) error {
+func (service K8SService) CreateExternalEndpoint(ac v1alpha1.AdminConsole) error {
 	log.Printf("Not implemented.")
 	return nil
 }
 
-func (service K8SService) CreateService(console v1alpha1.AdminConsole) error {
+func (service K8SService) CreateService(ac v1alpha1.AdminConsole) error {
 
-	labels := generateLabels(console.Name)
+	labels := generateLabels(ac.Name)
 
 	consoleServiceObject := &coreV1Api.Service{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      console.Name,
-			Namespace: console.Namespace,
+			Name:      ac.Name,
+			Namespace: ac.Namespace,
 			Labels:    labels,
 		},
 		Spec: coreV1Api.ServiceSpec{
 			Selector: labels,
 			Ports: []coreV1Api.ServicePort{
 				{
-					TargetPort: intstr.IntOrString{StrVal: console.Name},
+					TargetPort: intstr.IntOrString{StrVal: ac.Name},
 					Port:       8080,
 				},
 			},
 		},
 	}
 
-	if err := controllerutil.SetControllerReference(&console, consoleServiceObject, service.scheme); err != nil {
+	if err := controllerutil.SetControllerReference(&ac, consoleServiceObject, service.scheme); err != nil {
 		return logErrorAndReturn(err)
 	}
 
-	consoleService, err := service.coreClient.Services(console.Namespace).Get(console.Name, metav1.GetOptions{})
+	consoleService, err := service.coreClient.Services(ac.Namespace).Get(ac.Name, metav1.GetOptions{})
 
 	if err != nil && k8serr.IsNotFound(err) {
-		log.Printf("Creating a new service %s/%s for Admin Console %s", consoleServiceObject.Namespace, consoleServiceObject.Name, console.Name)
+		log.Printf("Creating a new service %s/%s for Admin Console %s", consoleServiceObject.Namespace, consoleServiceObject.Name, ac.Name)
 
 		consoleService, err = service.coreClient.Services(consoleServiceObject.Namespace).Create(consoleServiceObject)
 
@@ -108,26 +108,26 @@ func (service K8SService) CreateService(console v1alpha1.AdminConsole) error {
 	return nil
 }
 
-func (service K8SService) CreateServiceAccount(console v1alpha1.AdminConsole) (*coreV1Api.ServiceAccount, error) {
+func (service K8SService) CreateServiceAccount(ac v1alpha1.AdminConsole) (*coreV1Api.ServiceAccount, error) {
 
-	labels := generateLabels(console.Name)
+	labels := generateLabels(ac.Name)
 
 	consoleServiceAccountObject := &coreV1Api.ServiceAccount{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      console.Name,
-			Namespace: console.Namespace,
+			Name:      ac.Name,
+			Namespace: ac.Namespace,
 			Labels:    labels,
 		},
 	}
 
-	if err := controllerutil.SetControllerReference(&console, consoleServiceAccountObject, service.scheme); err != nil {
+	if err := controllerutil.SetControllerReference(&ac, consoleServiceAccountObject, service.scheme); err != nil {
 		return nil, logErrorAndReturn(err)
 	}
 
 	consoleServiceAccount, err := service.coreClient.ServiceAccounts(consoleServiceAccountObject.Namespace).Get(consoleServiceAccountObject.Name, metav1.GetOptions{})
 
 	if err != nil && k8serr.IsNotFound(err) {
-		log.Printf("Creating a new ServiceAccount %s/%s for Admin Console %s", consoleServiceAccountObject.Namespace, consoleServiceAccountObject.Name, console.Name)
+		log.Printf("Creating a new ServiceAccount %s/%s for Admin Console %s", consoleServiceAccountObject.Namespace, consoleServiceAccountObject.Name, ac.Name)
 
 		consoleServiceAccount, err = service.coreClient.ServiceAccounts(consoleServiceAccountObject.Namespace).Create(consoleServiceAccountObject)
 
@@ -156,7 +156,6 @@ func (service K8SService) GetConfigmap(namespace string, name string) (map[strin
 }
 
 func (service *K8SService) Init(config *rest.Config, scheme *runtime.Scheme) error {
-
 	coreClient, err := coreV1Client.NewForConfig(config)
 	if err != nil {
 		return logErrorAndReturn(err)

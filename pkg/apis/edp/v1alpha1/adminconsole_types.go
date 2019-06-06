@@ -2,6 +2,7 @@ package v1alpha1
 
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"time"
 )
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
@@ -10,16 +11,46 @@ import (
 // AdminConsoleSpec defines the desired state of AdminConsole
 // +k8s:openapi-gen=true
 type AdminConsoleSpec struct {
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
+	Image                 string                 `json:"image"`
+	Version               string                 `json:"version"`
+	KeycloakEnabled       string                 `json:"keycloakEnabled, omitempty"`
+	KeycloakUrl           string                 `json:"keycloakUrl, omitempty"`
+	EdpSpec               EdpSpec                `json:"edpSpec"`
+	DbSettings            AdminConsoleDbSettings `json:"dbSettings, omitempty"`
+	ExternalConfiguration ExternalConfiguration  `json:"externalConfiguration, omitempty"`
 	// Add custom validation using kubebuilder tags: https://book.kubebuilder.io/beyond_basics/generating_crd.html
+}
+
+type EdpSpec struct {
+	EdpVersion  string `json:"edpVersion"`
+	EdpName     string `json:"edpName"`
+	DnsWildcard string `json:"dnsWildcard"`
+}
+
+type ExternalConfigurationItem struct {
+	Name        string `json:"name, omitempty"`
+	Kind        string `json:"kind, omitempty"`
+	Description string `json:"description, omitempty"`
+}
+
+type AdminConsoleDbSettings struct {
+	DatabaseName     string `json:"databaseName,omitempty"`
+	DatabaseHostname string `json:"databaseHostname,omitempty"`
+	DatabasePort     string `json:"databasePort,omitempty"`
+	DatabaseEnabled  string `json:"databaseEnabled, omitempty"`
+}
+
+type ExternalConfiguration struct {
+	DbUser       ExternalConfigurationItem `json:"DbUser,omitempty"`
+	KeycloakUser ExternalConfigurationItem `json:"keycloackUser,omitempty"`
 }
 
 // AdminConsoleStatus defines the observed state of AdminConsole
 // +k8s:openapi-gen=true
 type AdminConsoleStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
+	Available       bool      `json:"available, omitempty"`
+	LastTimeUpdated time.Time `json:"lastTimeUpdated, omitempty"`
+	Status          string    `json:"status, omitempty"`
 	// Add custom validation using kubebuilder tags: https://book.kubebuilder.io/beyond_basics/generating_crd.html
 }
 

@@ -67,10 +67,52 @@ func schema_pkg_apis_edp_v1alpha1_AdminConsoleSpec(ref common.ReferenceCallback)
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
 				Description: "AdminConsoleSpec defines the desired state of AdminConsole",
-				Properties:  map[string]spec.Schema{},
+				Properties: map[string]spec.Schema{
+					"image": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"version": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"keycloakEnabled": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"keycloakUrl": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"edpSpec": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("admin-console-operator/pkg/apis/edp/v1alpha1.EdpSpec"),
+						},
+					},
+					"dbSettings": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("admin-console-operator/pkg/apis/edp/v1alpha1.AdminConsoleDbSettings"),
+						},
+					},
+					"externalConfiguration": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("admin-console-operator/pkg/apis/edp/v1alpha1.ExternalConfiguration"),
+						},
+					},
+				},
+				Required: []string{"image", "version", "edpSpec"},
 			},
 		},
-		Dependencies: []string{},
+		Dependencies: []string{
+			"admin-console-operator/pkg/apis/edp/v1alpha1.AdminConsoleDbSettings", "admin-console-operator/pkg/apis/edp/v1alpha1.EdpSpec", "admin-console-operator/pkg/apis/edp/v1alpha1.ExternalConfiguration"},
 	}
 }
 
@@ -79,7 +121,26 @@ func schema_pkg_apis_edp_v1alpha1_AdminConsoleStatus(ref common.ReferenceCallbac
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
 				Description: "AdminConsoleStatus defines the observed state of AdminConsole",
-				Properties:  map[string]spec.Schema{},
+				Properties: map[string]spec.Schema{
+					"available": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"boolean"},
+							Format: "",
+						},
+					},
+					"lastTimeUpdated": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "date-time",
+						},
+					},
+					"status": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+				},
 			},
 		},
 		Dependencies: []string{},

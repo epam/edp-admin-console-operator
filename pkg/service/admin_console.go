@@ -37,4 +37,3 @@ func (s AdminConsoleServiceImpl) Integration() error {
 func (s AdminConsoleServiceImpl) Install() error {
 	return nil
 }
-
