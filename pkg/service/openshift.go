@@ -8,7 +8,6 @@ import (
 	templateV1Client "github.com/openshift/client-go/template/clientset/versioned/typed/template/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/rest"
-	"log"
 )
 
 type OpenshiftService struct {
@@ -61,7 +60,3 @@ func (service *OpenshiftService) Init(config *rest.Config, scheme *runtime.Schem
 	return nil
 }
 
-func (service OpenshiftService) CreateDeployConf() error {
-	log.Printf("Mock")
-	return nil
-}
