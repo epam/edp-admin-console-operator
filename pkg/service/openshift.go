@@ -2,6 +2,7 @@ package service
 
 import (
 	"admin-console-operator/pkg/apis/edp/v1alpha1"
+	"errors"
 	"fmt"
 	appsV1Api "github.com/openshift/api/apps/v1"
 	authV1Api "github.com/openshift/api/authorization/v1"
@@ -47,10 +48,14 @@ func (service OpenshiftService) CreateDeployConf(ac v1alpha1.AdminConsole) error
 	dbEnabled := "false"
 	keycloakEnabled := "false"
 
-	host := fmt.Sprintf("https://%v-%v.%v", ac.Name, ac.Namespace, ac.Spec.EdpSpec.DnsWildcard)
+	host, err := service.getRouteUrl(ac)
 	//TODO(Serhii_Shydlovskyi): We can determine the Namespace referenced by the current context in the kubeconfig file.
 	// e.g. namespace, _, err := kubeconfig.Namespace()
-	edpDeployProject := fmt.Sprintf(ac.Spec.EdpSpec.EdpName + "-deploy-project")
+
+	displayName,err := service.getDisplayName(ac)
+	if err != nil{
+		return logErrorAndReturn(err)
+	}
 
 	labels := generateLabels(ac.Name)
 	consoleDcObject := &appsV1Api.DeploymentConfig{
@@ -99,7 +104,7 @@ func (service OpenshiftService) CreateDeployConf(ac v1alpha1.AdminConsole) error
 								},
 								{
 									Name:  "EDP_DEPLOY_PROJECT",
-									Value: edpDeployProject,
+									Value: fmt.Sprintf(displayName + "-deploy-project"),
 								},
 								{
 									Name:  "DB_ENABLED",
@@ -116,7 +121,6 @@ func (service OpenshiftService) CreateDeployConf(ac v1alpha1.AdminConsole) error
 							},
 							Ports: []coreV1Api.ContainerPort{
 								{
-									Name:          ac.Name,
 									ContainerPort: AdminConsolePort,
 								},
 							},
@@ -302,9 +306,15 @@ func (service OpenshiftService) CreateSecurityContext(ac v1alpha1.AdminConsole, 
 	labels := generateLabels(ac.Name)
 	priority := int32(1)
 
+
+	displayName,err := service.getDisplayName(ac)
+	if err != nil{
+		return logErrorAndReturn(err)
+	}
+
 	consoleSCCObject := &securityV1Api.SecurityContextConstraints{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      ac.Name,
+			Name:      fmt.Sprintf("%s-%s", ac.Name, displayName),
 			Namespace: ac.Namespace,
 			Labels:    labels,
 		},
@@ -423,5 +433,35 @@ func (service *OpenshiftService) Init(config *rest.Config, scheme *runtime.Schem
 	}
 	service.routeClient = *routeClient
 
+	authClient, err := authV1Client.NewForConfig(config)
+	if err != nil {
+		return logErrorAndReturn(err)
+	}
+	service.authClient = *authClient
+
 	return nil
+}
+
+func (service OpenshiftService) getDisplayName(ac v1alpha1.AdminConsole) (string, error) {
+	project, err := service.projectClient.Projects().Get(ac.Namespace, metav1.GetOptions{})
+	if err != nil && k8serrors.IsNotFound(err) {
+		return "", errors.New(fmt.Sprintf("Unable to retrieve project %s", ac.Namespace))
+	}
+
+	displayName := project.GetObjectMeta().GetAnnotations()["openshift.io/display-name"]
+	if displayName == "" {
+		return "", errors.New(fmt.Sprintf("Project display name does not set"))
+	}
+	return displayName, nil
+}
+
+func (service OpenshiftService) getRouteUrl(ac v1alpha1.AdminConsole) (string, error) {
+
+	route, err := service.routeClient.Routes(ac.Namespace).Get(ac.Name, metav1.GetOptions{})
+	if err != nil {
+		return  "", err
+	}
+
+	Url := route.Spec.Host
+	return Url, nil
 }

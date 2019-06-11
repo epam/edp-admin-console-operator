@@ -20,6 +20,15 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/source"
 )
 
+const (
+	StatusInstall     = "installing"
+	StatusFailed      = "failed"
+	StatusCreated     = "created"
+	StatusConfiguring = "configuring"
+	StatusConfigured  = "configured"
+	StatusReady       = "ready"
+)
+
 var log = logf.Log.WithName("controller_adminconsole")
 
 /**
@@ -108,11 +117,30 @@ func (r *ReconcileAdminConsole) Reconcile(request reconcile.Request) (reconcile.
 		return reconcile.Result{}, err
 	}
 
-	err = r.service.Install()
+	if instance.Status.Status == "" || instance.Status.Status == StatusFailed {
+		err = r.updateStatus(instance, StatusInstall)
+		if err != nil {
+			r.resourceActionFailed(instance, err)
+			return reconcile.Result{RequeueAfter: 10 * time.Second}, nil
+		}
+	}
+
+	err = r.service.Install(*instance)
 	if err != nil {
 		logPrint.Printf("[ERROR] Cannot install Admin Console %s. The reason: %s", instance.Name, err)
+		r.resourceActionFailed(instance, err)
 		return reconcile.Result{RequeueAfter: 10 * time.Second}, nil
 	}
+
+	if instance.Status.Status == StatusInstall {
+		logPrint.Printf("Installing Sonar component has been finished")
+		err = r.updateStatus(instance, StatusCreated)
+		if err != nil {
+			r.resourceActionFailed(instance, err)
+			return reconcile.Result{RequeueAfter: 10 * time.Second}, nil
+		}
+	}
+
 
 	err = r.service.Configure()
 	if err != nil {
@@ -133,4 +161,24 @@ func (r *ReconcileAdminConsole) Reconcile(request reconcile.Request) (reconcile.
 	}
 
 	return reconcile.Result{}, nil
+}
+
+func (r *ReconcileAdminConsole) updateStatus(instance *edpv1alpha1.AdminConsole, status string) error {
+
+	instance.Status.Status = status
+	instance.Status.LastTimeUpdated = time.Now()
+	err := r.client.Update(context.TODO(), instance)
+	if err != nil {
+		return err
+	}
+
+	logPrint.Printf("Status for Admin Console %v has been updated to '%v' at %v.", instance.Name, status, instance.Status.LastTimeUpdated)
+	return nil
+}
+
+func (r *ReconcileAdminConsole) resourceActionFailed(instance *edpv1alpha1.AdminConsole, err error) error {
+	if r.updateStatus(instance, StatusFailed) != nil {
+		return err
+	}
+	return err
 }

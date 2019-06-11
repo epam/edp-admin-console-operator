@@ -100,7 +100,7 @@ func (service K8SService) CreateService(ac v1alpha1.AdminConsole) error {
 			return logErrorAndReturn(err)
 		}
 
-		log.Printf("service %s/%s has been created", consoleService.Namespace, consoleService.Name)
+		log.Printf("Service %s/%s has been created", consoleService.Namespace, consoleService.Name)
 	} else if err != nil {
 		return logErrorAndReturn(err)
 	}
