@@ -141,12 +141,28 @@ func (r *ReconcileAdminConsole) Reconcile(request reconcile.Request) (reconcile.
 		}
 	}
 
+	if instance.Status.Status == StatusCreated || instance.Status.Status == "" {
+		logPrint.Println("Admin Console configuration has been started")
+		err := r.updateStatus(instance, StatusConfiguring)
+		if err != nil {
+			return reconcile.Result{RequeueAfter: 10 * time.Second}, nil
+		}
+	}
 
-	err = r.service.Configure()
+	err = r.service.Configure(*instance)
 	if err != nil {
-		logPrint.Printf("[ERROR] Cannot configure Admin Console %s. The reason: %s", instance.Name, err)
+		logPrint.Printf("[ERROR] Cannot run Sonar post-configuration %s %s. The reason: %s", instance.Name, instance.Spec.Version, err)
 		return reconcile.Result{RequeueAfter: 10 * time.Second}, nil
 	}
+
+	if instance.Status.Status == StatusConfiguring {
+		logPrint.Println("Sonar component configuration has been finished")
+		err = r.updateStatus(instance, StatusConfigured)
+		if err != nil {
+			return reconcile.Result{RequeueAfter: 10 * time.Second}, nil
+		}
+	}
+
 
 	err = r.service.ExposeConfiguration()
 	if err != nil {

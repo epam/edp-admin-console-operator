@@ -9,7 +9,7 @@ import (
 type AdminConsoleService interface {
 	// This is an entry point for service package. Invoked in err = r.service.Install(*instance) sonar_controller.go, Reconcile method.
 	Install(instance v1alpha1.AdminConsole) error
-	Configure() error
+	Configure(instance v1alpha1.AdminConsole) error
 	ExposeConfiguration() error
 	Integration() error
 }
@@ -24,7 +24,7 @@ type AdminConsoleServiceImpl struct {
 	k8sClient       client.Client
 }
 
-func (s AdminConsoleServiceImpl) Configure() error {
+func (s AdminConsoleServiceImpl) Configure(instance v1alpha1.AdminConsole) error {
 	return nil
 }
 
