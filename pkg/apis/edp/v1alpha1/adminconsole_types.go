@@ -23,7 +23,7 @@ type AdminConsoleSpec struct {
 
 type EdpSpec struct {
 	EdpVersion  string `json:"edpVersion"`
-	EdpName     string `json:"edpName"`
+	EdpName     string `json:"edpName, omitempty"`
 	DnsWildcard string `json:"dnsWildcard"`
 }
 

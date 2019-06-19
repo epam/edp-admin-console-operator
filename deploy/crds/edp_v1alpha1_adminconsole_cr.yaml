@@ -2,11 +2,9 @@ apiVersion: edp.epam.com/v1alpha1
 kind: AdminConsole
 metadata:
   name: example-adminconsole
-  namespace: shydlov-test-1
 spec:
-  image: docker-registry.default.svc:5000/edp-cicd-delivery/edp-admin-console
-  version: latest
+  image: epamedp/edp-admin-console
+  version: "2.0.0"
   edpSpec:
     dnsWildcard: delivery.aws.main.edp.projects.epam.com
-    edpName: shydlov-test-1
-    edpVersion: "1.0"
+    edpVersion: "2.0"
