@@ -14,8 +14,10 @@ type PlatformService interface {
 	CreateExternalEndpoint(ac v1alpha1.AdminConsole) error
 	CreateService(ac v1alpha1.AdminConsole) error
 	CreateServiceAccount(ac v1alpha1.AdminConsole) (*coreV1Api.ServiceAccount, error)
+	CreateSecurityContext(ac v1alpha1.AdminConsole, sa *coreV1Api.ServiceAccount) error
 	GetConfigmap(namespace string, name string) (map[string]string, error)
 	CreateUserRole(ac v1alpha1.AdminConsole) error
+	CreateUserRoleBinding(ac v1alpha1.AdminConsole) error
 }
 
 func NewPlatformService(scheme *runtime.Scheme) (PlatformService, error) {
