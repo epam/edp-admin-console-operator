@@ -33,13 +33,10 @@ spec:
               properties:
                 dnsWildcard:
                   type: string
-                edpName:
-                  type: string
                 edpVersion:
                   type: string
               required:
               - edpVersion
-              - edpName
               - dnsWildcard
               type: object
             image:
