@@ -11,19 +11,18 @@ import (
 // AdminConsoleSpec defines the desired state of AdminConsole
 // +k8s:openapi-gen=true
 type AdminConsoleSpec struct {
-	Image                 string                 `json:"image"`
-	Version               string                 `json:"version"`
-	KeycloakEnabled       string                 `json:"keycloakEnabled, omitempty"`
-	KeycloakUrl           string                 `json:"keycloakUrl, omitempty"`
-	EdpSpec               EdpSpec                `json:"edpSpec"`
-	DbSettings            AdminConsoleDbSettings `json:"dbSettings, omitempty"`
-	ExternalConfiguration ExternalConfiguration  `json:"externalConfiguration, omitempty"`
+	Image                 string                      `json:"image"`
+	Version               string                      `json:"version"`
+	KeycloakSpec          KeycloakSpec                `json:"keycloakSpec, omitempty"`
+	EdpSpec               EdpSpec                     `json:"edpSpec"`
+	DbSpec                AdminConsoleDbSettings      `json:"dbSpec, omitempty"`
+	ExternalConfiguration []ExternalConfigurationItem `json:"externalConfiguration, omitempty"`
 	// Add custom validation using kubebuilder tags: https://book.kubebuilder.io/beyond_basics/generating_crd.html
 }
 
 type EdpSpec struct {
-	EdpVersion  string `json:"edpVersion"`
-	EdpName     string `json:"edpName, omitempty"`
+	Version     string `json:"version"`
+	Name        string `json:"name, omitempty"`
 	DnsWildcard string `json:"dnsWildcard"`
 }
 
@@ -33,16 +32,16 @@ type ExternalConfigurationItem struct {
 	Description string `json:"description, omitempty"`
 }
 
-type AdminConsoleDbSettings struct {
-	DatabaseName     string `json:"databaseName,omitempty"`
-	DatabaseHostname string `json:"databaseHostname,omitempty"`
-	DatabasePort     string `json:"databasePort,omitempty"`
-	DatabaseEnabled  string `json:"databaseEnabled, omitempty"`
+type KeycloakSpec struct {
+	Enabled bool   `json:"enabled, omitempty"`
+	Url     string `json:"url, omitempty"`
 }
 
-type ExternalConfiguration struct {
-	DbUser       ExternalConfigurationItem `json:"DbUser,omitempty"`
-	KeycloakUser ExternalConfigurationItem `json:"keycloackUser,omitempty"`
+type AdminConsoleDbSettings struct {
+	Name     string `json:"name,omitempty"`
+	Hostname string `json:"hostname,omitempty"`
+	Port     string `json:"port,omitempty"`
+	Enabled  bool   `json:"enabled, omitempty"`
 }
 
 // AdminConsoleStatus defines the observed state of AdminConsole

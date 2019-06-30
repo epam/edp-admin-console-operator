@@ -80,16 +80,9 @@ func schema_pkg_apis_edp_v1alpha1_AdminConsoleSpec(ref common.ReferenceCallback)
 							Format: "",
 						},
 					},
-					"keycloakEnabled": {
+					"keycloakSpec": {
 						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"keycloakUrl": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
+							Ref: ref("admin-console-operator/pkg/apis/edp/v1alpha1.KeycloakSpec"),
 						},
 					},
 					"edpSpec": {
@@ -97,14 +90,21 @@ func schema_pkg_apis_edp_v1alpha1_AdminConsoleSpec(ref common.ReferenceCallback)
 							Ref: ref("admin-console-operator/pkg/apis/edp/v1alpha1.EdpSpec"),
 						},
 					},
-					"dbSettings": {
+					"dbSpec": {
 						SchemaProps: spec.SchemaProps{
 							Ref: ref("admin-console-operator/pkg/apis/edp/v1alpha1.AdminConsoleDbSettings"),
 						},
 					},
 					"externalConfiguration": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("admin-console-operator/pkg/apis/edp/v1alpha1.ExternalConfiguration"),
+							Type: []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Ref: ref("admin-console-operator/pkg/apis/edp/v1alpha1.ExternalConfigurationItem"),
+									},
+								},
+							},
 						},
 					},
 				},
@@ -112,7 +112,7 @@ func schema_pkg_apis_edp_v1alpha1_AdminConsoleSpec(ref common.ReferenceCallback)
 			},
 		},
 		Dependencies: []string{
-			"admin-console-operator/pkg/apis/edp/v1alpha1.AdminConsoleDbSettings", "admin-console-operator/pkg/apis/edp/v1alpha1.EdpSpec", "admin-console-operator/pkg/apis/edp/v1alpha1.ExternalConfiguration"},
+			"admin-console-operator/pkg/apis/edp/v1alpha1.AdminConsoleDbSettings", "admin-console-operator/pkg/apis/edp/v1alpha1.EdpSpec", "admin-console-operator/pkg/apis/edp/v1alpha1.ExternalConfigurationItem", "admin-console-operator/pkg/apis/edp/v1alpha1.KeycloakSpec"},
 	}
 }
 

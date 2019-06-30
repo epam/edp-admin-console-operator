@@ -2,6 +2,7 @@ package service
 
 import (
 	"admin-console-operator/pkg/apis/edp/v1alpha1"
+	appsV1Api "github.com/openshift/api/apps/v1"
 	coreV1Api "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/clientcmd"
@@ -9,15 +10,24 @@ import (
 )
 
 type PlatformService interface {
+	AddServiceAccToSecurityContext(scc string, ac v1alpha1.AdminConsole) error
 	CreateDeployConf(ac v1alpha1.AdminConsole) error
 	CreateSecret(ac v1alpha1.AdminConsole, name string, data map[string][]byte) error
 	CreateExternalEndpoint(ac v1alpha1.AdminConsole) error
 	CreateService(ac v1alpha1.AdminConsole) error
 	CreateServiceAccount(ac v1alpha1.AdminConsole) (*coreV1Api.ServiceAccount, error)
 	CreateSecurityContext(ac v1alpha1.AdminConsole, sa *coreV1Api.ServiceAccount) error
-	GetConfigmap(namespace string, name string) (map[string]string, error)
 	CreateUserRole(ac v1alpha1.AdminConsole) error
-	CreateUserRoleBinding(ac v1alpha1.AdminConsole, name string) error
+	CreateUserRoleBinding(ac v1alpha1.AdminConsole, name string, binding string) error
+	GetConfigmap(namespace string, name string) (map[string]string, error)
+	GetDisplayName(ac v1alpha1.AdminConsole) (string, error)
+	GetSecret(namespace string, name string) (map[string][]byte, error)
+	GetAdminConsole(ac v1alpha1.AdminConsole) (*v1alpha1.AdminConsole, error)
+	GetDeployConf(ac v1alpha1.AdminConsole) (*appsV1Api.DeploymentConfig, error)
+	GenerateDbSettings(ac v1alpha1.AdminConsole) ([]coreV1Api.EnvVar, map[string]string)
+	GenerateKeycloakSettings(ac v1alpha1.AdminConsole) ([]coreV1Api.EnvVar, string)
+	PatchDeployConfEnv(ac v1alpha1.AdminConsole, dc *appsV1Api.DeploymentConfig, env []coreV1Api.EnvVar) error
+	UpdateAdminConsole(ac v1alpha1.AdminConsole) (*v1alpha1.AdminConsole, error)
 }
 
 func NewPlatformService(scheme *runtime.Scheme) (PlatformService, error) {
