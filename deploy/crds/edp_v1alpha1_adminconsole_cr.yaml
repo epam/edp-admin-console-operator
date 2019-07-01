@@ -1,7 +1,8 @@
 apiVersion: edp.epam.com/v1alpha1
 kind: AdminConsole
 metadata:
-  name: example-adminconsole
+  name: example-adminconsole-1
+  namespace: shydlov-test-1
 spec:
   image: epamedp/edp-admin-console
   version: "2.0.0"

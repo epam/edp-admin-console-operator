@@ -226,7 +226,7 @@ func (service OpenshiftService) CreateUserRoleBinding(ac v1alpha1.AdminConsole, 
 		RoleRef: coreV1Api.ObjectReference{
 			APIVersion: "rbac.authorization.k8s.io",
 			Kind:       "Role",
-			Name:       name,
+			Name:       fmt.Sprintf("edp-%s", name),
 			Namespace:  ac.Namespace,
 		},
 		Subjects: []coreV1Api.ObjectReference{
