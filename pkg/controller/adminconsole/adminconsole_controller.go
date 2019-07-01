@@ -163,6 +163,12 @@ func (r *ReconcileAdminConsole) Reconcile(request reconcile.Request) (reconcile.
 		}
 	}
 
+	err = r.updateAvailableStatus(instance, true)
+	if err != nil {
+		r.resourceActionFailed(instance, err)
+		return reconcile.Result{RequeueAfter: 10 * time.Second}, nil
+	}
+
 
 	err = r.service.ExposeConfiguration()
 	if err != nil {
@@ -197,4 +203,16 @@ func (r *ReconcileAdminConsole) resourceActionFailed(instance *edpv1alpha1.Admin
 		return err
 	}
 	return err
+}
+
+func (r *ReconcileAdminConsole) updateAvailableStatus(instance *edpv1alpha1.AdminConsole, value bool) error {
+	if instance.Status.Available != value {
+		instance.Status.Available = value
+		instance.Status.LastTimeUpdated = time.Now()
+		err := r.client.Update(context.TODO(), instance)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
