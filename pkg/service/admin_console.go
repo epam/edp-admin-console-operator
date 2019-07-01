@@ -54,10 +54,17 @@ func (s AdminConsoleServiceImpl) Install(instance v1alpha1.AdminConsole) error {
 		return logErrorAndReturn(err)
 	}
 
-	err = s.platformService.CreateUserRoleBinding(instance)
+
+	err = s.platformService.CreateUserRoleBinding(instance, "resources-admin")
 	if err != nil {
 		return logErrorAndReturn(err)
 	}
+
+	err = s.platformService.CreateUserRoleBinding(instance, "admin")
+	if err != nil {
+		return logErrorAndReturn(err)
+	}
+
 
 	err = s.platformService.CreateService(instance)
 	if err != nil {

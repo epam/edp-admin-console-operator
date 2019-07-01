@@ -133,7 +133,7 @@ func (r *ReconcileAdminConsole) Reconcile(request reconcile.Request) (reconcile.
 	}
 
 	if instance.Status.Status == StatusInstall {
-		logPrint.Printf("Installing Sonar component has been finished")
+		logPrint.Printf("Installing Admin Console component has been finished")
 		err = r.updateStatus(instance, StatusCreated)
 		if err != nil {
 			r.resourceActionFailed(instance, err)
@@ -151,12 +151,12 @@ func (r *ReconcileAdminConsole) Reconcile(request reconcile.Request) (reconcile.
 
 	err = r.service.Configure(*instance)
 	if err != nil {
-		logPrint.Printf("[ERROR] Cannot run Sonar post-configuration %s %s. The reason: %s", instance.Name, instance.Spec.Version, err)
+		logPrint.Printf("[ERROR] Cannot run Admin Console post-configuration %s %s. The reason: %s", instance.Name, instance.Spec.Version, err)
 		return reconcile.Result{RequeueAfter: 10 * time.Second}, nil
 	}
 
 	if instance.Status.Status == StatusConfiguring {
-		logPrint.Println("Sonar component configuration has been finished")
+		logPrint.Println("Admin Console component configuration has been finished")
 		err = r.updateStatus(instance, StatusConfigured)
 		if err != nil {
 			return reconcile.Result{RequeueAfter: 10 * time.Second}, nil

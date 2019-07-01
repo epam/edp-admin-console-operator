@@ -17,7 +17,7 @@ type PlatformService interface {
 	CreateSecurityContext(ac v1alpha1.AdminConsole, sa *coreV1Api.ServiceAccount) error
 	GetConfigmap(namespace string, name string) (map[string]string, error)
 	CreateUserRole(ac v1alpha1.AdminConsole) error
-	CreateUserRoleBinding(ac v1alpha1.AdminConsole) error
+	CreateUserRoleBinding(ac v1alpha1.AdminConsole, name string) error
 }
 
 func NewPlatformService(scheme *runtime.Scheme) (PlatformService, error) {

@@ -217,16 +217,17 @@ func (service OpenshiftService) CreateUserRole(ac v1alpha1.AdminConsole) error {
 	return nil
 }
 
-func (service OpenshiftService) CreateUserRoleBinding(ac v1alpha1.AdminConsole) error {
+func (service OpenshiftService) CreateUserRoleBinding(ac v1alpha1.AdminConsole, name string) error {
 	acBindingObject := &authV1Api.RoleBinding{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      "edp-resources-admin",
+			Name:      fmt.Sprintf("edp-%s", name),
 			Namespace: ac.Namespace,
 		},
 		RoleRef: coreV1Api.ObjectReference{
 			APIVersion: "rbac.authorization.k8s.io",
 			Kind:       "Role",
-			Name:       "edp-resources-admin",
+			Name:       name,
+			Namespace:  ac.Namespace,
 		},
 		Subjects: []coreV1Api.ObjectReference{
 			{
