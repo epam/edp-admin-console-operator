@@ -2,7 +2,7 @@ package service
 
 import (
 	"admin-console-operator/pkg/apis/edp/v1alpha1"
-	"errors"
+	"encoding/json"
 	"fmt"
 	appsV1Api "github.com/openshift/api/apps/v1"
 	authV1Api "github.com/openshift/api/authorization/v1"
@@ -14,23 +14,24 @@ import (
 	routeV1Client "github.com/openshift/client-go/route/clientset/versioned/typed/route/v1"
 	securityV1Client "github.com/openshift/client-go/security/clientset/versioned/typed/security/v1"
 	templateV1Client "github.com/openshift/client-go/template/clientset/versioned/typed/template/v1"
+	"github.com/pkg/errors"
 	coreV1Api "k8s.io/api/core/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/client-go/rest"
 	"log"
 	"reflect"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
+	"strconv"
 )
 
 const (
-	PgPort           = "5432"
 	AdminConsolePort = 8080
 	MemoryRequest    = "500Mi"
-	DbName           = "edp-install-wizard-db"
 )
 
 type OpenshiftService struct {
@@ -44,17 +45,36 @@ type OpenshiftService struct {
 	routeClient    routeV1Client.RouteV1Client
 }
 
+func (service OpenshiftService) AddServiceAccToSecurityContext(scc string, ac v1alpha1.AdminConsole) error {
+	saName := fmt.Sprintf("system:serviceaccount:%s:%s", ac.Namespace, ac.Name)
+	consoleSCC, err := service.securityClient.SecurityContextConstraints().Get(scc, metav1.GetOptions{})
+	if err != nil {
+		return err
+	}
+
+	if !stringInSlice(saName, consoleSCC.Users) {
+		log.Printf("Adding Service Account to anyuid Security Context")
+		consoleSCC.Users = append(consoleSCC.Users, saName)
+		_, err = service.securityClient.SecurityContextConstraints().Update(consoleSCC)
+		if err != nil {
+			return err
+		}
+		log.Printf("anyuid Security Context updated succesfully.")
+	}
+
+	return nil
+}
+
 func (service OpenshiftService) CreateDeployConf(ac v1alpha1.AdminConsole) error {
 	dbEnabled := "false"
 	keycloakEnabled := "false"
 
 	host, err := service.getRouteUrl(ac)
-	//TODO(Serhii_Shydlovskyi): We can determine the Namespace referenced by the current context in the kubeconfig file.
-	// e.g. namespace, _, err := kubeconfig.Namespace()
+	displayName := ac.Spec.EdpSpec.Name
 
-	displayName,err := service.getDisplayName(ac)
-	if err != nil{
-		return logErrorAndReturn(err)
+	err = service.setDisplayName(ac, displayName)
+	if err != nil {
+		return err
 	}
 
 	labels := generateLabels(ac.Name)
@@ -112,11 +132,49 @@ func (service OpenshiftService) CreateDeployConf(ac v1alpha1.AdminConsole) error
 								},
 								{
 									Name:  "EDP_VERSION",
-									Value: ac.Spec.EdpSpec.EdpVersion,
+									Value: ac.Spec.EdpSpec.Version,
 								},
 								{
 									Name:  "AUTH_KEYCLOAK_ENABLED",
 									Value: keycloakEnabled,
+								},
+								{
+									Name:  "DNS_WILDCARD",
+									Value: ac.Spec.EdpSpec.DnsWildcard,
+								},
+								{
+									Name:  "KEYCLOAK_URL",
+									Value: "",
+								},
+								{
+									Name:  "KEYCLOAK_CLIENT_ID",
+									Value: "",
+								},
+								{
+									Name:  "KEYCLOAK_CLIENT_SECRET",
+									Value: "",
+								},
+								{
+									Name: "PG_USER",
+									ValueFrom: &coreV1Api.EnvVarSource{
+										SecretKeyRef: &coreV1Api.SecretKeySelector{
+											LocalObjectReference: coreV1Api.LocalObjectReference{
+												Name: "admin-console-db",
+											},
+											Key: "username",
+										},
+									},
+								},
+								{
+									Name: "PG_PASSWORD",
+									ValueFrom: &coreV1Api.EnvVarSource{
+										SecretKeyRef: &coreV1Api.SecretKeySelector{
+											LocalObjectReference: coreV1Api.LocalObjectReference{
+												Name: "admin-console-db",
+											},
+											Key: "password",
+										},
+									},
 								},
 							},
 							Ports: []coreV1Api.ContainerPort{
@@ -180,84 +238,6 @@ func (service OpenshiftService) CreateDeployConf(ac v1alpha1.AdminConsole) error
 	return nil
 }
 
-func (service OpenshiftService) CreateUserRole(ac v1alpha1.AdminConsole) error {
-	consoleRoleObject := &authV1Api.Role{
-		ObjectMeta: metav1.ObjectMeta{
-			// !!!This little typo fix might kill A LOT of things in automation!!!
-			Name:      "edp-resources-admin",
-			Namespace: ac.Namespace,
-		},
-		Rules: []authV1Api.PolicyRule{
-			{
-				APIGroups: []string{"*"},
-				Resources: []string{"codebases", "applicationbranches", "codebasebranches", "cdpipelines", "stages"},
-				Verbs:     []string{"get", "create"},
-			},
-		},
-	}
-
-	if err := controllerutil.SetControllerReference(&ac, consoleRoleObject, service.scheme); err != nil {
-		return logErrorAndReturn(err)
-	}
-
-	consoleRole, err := service.authClient.Roles(consoleRoleObject.Namespace).Get(consoleRoleObject.Name, metav1.GetOptions{})
-	if err != nil && k8serrors.IsNotFound(err) {
-		log.Printf("Creating Role %s for Admin Console %s", consoleRoleObject.Name, consoleRoleObject.Name)
-
-		consoleRole, err = service.authClient.Roles(consoleRoleObject.Namespace).Create(consoleRoleObject)
-		if err != nil {
-			return logErrorAndReturn(err)
-		}
-
-		log.Printf("Role %s for Admin Console %s created", consoleRole.Name, ac.Name)
-	} else if err != nil {
-		return logErrorAndReturn(err)
-	}
-
-	return nil
-}
-
-func (service OpenshiftService) CreateUserRoleBinding(ac v1alpha1.AdminConsole, name string) error {
-	acBindingObject := &authV1Api.RoleBinding{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      fmt.Sprintf("edp-%s", name),
-			Namespace: ac.Namespace,
-		},
-		RoleRef: coreV1Api.ObjectReference{
-			APIVersion: "rbac.authorization.k8s.io",
-			Kind:       "Role",
-			Name:       fmt.Sprintf("edp-%s", name),
-			Namespace:  ac.Namespace,
-		},
-		Subjects: []coreV1Api.ObjectReference{
-			{
-				Kind: "ServiceAccount",
-				Name: "admin-console",
-			},
-		},
-	}
-
-	if err := controllerutil.SetControllerReference(&ac, acBindingObject, service.scheme); err != nil {
-		return logErrorAndReturn(err)
-	}
-
-	acBinding, err := service.authClient.RoleBindings(acBindingObject.Namespace).Get(acBindingObject.Name, metav1.GetOptions{})
-
-	if err != nil && k8serrors.IsNotFound(err) {
-		log.Printf("Creating a new RoleBinding %s/%s for Admin Console %s", acBindingObject.Namespace, acBindingObject.Name, ac.Name)
-		acBinding, err = service.authClient.RoleBindings(acBindingObject.Namespace).Create(acBindingObject)
-		if err != nil {
-			return logErrorAndReturn(err)
-		}
-
-		log.Printf("RoleBinding %s/%s has been created", acBinding.Namespace, acBinding.Name)
-	} else if err != nil {
-		return logErrorAndReturn(err)
-	}
-
-	return nil
-}
-
 func (service OpenshiftService) CreateExternalEndpoint(ac v1alpha1.AdminConsole) error {
 
 	labels := generateLabels(ac.Name)
@@ -307,9 +287,8 @@ func (service OpenshiftService) CreateSecurityContext(ac v1alpha1.AdminConsole, 
 	labels := generateLabels(ac.Name)
 	priority := int32(1)
 
-
-	displayName,err := service.getDisplayName(ac)
-	if err != nil{
+	displayName, err := service.GetDisplayName(ac)
+	if err != nil {
 		return logErrorAndReturn(err)
 	}
 
@@ -358,7 +337,7 @@ func (service OpenshiftService) CreateSecurityContext(ac v1alpha1.AdminConsole, 
 			Ranges: nil,
 		},
 		Users: []string{
-			"system:serviceaccount:" + ac.Namespace + ":admin-console",
+			fmt.Sprintf("system:serviceaccount:%s:%s", ac.Namespace, ac.Name),
 		},
 	}
 
@@ -381,7 +360,6 @@ func (service OpenshiftService) CreateSecurityContext(ac v1alpha1.AdminConsole, 
 		return logErrorAndReturn(err)
 
 	} else {
-		// TODO(Serhii Shydlovskyi): Reflect reports that present users and currently stored in object are different for some reason.
 		if !reflect.DeepEqual(consoleSCC.Users, consoleSCCObject.Users) {
 
 			consoleSCC, err = service.securityClient.SecurityContextConstraints().Update(consoleSCCObject)
@@ -392,6 +370,241 @@ func (service OpenshiftService) CreateSecurityContext(ac v1alpha1.AdminConsole, 
 
 			log.Printf("Security Context Constraint %s has been updated", consoleSCC.Name)
 		}
+	}
+
+	return nil
+}
+
+func (service OpenshiftService) CreateUserRole(ac v1alpha1.AdminConsole) error {
+	consoleRoleObject := &authV1Api.Role{
+		ObjectMeta: metav1.ObjectMeta{
+			// !!!This little typo fix might kill A LOT of things in automation!!!
+			Name:      "edp-resources-admin",
+			Namespace: ac.Namespace,
+		},
+		Rules: []authV1Api.PolicyRule{
+			{
+				APIGroups: []string{"*"},
+				Resources: []string{"codebases", "applicationbranches", "codebasebranches", "cdpipelines", "stages"},
+				Verbs:     []string{"get", "create"},
+			},
+		},
+	}
+
+	if err := controllerutil.SetControllerReference(&ac, consoleRoleObject, service.scheme); err != nil {
+		return logErrorAndReturn(err)
+	}
+
+	consoleRole, err := service.authClient.Roles(consoleRoleObject.Namespace).Get(consoleRoleObject.Name, metav1.GetOptions{})
+	if err != nil && k8serrors.IsNotFound(err) {
+		log.Printf("Creating Role %s for Admin Console %s", consoleRoleObject.Name, consoleRoleObject.Name)
+
+		consoleRole, err = service.authClient.Roles(consoleRoleObject.Namespace).Create(consoleRoleObject)
+		if err != nil {
+			return logErrorAndReturn(err)
+		}
+
+		log.Printf("Role %s for Admin Console %s created", consoleRole.Name, ac.Name)
+	} else if err != nil {
+		return logErrorAndReturn(err)
+	}
+
+	return nil
+}
+
+func (service OpenshiftService) CreateUserRoleBinding(ac v1alpha1.AdminConsole, name string, binding string) error {
+	acBindingObject := &authV1Api.RoleBinding{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: ac.Namespace,
+		},
+		RoleRef: coreV1Api.ObjectReference{
+			APIVersion: "rbac.authorization.k8s.io",
+			Kind:       "Role",
+			Name:       binding,
+			Namespace:  ac.Namespace,
+		},
+		Subjects: []coreV1Api.ObjectReference{
+			{
+				Kind: "ServiceAccount",
+				Name: "admin-console",
+			},
+		},
+	}
+
+	if err := controllerutil.SetControllerReference(&ac, acBindingObject, service.scheme); err != nil {
+		return logErrorAndReturn(err)
+	}
+
+	acBinding, err := service.authClient.RoleBindings(acBindingObject.Namespace).Get(acBindingObject.Name, metav1.GetOptions{})
+
+	if err != nil && k8serrors.IsNotFound(err) {
+		log.Printf("Creating a new RoleBinding %s/%s for Admin Console %s", acBindingObject.Namespace, acBindingObject.Name, ac.Name)
+		acBinding, err = service.authClient.RoleBindings(acBindingObject.Namespace).Create(acBindingObject)
+		if err != nil {
+			return logErrorAndReturn(err)
+		}
+
+		log.Printf("RoleBinding %s/%s has been created", acBinding.Namespace, acBinding.Name)
+	} else if err != nil {
+		return logErrorAndReturn(err)
+	}
+
+	return nil
+}
+
+func (service OpenshiftService) GetDisplayName(ac v1alpha1.AdminConsole) (string, error) {
+	project, err := service.projectClient.Projects().Get(ac.Namespace, metav1.GetOptions{})
+	if err != nil && k8serrors.IsNotFound(err) {
+		return "", errors.New(fmt.Sprintf("Unable to retrieve project %s", ac.Namespace))
+	}
+
+	displayName := project.GetObjectMeta().GetAnnotations()["openshift.io/display-name"]
+	if displayName == "" {
+		return "", errors.New(fmt.Sprintf("Project display name does not set"))
+	}
+	return displayName, nil
+}
+
+func (service OpenshiftService) GetDeployConf(ac v1alpha1.AdminConsole) (*appsV1Api.DeploymentConfig, error) {
+
+	result, err := service.appClient.DeploymentConfigs(ac.Namespace).Get(ac.Name, metav1.GetOptions{})
+	if err != nil {
+		return &appsV1Api.DeploymentConfig{}, err
+	}
+
+	return result, nil
+}
+
+func (service OpenshiftService) GenerateDbSettings(ac v1alpha1.AdminConsole) ([]coreV1Api.EnvVar, map[string]string) {
+	var out []coreV1Api.EnvVar
+	outMap := map[string]string{
+		"DatabaseName": "",
+		"DatabaseHostname" : "",
+		"DatabasePort": "",
+	}
+
+	DatabaseName := "edp-install-wizard-db"
+	DatabaseHostname := fmt.Sprintf(DatabaseName + "." + ac.Spec.EdpSpec.Name + "-deploy-project")
+	DatabasePort := "5432"
+
+	if ac.Spec.DbSpec.Enabled{
+		log.Printf("Generating DB settings for Admin Console %s", ac.Name)
+		if ac.Spec.DbSpec.Name != "" {
+			DatabaseName = ac.Spec.DbSpec.Name
+		}
+
+		if ac.Spec.DbSpec.Hostname != "" {
+			DatabaseHostname = ac.Spec.DbSpec.Hostname
+		}
+
+		if ac.Spec.DbSpec.Port != "" {
+			DatabasePort = ac.Spec.DbSpec.Port
+		}
+
+		out = []coreV1Api.EnvVar{
+			{
+				Name:  "PG_HOST",
+				Value: DatabaseHostname,
+			},
+			{
+				Name:  "PG_PORT",
+				Value: DatabasePort,
+			},
+			{
+				Name:  "PG_DATABASE",
+				Value: DatabaseName,
+			},
+			{
+				Name:  "DB_ENABLED",
+				Value: strconv.FormatBool(ac.Spec.DbSpec.Enabled),
+			},
+		}
+		outMap["DatabaseName"] = DatabaseName
+		outMap["DatabaseHostname"] = DatabaseHostname
+		outMap["DatabasePort"] = DatabasePort
+		return out, outMap
+	}
+
+	log.Printf("DB_ENABLED flag in %s spec is false. Settings will not be created.", ac.Name)
+	return out, outMap
+}
+
+func (service OpenshiftService) GenerateKeycloakSettings(ac v1alpha1.AdminConsole) ([]coreV1Api.EnvVar, string) {
+	var out []coreV1Api.EnvVar
+
+	KeycloakUrl := ""
+
+	if ac.Spec.KeycloakSpec.Enabled {
+		log.Printf("Generating Keycloak settings for Admin Console %s", ac.Name)
+		if ac.Spec.KeycloakSpec.Url != "" {
+			KeycloakUrl = ac.Spec.KeycloakSpec.Url
+		} else {
+			log.Printf("[WARNING] Keycloak URL field is empty, but integration enabled!")
+		}
+
+		out = []coreV1Api.EnvVar{
+			{
+				Name: "KEYCLOAK_CLIENT_ID",
+				ValueFrom: &coreV1Api.EnvVarSource{
+					SecretKeyRef: &coreV1Api.SecretKeySelector{
+						LocalObjectReference: coreV1Api.LocalObjectReference{
+							Name: "admin-console-client",
+						},
+						Key: "username",
+					},
+				},
+			},
+			{
+				Name: "KEYCLOAK_CLIENT_SECRET",
+				ValueFrom: &coreV1Api.EnvVarSource{
+					SecretKeyRef: &coreV1Api.SecretKeySelector{
+						LocalObjectReference: coreV1Api.LocalObjectReference{
+							Name: "admin-console-client",
+						},
+						Key: "password",
+					},
+				},
+			},
+			{
+				Name:  "KEYCLOAK_URL",
+				Value: KeycloakUrl,
+			},
+			{
+				Name:  "KEYCLOAK_ENABLED",
+				Value: strconv.FormatBool(ac.Spec.KeycloakSpec.Enabled),
+			},
+		}
+		return out, KeycloakUrl
+	}
+
+	log.Printf("KEYCLOAK_ENABLED flag in %s spec is false. Settings will not be created.", ac.Name)
+	return out, ""
+}
+
+func (service OpenshiftService) PatchDeployConfEnv(ac v1alpha1.AdminConsole, dc *appsV1Api.DeploymentConfig, env []coreV1Api.EnvVar) error {
+
+	if len(env) == 0 {
+		return nil
+	}
+
+	container, err := selectContainer(dc.Spec.Template.Spec.Containers, ac.Name)
+	if err != nil {
+		return err
+	}
+
+	container.Env = updateEnv(container.Env, env)
+
+	dc.Spec.Template.Spec.Containers = append(dc.Spec.Template.Spec.Containers, container)
+
+	jsonDc, err := json.Marshal(dc)
+	if err != nil {
+		return err
+	}
+
+	_, err = service.appClient.DeploymentConfigs(dc.Namespace).Patch(dc.Name, types.StrategicMergePatchType, jsonDc)
+	if err != nil {
+		return err
 	}
 
 	return nil
@@ -443,26 +656,81 @@ func (service *OpenshiftService) Init(config *rest.Config, scheme *runtime.Schem
 	return nil
 }
 
-func (service OpenshiftService) getDisplayName(ac v1alpha1.AdminConsole) (string, error) {
-	project, err := service.projectClient.Projects().Get(ac.Namespace, metav1.GetOptions{})
-	if err != nil && k8serrors.IsNotFound(err) {
-		return "", errors.New(fmt.Sprintf("Unable to retrieve project %s", ac.Namespace))
-	}
-
-	displayName := project.GetObjectMeta().GetAnnotations()["openshift.io/display-name"]
-	if displayName == "" {
-		return "", errors.New(fmt.Sprintf("Project display name does not set"))
-	}
-	return displayName, nil
-}
-
 func (service OpenshiftService) getRouteUrl(ac v1alpha1.AdminConsole) (string, error) {
 
 	route, err := service.routeClient.Routes(ac.Namespace).Get(ac.Name, metav1.GetOptions{})
 	if err != nil {
-		return  "", err
+		return "", err
 	}
 
 	Url := route.Spec.Host
 	return Url, nil
+}
+
+func (service OpenshiftService) setDisplayName(ac v1alpha1.AdminConsole, displayName string) error {
+
+	if ac.Spec.EdpSpec.Name == "" {
+		adminConsole := &ac
+		adminConsole.Spec.EdpSpec.Name = displayName
+
+		_, err := service.edpClient.Update(&ac)
+		if err != nil {
+			return err
+		}
+		return nil
+	}
+
+	return nil
+}
+
+func stringInSlice(str string, list []string) bool {
+	for _, v := range list {
+		if v == str {
+			return true
+		}
+	}
+	return false
+}
+
+func selectContainer(containers []coreV1Api.Container, name string) (coreV1Api.Container, error) {
+	out := coreV1Api.Container{}
+	for _, c := range containers {
+		if c.Name == name {
+			return c, nil
+		}
+	}
+
+	return out, errors.New("No matching container in spec found!")
+}
+
+func updateEnv(existing []coreV1Api.EnvVar, env []coreV1Api.EnvVar) []coreV1Api.EnvVar {
+	out := []coreV1Api.EnvVar{}
+	var covered []string
+
+	for _, e := range existing {
+		newer, ok := findEnv(env, e.Name)
+		if ok {
+			covered = append(covered, e.Name)
+			out = append(out, newer)
+			continue
+		}
+		out = append(out, e)
+	}
+	for _, e := range env {
+		if stringInSlice(e.Name, covered) {
+			continue
+		}
+		covered = append(covered, e.Name)
+		out = append(out, e)
+	}
+	return out
+}
+
+func findEnv(env []coreV1Api.EnvVar, name string) (coreV1Api.EnvVar, bool) {
+	for _, e := range env {
+		if e.Name == name {
+			return e, true
+		}
+	}
+	return coreV1Api.EnvVar{}, false
 }

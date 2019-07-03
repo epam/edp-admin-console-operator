@@ -21,12 +21,15 @@ import (
 )
 
 const (
-	StatusInstall     = "installing"
-	StatusFailed      = "failed"
-	StatusCreated     = "created"
-	StatusConfiguring = "configuring"
-	StatusConfigured  = "configured"
-	StatusReady       = "ready"
+	StatusInstall          = "installing"
+	StatusFailed           = "failed"
+	StatusCreated          = "created"
+	StatusConfiguring      = "configuring"
+	StatusConfigured       = "configured"
+	StatusExposeStart      = "exposing config"
+	StatusExposeFinish     = "config exposed"
+	StatusIntegrationStart = "integration started"
+	StatusReady            = "ready"
 )
 
 var log = logf.Log.WithName("controller_adminconsole")
@@ -125,7 +128,7 @@ func (r *ReconcileAdminConsole) Reconcile(request reconcile.Request) (reconcile.
 		}
 	}
 
-	err = r.service.Install(*instance)
+	instance, err = r.service.Install(*instance)
 	if err != nil {
 		logPrint.Printf("[ERROR] Cannot install Admin Console %s. The reason: %s", instance.Name, err)
 		r.resourceActionFailed(instance, err)
@@ -149,7 +152,7 @@ func (r *ReconcileAdminConsole) Reconcile(request reconcile.Request) (reconcile.
 		}
 	}
 
-	err = r.service.Configure(*instance)
+	instance, err = r.service.Configure(*instance)
 	if err != nil {
 		logPrint.Printf("[ERROR] Cannot run Admin Console post-configuration %s %s. The reason: %s", instance.Name, instance.Spec.Version, err)
 		return reconcile.Result{RequeueAfter: 10 * time.Second}, nil
@@ -163,23 +166,54 @@ func (r *ReconcileAdminConsole) Reconcile(request reconcile.Request) (reconcile.
 		}
 	}
 
-	err = r.updateAvailableStatus(instance, true)
-	if err != nil {
-		r.resourceActionFailed(instance, err)
-		return reconcile.Result{RequeueAfter: 10 * time.Second}, nil
+
+	if instance.Status.Status == StatusConfigured {
+		logPrint.Println("Admin Console component configuration has been finished")
+		err = r.updateStatus(instance, StatusExposeStart)
+		if err != nil {
+			return reconcile.Result{RequeueAfter: 10 * time.Second}, nil
+		}
 	}
 
-
-	err = r.service.ExposeConfiguration()
+	instance, err = r.service.ExposeConfiguration(*instance)
 	if err != nil {
 		logPrint.Printf("[ERROR] Cannot expose configuration for Admin Console %s. The reason: %s", instance.Name, err)
 		return reconcile.Result{RequeueAfter: 10 * time.Second}, nil
 	}
 
-	err = r.service.Integration()
+	if instance.Status.Status == StatusExposeStart {
+		logPrint.Println("Admin Console component configuration has been finished")
+		err = r.updateStatus(instance, StatusExposeFinish)
+		if err != nil {
+			return reconcile.Result{RequeueAfter: 10 * time.Second}, nil
+		}
+	}
+
+	if instance.Status.Status == StatusExposeFinish {
+		logPrint.Println("Admin Console component configuration has been finished")
+		err = r.updateStatus(instance, StatusIntegrationStart)
+		if err != nil {
+			return reconcile.Result{RequeueAfter: 10 * time.Second}, nil
+		}
+	}
+
+	instance, err = r.service.Integrate(*instance)
 	if err != nil {
 		logPrint.Printf("[ERROR] Cannot integrate Admin Console %s. The reason: %s", instance.Name, err)
 		return reconcile.Result{RequeueAfter: 10 * time.Second}, nil
+	}
+
+	if instance.Status.Status == StatusIntegrationStart {
+		logPrint.Println("Admin Console component configuration has been finished")
+		err = r.updateStatus(instance, StatusReady)
+		if err != nil {
+			return reconcile.Result{RequeueAfter: 10 * time.Second}, nil
+		}
+	}
+
+	err = r.updateAvailableStatus(instance, true)
+	if err != nil {
+		r.resourceActionFailed(instance, err)
 	}
 
 	return reconcile.Result{}, nil
@@ -205,7 +239,7 @@ func (r *ReconcileAdminConsole) resourceActionFailed(instance *edpv1alpha1.Admin
 	return err
 }
 
-func (r *ReconcileAdminConsole) updateAvailableStatus(instance *edpv1alpha1.AdminConsole, value bool) error {
+func (r ReconcileAdminConsole) updateAvailableStatus(instance *edpv1alpha1.AdminConsole, value bool) error {
 	if instance.Status.Available != value {
 		instance.Status.Available = value
 		instance.Status.LastTimeUpdated = time.Now()

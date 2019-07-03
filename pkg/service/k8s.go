@@ -2,6 +2,8 @@ package service
 
 import (
 	"admin-console-operator/pkg/apis/edp/v1alpha1"
+	"admin-console-operator/pkg/client"
+	"github.com/pkg/errors"
 	coreV1Api "k8s.io/api/core/v1"
 	k8serr "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -16,11 +18,7 @@ import (
 type K8SService struct {
 	scheme     *runtime.Scheme
 	coreClient coreV1Client.CoreV1Client
-}
-
-func (service K8SService) CreateDeployConf(ac v1alpha1.AdminConsole) error {
-	log.Printf("Not implemented.")
-	return nil
+	edpClient  client.EdpV1Client
 }
 
 func (service K8SService) CreateSecret(ac v1alpha1.AdminConsole, name string, data map[string][]byte) error {
@@ -56,11 +54,6 @@ func (service K8SService) CreateSecret(ac v1alpha1.AdminConsole, name string, da
 		return logErrorAndReturn(err)
 	}
 
-	return nil
-}
-
-func (service K8SService) CreateExternalEndpoint(ac v1alpha1.AdminConsole) error {
-	log.Printf("Not implemented.")
 	return nil
 }
 
@@ -143,6 +136,11 @@ func (service K8SService) CreateServiceAccount(ac v1alpha1.AdminConsole) (*coreV
 	return consoleServiceAccount, nil
 }
 
+func (service K8SService) CreateExternalEndpoint(ac v1alpha1.AdminConsole) error {
+	log.Printf("Not implemented.")
+	return nil
+}
+
 func (service K8SService) GetConfigmap(namespace string, name string) (map[string]string, error) {
 	configmap, err := service.coreClient.ConfigMaps(namespace).Get(name, metav1.GetOptions{})
 
@@ -155,11 +153,58 @@ func (service K8SService) GetConfigmap(namespace string, name string) (map[strin
 	return configmap.Data, nil
 }
 
+func (service K8SService) GetSecret(namespace string, name string) (map[string][]byte, error) {
+	adminDBSecret, err := service.coreClient.Secrets(namespace).Get(name, metav1.GetOptions{})
+	if err != nil && k8serr.IsNotFound(err) {
+		log.Printf("Secret %v in namespace %v not found", name, namespace)
+		return nil, nil
+	} else if err != nil {
+		return nil, err
+	}
+	return adminDBSecret.Data, nil
+}
+
+func (service K8SService) GetAdminConsole(ac v1alpha1.AdminConsole) (*v1alpha1.AdminConsole, error) {
+
+	AdminConsoleInstance, err := service.edpClient.Get(ac.Name, ac.Namespace, metav1.GetOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	return AdminConsoleInstance, nil
+}
+
+func (service K8SService) GetPods(namespace string) (*coreV1Api.PodList, error) {
+
+	PodList, err := service.coreClient.Pods(namespace).List(metav1.ListOptions{})
+	if err != nil {
+		return &coreV1Api.PodList{}, err
+	}
+
+	return PodList, nil
+}
+
+func (service K8SService) UpdateAdminConsole(ac v1alpha1.AdminConsole) (*v1alpha1.AdminConsole, error) {
+	instance, err := service.edpClient.Update(&ac)
+	if err != nil {
+		return nil, err
+	}
+
+	return instance, nil
+}
+
 func (service *K8SService) Init(config *rest.Config, scheme *runtime.Scheme) error {
 	coreClient, err := coreV1Client.NewForConfig(config)
 	if err != nil {
 		return logErrorAndReturn(err)
 	}
+
+	edpClient, err := client.NewForConfig(config)
+	if err != nil {
+		return errors.Wrap(err, "EDP Client initialization failed!")
+	}
+
+	service.edpClient = *edpClient
 	service.coreClient = *coreClient
 	service.scheme = scheme
 	return nil

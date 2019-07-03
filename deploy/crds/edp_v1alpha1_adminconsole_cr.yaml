@@ -1,10 +1,15 @@
 apiVersion: edp.epam.com/v1alpha1
 kind: AdminConsole
 metadata:
-  name: example-adminconsole-1
+  name: example-adminconsole
 spec:
   image: epamedp/edp-admin-console
   version: "2.0.0"
   edpSpec:
     dnsWildcard: delivery.aws.main.edp.projects.epam.com
-    edpVersion: "2.0"
+    version: "2.0"
+  dbSettings:
+    enabled: true
+  keycloakSpec:
+    enabled: true
+    url: ""
