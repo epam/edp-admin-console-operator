@@ -6,10 +6,14 @@ spec:
   image: epamedp/edp-admin-console
   version: "2.0.0"
   edpSpec:
+    name:
     dnsWildcard: delivery.aws.main.edp.projects.epam.com
     version: "2.0"
-  dbSettings:
-    enabled: true
+  dbSpec:
+    enabled: false
+    name: ""
+    hostname: ""
+    port: ""
   keycloakSpec:
-    enabled: true
+    enabled: false
     url: ""
