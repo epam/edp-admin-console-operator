@@ -18,7 +18,7 @@ type PlatformService interface {
 	CreateServiceAccount(ac v1alpha1.AdminConsole) (*coreV1Api.ServiceAccount, error)
 	CreateSecurityContext(ac v1alpha1.AdminConsole, sa *coreV1Api.ServiceAccount) error
 	CreateUserRole(ac v1alpha1.AdminConsole) error
-	CreateUserRoleBinding(ac v1alpha1.AdminConsole, name string, binding string) error
+	CreateUserRoleBinding(ac v1alpha1.AdminConsole, name string, binding string, kind string) error
 	GetConfigmap(namespace string, name string) (map[string]string, error)
 	GetDisplayName(ac v1alpha1.AdminConsole) (string, error)
 	GetSecret(namespace string, name string) (map[string][]byte, error)

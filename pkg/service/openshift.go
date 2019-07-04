@@ -27,11 +27,14 @@ import (
 	"reflect"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"strconv"
+	"strings"
 )
 
 const (
-	AdminConsolePort = 8080
-	MemoryRequest    = "500Mi"
+	AdminConsolePort        = 8080
+	MemoryRequest           = "500Mi"
+	ClusterRole      string = "clusterrole"
+	Role             string = "role"
 )
 
 type OpenshiftService struct {
@@ -141,18 +144,6 @@ func (service OpenshiftService) CreateDeployConf(ac v1alpha1.AdminConsole) error
 								{
 									Name:  "DNS_WILDCARD",
 									Value: ac.Spec.EdpSpec.DnsWildcard,
-								},
-								{
-									Name:  "KEYCLOAK_URL",
-									Value: "",
-								},
-								{
-									Name:  "KEYCLOAK_CLIENT_ID",
-									Value: "",
-								},
-								{
-									Name:  "KEYCLOAK_CLIENT_SECRET",
-									Value: "",
 								},
 								{
 									Name: "PG_USER",
@@ -412,24 +403,11 @@ func (service OpenshiftService) CreateUserRole(ac v1alpha1.AdminConsole) error {
 	return nil
 }
 
-func (service OpenshiftService) CreateUserRoleBinding(ac v1alpha1.AdminConsole, name string, binding string) error {
-	acBindingObject := &authV1Api.RoleBinding{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      name,
-			Namespace: ac.Namespace,
-		},
-		RoleRef: coreV1Api.ObjectReference{
-			APIVersion: "rbac.authorization.k8s.io",
-			Kind:       "Role",
-			Name:       binding,
-			Namespace:  ac.Namespace,
-		},
-		Subjects: []coreV1Api.ObjectReference{
-			{
-				Kind: "ServiceAccount",
-				Name: "admin-console",
-			},
-		},
+func (service OpenshiftService) CreateUserRoleBinding(ac v1alpha1.AdminConsole, name string, binding string, kind string) error {
+
+	acBindingObject, err := getNewRoleObject(ac, name, binding, kind)
+	if err != nil {
+		return err
 	}
 
 	if err := controllerutil.SetControllerReference(&ac, acBindingObject, service.scheme); err != nil {
@@ -479,16 +457,16 @@ func (service OpenshiftService) GetDeployConf(ac v1alpha1.AdminConsole) (*appsV1
 func (service OpenshiftService) GenerateDbSettings(ac v1alpha1.AdminConsole) ([]coreV1Api.EnvVar, map[string]string) {
 	var out []coreV1Api.EnvVar
 	outMap := map[string]string{
-		"DatabaseName": "",
-		"DatabaseHostname" : "",
-		"DatabasePort": "",
+		"DatabaseName":     "",
+		"DatabaseHostname": "",
+		"DatabasePort":     "",
 	}
 
 	DatabaseName := "edp-install-wizard-db"
 	DatabaseHostname := fmt.Sprintf(DatabaseName + "." + ac.Spec.EdpSpec.Name + "-deploy-project")
 	DatabasePort := "5432"
 
-	if ac.Spec.DbSpec.Enabled{
+	if ac.Spec.DbSpec.Enabled {
 		log.Printf("Generating DB settings for Admin Console %s", ac.Name)
 		if ac.Spec.DbSpec.Name != "" {
 			DatabaseName = ac.Spec.DbSpec.Name
@@ -733,4 +711,60 @@ func findEnv(env []coreV1Api.EnvVar, name string) (coreV1Api.EnvVar, bool) {
 		}
 	}
 	return coreV1Api.EnvVar{}, false
+}
+
+func getNewRoleObject (ac v1alpha1.AdminConsole,name string, binding string, kind string) (*authV1Api.RoleBinding, error) {
+	switch strings.ToLower(kind){
+	case ClusterRole:
+		return newCluseterRoleObject(ac, name, binding), nil
+	case Role:
+		return newRoleObject(ac, name, binding), nil
+	default:
+		return &authV1Api.RoleBinding{}, errors.New(fmt.Sprintf("Wrong role kind %s! Cant't create rolebinding", kind))
+
+	}
+
+}
+
+func newCluseterRoleObject(ac v1alpha1.AdminConsole,name string, binding string) *authV1Api.RoleBinding {
+	return &authV1Api.RoleBinding{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: ac.Namespace,
+		},
+		RoleRef: coreV1Api.ObjectReference{
+			APIVersion: "rbac.authorization.k8s.io",
+			Kind:       "ClusterRole",
+			Name:       binding,
+		},
+		Subjects: []coreV1Api.ObjectReference{
+			{
+				Kind: "ServiceAccount",
+				Name: "admin-console",
+			},
+		},
+	}
+}
+
+func newRoleObject(ac v1alpha1.AdminConsole, name string, binding string) *authV1Api.RoleBinding {
+
+	return &authV1Api.RoleBinding{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: ac.Namespace,
+		},
+		RoleRef: coreV1Api.ObjectReference{
+			APIVersion: "rbac.authorization.k8s.io",
+			Kind:       "Role",
+			Name:       binding,
+			Namespace:  ac.Namespace,
+		},
+		Subjects: []coreV1Api.ObjectReference{
+			{
+				Kind: "ServiceAccount",
+				Name: "admin-console",
+			},
+		},
+	}
+
 }

@@ -46,19 +46,19 @@ func (s AdminConsoleServiceImpl) Integrate(instance v1alpha1.AdminConsole) (*v1a
 		return &instance, nil
 	}
 
-	if instance.Spec.DbSpec.Name == ""{
+	if instance.Spec.DbSpec.Name == "" {
 		instance.Spec.DbSpec.Name = adminConsoleDbSpecValue["DatabaseName"]
 	}
 
-	if instance.Spec.DbSpec.Port == ""{
+	if instance.Spec.DbSpec.Port == "" {
 		instance.Spec.DbSpec.Port = adminConsoleDbSpecValue["DatabasePort"]
 	}
 
-	if instance.Spec.DbSpec.Hostname == ""{
+	if instance.Spec.DbSpec.Hostname == "" {
 		instance.Spec.DbSpec.Hostname = adminConsoleDbSpecValue["DatabaseHostname"]
 	}
 
-	if instance.Spec.KeycloakSpec.Url == ""{
+	if instance.Spec.KeycloakSpec.Url == "" {
 		instance.Spec.KeycloakSpec.Url = adminConsoleKeycloakUrlValue
 	}
 
@@ -195,16 +195,15 @@ func (s AdminConsoleServiceImpl) Install(instance v1alpha1.AdminConsole) (*v1alp
 		return &instance, logErrorAndReturn(err)
 	}
 
-	err = s.platformService.CreateUserRoleBinding(instance, "edp-resources-admin", "edp-resources-admin")
+	err = s.platformService.CreateUserRoleBinding(instance,"edp-resources-admin","edp-resources-admin","Role")
 	if err != nil {
 		return &instance, logErrorAndReturn(err)
 	}
 
-	err = s.platformService.CreateUserRoleBinding(instance, "edp-admin", "admin")
+	err = s.platformService.CreateUserRoleBinding(instance, "edp-admin", "admin", "ClusterRole")
 	if err != nil {
 		return &instance, logErrorAndReturn(err)
 	}
-
 
 	err = s.platformService.CreateService(instance)
 	if err != nil {
