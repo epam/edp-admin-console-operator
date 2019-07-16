@@ -32,34 +32,24 @@ func (s AdminConsoleServiceImpl) Integrate(instance v1alpha1.AdminConsole) (*v1a
 
 	deployConf, err := s.platformService.GetDeployConf(instance)
 	if err != nil {
-		return &instance, nil
+		return &instance, errors.Wrap(err, fmt.Sprintf("Failed to get Deployment Config for %s!", instance.Name))
 	}
 
-	dbEnvironmentValue, adminConsoleDbSpecValue := s.platformService.GenerateDbSettings(instance)
+	dbEnvironmentValue, err := s.platformService.GenerateDbSettings(instance)
+	if err != nil {
+		return &instance, errors.Wrap(err, "Failed to generate environment variables for shared database!" )
+	}
 
-	keycloakEnvironmentValue, adminConsoleKeycloakUrlValue := s.platformService.GenerateKeycloakSettings(instance)
+	keycloakEnvironmentValue, err := s.platformService.GenerateKeycloakSettings(instance)
+	if err != nil {
+		return &instance, errors.Wrap(err, "Failed to generate environment variables for Keycloack!")
+	}
 
 	adminConsoleEnvironment := append(dbEnvironmentValue, keycloakEnvironmentValue...)
 
 	err = s.platformService.PatchDeployConfEnv(instance, deployConf, adminConsoleEnvironment)
 	if err != nil {
 		return &instance, nil
-	}
-
-	if instance.Spec.DbSpec.Name == "" {
-		instance.Spec.DbSpec.Name = adminConsoleDbSpecValue["DatabaseName"]
-	}
-
-	if instance.Spec.DbSpec.Port == "" {
-		instance.Spec.DbSpec.Port = adminConsoleDbSpecValue["DatabasePort"]
-	}
-
-	if instance.Spec.DbSpec.Hostname == "" {
-		instance.Spec.DbSpec.Hostname = adminConsoleDbSpecValue["DatabaseHostname"]
-	}
-
-	if instance.Spec.KeycloakSpec.Url == "" {
-		instance.Spec.KeycloakSpec.Url = adminConsoleKeycloakUrlValue
 	}
 
 	result, err := s.platformService.UpdateAdminConsole(instance)
@@ -159,15 +149,6 @@ func (s AdminConsoleServiceImpl) Configure(instance v1alpha1.AdminConsole) (*v1a
 
 func (s AdminConsoleServiceImpl) Install(instance v1alpha1.AdminConsole) (*v1alpha1.AdminConsole, error) {
 	log.Printf("Starting installation for Admin console")
-
-	edpName, err := s.platformService.GetDisplayName(instance)
-	if err != nil {
-		return &instance, errors.Wrap(err, "Unable to get display name!")
-	}
-
-	if instance.Spec.EdpSpec.Name != edpName {
-		instance.Spec.EdpSpec.Name = edpName
-	}
 
 	sa, err := s.platformService.CreateServiceAccount(instance)
 	if err != nil {

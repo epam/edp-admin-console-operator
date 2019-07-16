@@ -73,12 +73,6 @@ func (service OpenshiftService) CreateDeployConf(ac v1alpha1.AdminConsole) error
 	keycloakEnabled := "false"
 
 	host, err := service.getRouteUrl(ac)
-	displayName := ac.Spec.EdpSpec.Name
-
-	err = service.setDisplayName(ac, displayName)
-	if err != nil {
-		return err
-	}
 
 	labels := generateLabels(ac.Name)
 	consoleDcObject := &appsV1Api.DeploymentConfig{
@@ -124,10 +118,6 @@ func (service OpenshiftService) CreateDeployConf(ac v1alpha1.AdminConsole) error
 								{
 									Name:  "EDP_ADMIN_CONSOLE_VERSION",
 									Value: ac.Spec.Version,
-								},
-								{
-									Name:  "EDP_DEPLOY_PROJECT",
-									Value: fmt.Sprintf(displayName + "-deploy-project"),
 								},
 								{
 									Name:  "DB_ENABLED",
@@ -454,71 +444,48 @@ func (service OpenshiftService) GetDeployConf(ac v1alpha1.AdminConsole) (*appsV1
 	return result, nil
 }
 
-func (service OpenshiftService) GenerateDbSettings(ac v1alpha1.AdminConsole) ([]coreV1Api.EnvVar, map[string]string) {
+func (service OpenshiftService) GenerateDbSettings(ac v1alpha1.AdminConsole) ([]coreV1Api.EnvVar, error) {
 	var out []coreV1Api.EnvVar
-	outMap := map[string]string{
-		"DatabaseName":     "",
-		"DatabaseHostname": "",
-		"DatabasePort":     "",
-	}
-
-	DatabaseName := "edp-install-wizard-db"
-	DatabaseHostname := fmt.Sprintf(DatabaseName + "." + ac.Spec.EdpSpec.Name + "-deploy-project")
-	DatabasePort := "5432"
 
 	if ac.Spec.DbSpec.Enabled {
 		log.Printf("Generating DB settings for Admin Console %s", ac.Name)
-		if ac.Spec.DbSpec.Name != "" {
-			DatabaseName = ac.Spec.DbSpec.Name
-		}
-
-		if ac.Spec.DbSpec.Hostname != "" {
-			DatabaseHostname = ac.Spec.DbSpec.Hostname
-		}
-
-		if ac.Spec.DbSpec.Port != "" {
-			DatabasePort = ac.Spec.DbSpec.Port
+		if containsEmpty(ac.Spec.DbSpec.Name, ac.Spec.DbSpec.Hostname, ac.Spec.DbSpec.Port) {
+			return nil, errors.New("One or many DB settings field are empty!")
 		}
 
 		out = []coreV1Api.EnvVar{
 			{
 				Name:  "PG_HOST",
-				Value: DatabaseHostname,
+				Value: ac.Spec.DbSpec.Hostname,
 			},
 			{
 				Name:  "PG_PORT",
-				Value: DatabasePort,
+				Value: ac.Spec.DbSpec.Port,
 			},
 			{
 				Name:  "PG_DATABASE",
-				Value: DatabaseName,
+				Value: ac.Spec.DbSpec.Name,
 			},
 			{
 				Name:  "DB_ENABLED",
 				Value: strconv.FormatBool(ac.Spec.DbSpec.Enabled),
 			},
 		}
-		outMap["DatabaseName"] = DatabaseName
-		outMap["DatabaseHostname"] = DatabaseHostname
-		outMap["DatabasePort"] = DatabasePort
-		return out, outMap
+
+		return out, nil
 	}
 
 	log.Printf("DB_ENABLED flag in %s spec is false. Settings will not be created.", ac.Name)
-	return out, outMap
+	return out, nil
 }
 
-func (service OpenshiftService) GenerateKeycloakSettings(ac v1alpha1.AdminConsole) ([]coreV1Api.EnvVar, string) {
+func (service OpenshiftService) GenerateKeycloakSettings(ac v1alpha1.AdminConsole) ([]coreV1Api.EnvVar, error) {
 	var out []coreV1Api.EnvVar
-
-	KeycloakUrl := ""
 
 	if ac.Spec.KeycloakSpec.Enabled {
 		log.Printf("Generating Keycloak settings for Admin Console %s", ac.Name)
-		if ac.Spec.KeycloakSpec.Url != "" {
-			KeycloakUrl = ac.Spec.KeycloakSpec.Url
-		} else {
-			log.Printf("[WARNING] Keycloak URL field is empty, but integration enabled!")
+		if ac.Spec.KeycloakSpec.Url == "" {
+			return nil, errors.New(fmt.Sprintf("Keycloak URL field in %s is empty and integration enabled!", ac.Name))
 		}
 
 		out = []coreV1Api.EnvVar{
@@ -546,18 +513,18 @@ func (service OpenshiftService) GenerateKeycloakSettings(ac v1alpha1.AdminConsol
 			},
 			{
 				Name:  "KEYCLOAK_URL",
-				Value: KeycloakUrl,
+				Value: ac.Spec.KeycloakSpec.Url,
 			},
 			{
 				Name:  "KEYCLOAK_ENABLED",
 				Value: strconv.FormatBool(ac.Spec.KeycloakSpec.Enabled),
 			},
 		}
-		return out, KeycloakUrl
+		return out, nil
 	}
 
 	log.Printf("KEYCLOAK_ENABLED flag in %s spec is false. Settings will not be created.", ac.Name)
-	return out, ""
+	return out, nil
 }
 
 func (service OpenshiftService) PatchDeployConfEnv(ac v1alpha1.AdminConsole, dc *appsV1Api.DeploymentConfig, env []coreV1Api.EnvVar) error {
@@ -645,22 +612,6 @@ func (service OpenshiftService) getRouteUrl(ac v1alpha1.AdminConsole) (string, e
 	return Url, nil
 }
 
-func (service OpenshiftService) setDisplayName(ac v1alpha1.AdminConsole, displayName string) error {
-
-	if ac.Spec.EdpSpec.Name == "" {
-		adminConsole := &ac
-		adminConsole.Spec.EdpSpec.Name = displayName
-
-		_, err := service.edpClient.Update(&ac)
-		if err != nil {
-			return err
-		}
-		return nil
-	}
-
-	return nil
-}
-
 func stringInSlice(str string, list []string) bool {
 	for _, v := range list {
 		if v == str {
@@ -682,7 +633,7 @@ func selectContainer(containers []coreV1Api.Container, name string) (coreV1Api.C
 }
 
 func updateEnv(existing []coreV1Api.EnvVar, env []coreV1Api.EnvVar) []coreV1Api.EnvVar {
-	out := []coreV1Api.EnvVar{}
+	var out []coreV1Api.EnvVar
 	var covered []string
 
 	for _, e := range existing {
@@ -767,4 +718,13 @@ func newRoleObject(ac v1alpha1.AdminConsole, name string, binding string) *authV
 		},
 	}
 
+}
+
+func containsEmpty(ss ...string) bool {
+	for _, s := range ss {
+		if s == "" {
+			return true
+		}
+	}
+	return false
 }
