@@ -691,7 +691,7 @@ func newCluseterRoleObject(ac v1alpha1.AdminConsole,name string, binding string)
 		Subjects: []coreV1Api.ObjectReference{
 			{
 				Kind: "ServiceAccount",
-				Name: "admin-console",
+				Name: ac.Name,
 			},
 		},
 	}
@@ -713,7 +713,7 @@ func newRoleObject(ac v1alpha1.AdminConsole, name string, binding string) *authV
 		Subjects: []coreV1Api.ObjectReference{
 			{
 				Kind: "ServiceAccount",
-				Name: "admin-console",
+				Name: ac.Name,
 			},
 		},
 	}
