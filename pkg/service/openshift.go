@@ -516,7 +516,7 @@ func (service OpenshiftService) GenerateKeycloakSettings(ac v1alpha1.AdminConsol
 				Value: ac.Spec.KeycloakSpec.Url,
 			},
 			{
-				Name:  "KEYCLOAK_ENABLED",
+				Name:  "AUTH_KEYCLOAK_ENABLED",
 				Value: strconv.FormatBool(ac.Spec.KeycloakSpec.Enabled),
 			},
 		}
