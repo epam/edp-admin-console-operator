@@ -73,6 +73,7 @@ func (service OpenshiftService) CreateDeployConf(ac v1alpha1.AdminConsole) error
 	keycloakEnabled := "false"
 
 	host, err := service.getRouteUrl(ac)
+	secureHost := fmt.Sprintf("https://%s", host)
 
 	labels := generateLabels(ac.Name)
 	consoleDcObject := &appsV1Api.DeploymentConfig{
@@ -113,7 +114,7 @@ func (service OpenshiftService) CreateDeployConf(ac v1alpha1.AdminConsole) error
 								},
 								{
 									Name:  "HOST",
-									Value: host,
+									Value: secureHost,
 								},
 								{
 									Name:  "EDP_ADMIN_CONSOLE_VERSION",

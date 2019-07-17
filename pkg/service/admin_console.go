@@ -98,7 +98,7 @@ func (s AdminConsoleServiceImpl) ExposeConfiguration(instance v1alpha1.AdminCons
 
 	adminConsoleClientPassword := uniuri.New()
 	adminConsoleClientCredentials := map[string][]byte{
-		"username": []byte("admin-console-creator"),
+		"username": []byte("admin-console-client"),
 		"password": []byte(adminConsoleClientPassword),
 	}
 
