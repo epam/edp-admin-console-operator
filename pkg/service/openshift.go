@@ -4,6 +4,12 @@ import (
 	"admin-console-operator/pkg/apis/edp/v1alpha1"
 	"encoding/json"
 	"fmt"
+	"log"
+	"net/url"
+	"reflect"
+	"strconv"
+	"strings"
+
 	appsV1Api "github.com/openshift/api/apps/v1"
 	authV1Api "github.com/openshift/api/authorization/v1"
 	routeV1Api "github.com/openshift/api/route/v1"
@@ -15,6 +21,7 @@ import (
 	securityV1Client "github.com/openshift/client-go/security/clientset/versioned/typed/security/v1"
 	templateV1Client "github.com/openshift/client-go/template/clientset/versioned/typed/template/v1"
 	"github.com/pkg/errors"
+	"gopkg.in/yaml.v2"
 	coreV1Api "k8s.io/api/core/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -23,11 +30,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/client-go/rest"
-	"log"
-	"reflect"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
-	"strconv"
-	"strings"
 )
 
 const (
@@ -69,6 +72,11 @@ func (service OpenshiftService) AddServiceAccToSecurityContext(scc string, ac v1
 }
 
 func (service OpenshiftService) CreateDeployConf(ac v1alpha1.AdminConsole) error {
+	openshiftClusterURL, err := service.getClusterURL()
+	if err != nil {
+		return errors.Wrap(err, "Unable to build an OpenshiftClusterURL value")
+	}
+
 	dbEnabled := "false"
 	keycloakEnabled := "false"
 
@@ -135,6 +143,10 @@ func (service OpenshiftService) CreateDeployConf(ac v1alpha1.AdminConsole) error
 								{
 									Name:  "DNS_WILDCARD",
 									Value: ac.Spec.EdpSpec.DnsWildcard,
+								},
+								{
+									Name:  "OPENSHIFT_CLUSTER_URL",
+									Value: openshiftClusterURL,
 								},
 								{
 									Name: "PG_USER",
@@ -613,6 +625,60 @@ func (service OpenshiftService) getRouteUrl(ac v1alpha1.AdminConsole) (string, e
 	return Url, nil
 }
 
+// getClusterURL extracts Openshift's Cluster URL from openshift-web-console/webconsole-config ConfigMap object
+func (service OpenshiftService) getClusterURL() (string, error) {
+	namespace := "openshift-web-console"
+	name := "webconsole-config"
+	filename := "webconsole-config.yaml"
+	cm, err := service.coreClient.ConfigMaps(namespace).Get(name, metav1.GetOptions{})
+	if err != nil {
+		return "", errors.Wrapf(err, "Unable to get a ConfigMap - %s/%s", namespace, name)
+	}
+	data, ok := cm.Data[filename]
+	if !ok {
+		return "", errors.Wrapf(err, "ConfigMap %s/%s has no required data, % is missing", namespace, name, filename)
+	}
+	config, err := parseWebConsoleConfig(data)
+	if err != nil {
+		return "", errors.Wrap(err, "Unable to parse WebConsoleConfiguration")
+	}
+	clusterURL, err := stripClusterURL(config.ClusterInfo.ConsolePublicURL)
+	if err != nil {
+		return "", errors.Wrap(err, "Unable to strip a relative path from a URL")
+	}
+	// Success
+	return clusterURL, nil
+}
+
+// webConsoleConfiguration defines required properties of a data structure used by YAML-formatted payload
+// of the openshift-web-console/webconsole-config ConfigMap object
+type webConsoleConfiguration struct {
+	ClusterInfo struct {
+		ConsolePublicURL string `yaml:"consolePublicURL"`
+	} `yaml:"clusterInfo"`
+}
+
+// parseWebConsoleConfig unmarshals YAML-formatted data into webConsoleConfiguration object
+func parseWebConsoleConfig(data string) (*webConsoleConfiguration, error) {
+	config := &webConsoleConfiguration{}
+	err := yaml.Unmarshal([]byte(data), config)
+	if err != nil {
+		return nil, errors.Wrap(err, "Unable to unmarshal webConsoleConfiguration data")
+	}
+	// Success
+	return config, nil
+}
+
+// stripClusterURL returns ClusterURL as url parameter value without relative path
+func stripClusterURL(s string) (string, error) {
+	u, err := url.Parse(s)
+	if err != nil {
+		return "", errors.Wrap(err, "Unable to parse a URL string")
+	}
+	// Success
+	return fmt.Sprintf("%s://%s", u.Scheme, u.Host), nil
+}
+
 func stringInSlice(str string, list []string) bool {
 	for _, v := range list {
 		if v == str {
@@ -665,8 +731,8 @@ func findEnv(env []coreV1Api.EnvVar, name string) (coreV1Api.EnvVar, bool) {
 	return coreV1Api.EnvVar{}, false
 }
 
-func getNewRoleObject (ac v1alpha1.AdminConsole,name string, binding string, kind string) (*authV1Api.RoleBinding, error) {
-	switch strings.ToLower(kind){
+func getNewRoleObject(ac v1alpha1.AdminConsole, name string, binding string, kind string) (*authV1Api.RoleBinding, error) {
+	switch strings.ToLower(kind) {
 	case ClusterRole:
 		return newCluseterRoleObject(ac, name, binding), nil
 	case Role:
@@ -678,7 +744,7 @@ func getNewRoleObject (ac v1alpha1.AdminConsole,name string, binding string, kin
 
 }
 
-func newCluseterRoleObject(ac v1alpha1.AdminConsole,name string, binding string) *authV1Api.RoleBinding {
+func newCluseterRoleObject(ac v1alpha1.AdminConsole, name string, binding string) *authV1Api.RoleBinding {
 	return &authV1Api.RoleBinding{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
