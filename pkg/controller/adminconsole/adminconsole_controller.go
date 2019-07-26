@@ -166,7 +166,6 @@ func (r *ReconcileAdminConsole) Reconcile(request reconcile.Request) (reconcile.
 		}
 	}
 
-
 	if instance.Status.Status == StatusConfigured {
 		logPrint.Println("Admin Console component configuration has been finished")
 		err = r.updateStatus(instance, StatusExposeStart)
@@ -223,9 +222,12 @@ func (r *ReconcileAdminConsole) updateStatus(instance *edpv1alpha1.AdminConsole,
 
 	instance.Status.Status = status
 	instance.Status.LastTimeUpdated = time.Now()
-	err := r.client.Update(context.TODO(), instance)
+	err := r.client.Status().Update(context.TODO(), instance)
 	if err != nil {
-		return err
+		err := r.client.Update(context.TODO(), instance)
+		if err != nil {
+			return err
+		}
 	}
 
 	logPrint.Printf("Status for Admin Console %v has been updated to '%v' at %v.", instance.Name, status, instance.Status.LastTimeUpdated)
@@ -243,9 +245,12 @@ func (r ReconcileAdminConsole) updateAvailableStatus(instance *edpv1alpha1.Admin
 	if instance.Status.Available != value {
 		instance.Status.Available = value
 		instance.Status.LastTimeUpdated = time.Now()
-		err := r.client.Update(context.TODO(), instance)
+		err := r.client.Status().Update(context.TODO(), instance)
 		if err != nil {
-			return err
+			err := r.client.Update(context.TODO(), instance)
+			if err != nil {
+				return err
+			}
 		}
 	}
 	return nil
