@@ -380,7 +380,7 @@ func (service OpenshiftService) CreateUserRole(ac v1alpha1.AdminConsole) error {
 			{
 				APIGroups: []string{"*"},
 				Resources: []string{"codebases", "applicationbranches", "codebasebranches", "cdpipelines", "stages"},
-				Verbs:     []string{"get", "create"},
+				Verbs:     []string{"get", "create", "update"},
 			},
 		},
 	}
