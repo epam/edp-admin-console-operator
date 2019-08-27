@@ -170,6 +170,10 @@ func (service OpenshiftService) CreateDeployConf(ac v1alpha1.AdminConsole) error
 										},
 									},
 								},
+								{
+									Name:  "INTEGRATION_STRATEGIES",
+									Value: ac.Spec.EdpSpec.IntegrationStrategies,
+								},
 							},
 							Ports: []coreV1Api.ContainerPort{
 								{

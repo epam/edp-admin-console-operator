@@ -21,9 +21,10 @@ type AdminConsoleSpec struct {
 }
 
 type EdpSpec struct {
-	Version     string `json:"version"`
-	Name        string `json:"name, omitempty"`
-	DnsWildcard string `json:"dnsWildcard"`
+	Version               string `json:"version"`
+	Name                  string `json:"name, omitempty"`
+	DnsWildcard           string `json:"dnsWildcard"`
+	IntegrationStrategies string `json:"integrationStrategies, omitempty"`
 }
 
 type ExternalConfigurationItem struct {

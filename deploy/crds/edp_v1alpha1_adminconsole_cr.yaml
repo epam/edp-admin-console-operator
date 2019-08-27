@@ -9,6 +9,7 @@ spec:
     name:
     dnsWildcard: delivery.aws.main.edp.projects.epam.com
     version: "2.0"
+    integrationStrategies: "Create,Clone"
   dbSpec:
     enabled: false
     name: ""
