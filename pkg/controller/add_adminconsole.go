@@ -1,7 +1,7 @@
 package controller
 
 import (
-	"admin-console-operator/pkg/controller/adminconsole"
+	"github.com/epmd-edp/admin-console-operator/v2/pkg/controller/adminconsole"
 )
 
 func init() {

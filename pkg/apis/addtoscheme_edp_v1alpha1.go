@@ -1,7 +1,7 @@
 package apis
 
 import (
-	"admin-console-operator/pkg/apis/edp/v1alpha1"
+	"github.com/epmd-edp/admin-console-operator/v2/pkg/apis/edp/v1alpha1"
 )
 
 func init() {

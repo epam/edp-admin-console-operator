@@ -13,9 +13,9 @@ import (
 
 func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenAPIDefinition {
 	return map[string]common.OpenAPIDefinition{
-		"admin-console-operator/pkg/apis/edp/v1alpha1.AdminConsole":       schema_pkg_apis_edp_v1alpha1_AdminConsole(ref),
-		"admin-console-operator/pkg/apis/edp/v1alpha1.AdminConsoleSpec":   schema_pkg_apis_edp_v1alpha1_AdminConsoleSpec(ref),
-		"admin-console-operator/pkg/apis/edp/v1alpha1.AdminConsoleStatus": schema_pkg_apis_edp_v1alpha1_AdminConsoleStatus(ref),
+		"github.com/epmd-edp/admin-console-operator/v2/pkg/apis/edp/v1alpha1.AdminConsole":       schema_pkg_apis_edp_v1alpha1_AdminConsole(ref),
+		"github.com/epmd-edp/admin-console-operator/v2/pkg/apis/edp/v1alpha1.AdminConsoleSpec":   schema_pkg_apis_edp_v1alpha1_AdminConsoleSpec(ref),
+		"github.com/epmd-edp/admin-console-operator/v2/pkg/apis/edp/v1alpha1.AdminConsoleStatus": schema_pkg_apis_edp_v1alpha1_AdminConsoleStatus(ref),
 	}
 }
 
@@ -46,19 +46,19 @@ func schema_pkg_apis_edp_v1alpha1_AdminConsole(ref common.ReferenceCallback) com
 					},
 					"spec": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("admin-console-operator/pkg/apis/edp/v1alpha1.AdminConsoleSpec"),
+							Ref: ref("github.com/epmd-edp/admin-console-operator/v2/pkg/apis/edp/v1alpha1.AdminConsoleSpec"),
 						},
 					},
 					"status": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("admin-console-operator/pkg/apis/edp/v1alpha1.AdminConsoleStatus"),
+							Ref: ref("github.com/epmd-edp/admin-console-operator/v2/pkg/apis/edp/v1alpha1.AdminConsoleStatus"),
 						},
 					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"admin-console-operator/pkg/apis/edp/v1alpha1.AdminConsoleSpec", "admin-console-operator/pkg/apis/edp/v1alpha1.AdminConsoleStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+			"github.com/epmd-edp/admin-console-operator/v2/pkg/apis/edp/v1alpha1.AdminConsoleSpec", "github.com/epmd-edp/admin-console-operator/v2/pkg/apis/edp/v1alpha1.AdminConsoleStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
 	}
 }
 
@@ -82,17 +82,17 @@ func schema_pkg_apis_edp_v1alpha1_AdminConsoleSpec(ref common.ReferenceCallback)
 					},
 					"keycloakSpec": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("admin-console-operator/pkg/apis/edp/v1alpha1.KeycloakSpec"),
+							Ref: ref("github.com/epmd-edp/admin-console-operator/v2/pkg/apis/edp/v1alpha1.KeycloakSpec"),
 						},
 					},
 					"edpSpec": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("admin-console-operator/pkg/apis/edp/v1alpha1.EdpSpec"),
+							Ref: ref("github.com/epmd-edp/admin-console-operator/v2/pkg/apis/edp/v1alpha1.EdpSpec"),
 						},
 					},
 					"dbSpec": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("admin-console-operator/pkg/apis/edp/v1alpha1.AdminConsoleDbSettings"),
+							Ref: ref("github.com/epmd-edp/admin-console-operator/v2/pkg/apis/edp/v1alpha1.AdminConsoleDbSettings"),
 						},
 					},
 					"externalConfiguration": {
@@ -101,7 +101,7 @@ func schema_pkg_apis_edp_v1alpha1_AdminConsoleSpec(ref common.ReferenceCallback)
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
-										Ref: ref("admin-console-operator/pkg/apis/edp/v1alpha1.ExternalConfigurationItem"),
+										Ref: ref("github.com/epmd-edp/admin-console-operator/v2/pkg/apis/edp/v1alpha1.ExternalConfigurationItem"),
 									},
 								},
 							},
@@ -112,7 +112,7 @@ func schema_pkg_apis_edp_v1alpha1_AdminConsoleSpec(ref common.ReferenceCallback)
 			},
 		},
 		Dependencies: []string{
-			"admin-console-operator/pkg/apis/edp/v1alpha1.AdminConsoleDbSettings", "admin-console-operator/pkg/apis/edp/v1alpha1.EdpSpec", "admin-console-operator/pkg/apis/edp/v1alpha1.ExternalConfigurationItem", "admin-console-operator/pkg/apis/edp/v1alpha1.KeycloakSpec"},
+			"github.com/epmd-edp/admin-console-operator/v2/pkg/apis/edp/v1alpha1.AdminConsoleDbSettings", "github.com/epmd-edp/admin-console-operator/v2/pkg/apis/edp/v1alpha1.EdpSpec", "github.com/epmd-edp/admin-console-operator/v2/pkg/apis/edp/v1alpha1.ExternalConfigurationItem", "github.com/epmd-edp/admin-console-operator/v2/pkg/apis/edp/v1alpha1.KeycloakSpec"},
 	}
 }
 

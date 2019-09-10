@@ -1,11 +1,11 @@
 package adminconsole
 
 import (
-	"admin-console-operator/pkg/service"
 	"context"
+	"github.com/epmd-edp/admin-console-operator/v2/pkg/service"
 	"time"
 
-	edpv1alpha1 "admin-console-operator/pkg/apis/edp/v1alpha1"
+	edpv1alpha1 "github.com/epmd-edp/admin-console-operator/v2/pkg/apis/edp/v1alpha1"
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"

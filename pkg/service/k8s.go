@@ -1,8 +1,8 @@
 package service
 
 import (
-	"admin-console-operator/pkg/apis/edp/v1alpha1"
-	"admin-console-operator/pkg/client"
+	"github.com/epmd-edp/admin-console-operator/v2/pkg/apis/edp/v1alpha1"
+	"github.com/epmd-edp/admin-console-operator/v2/pkg/client"
 	"github.com/pkg/errors"
 	coreV1Api "k8s.io/api/core/v1"
 	k8serr "k8s.io/apimachinery/pkg/api/errors"

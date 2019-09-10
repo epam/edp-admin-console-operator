@@ -1,9 +1,9 @@
 package service
 
 import (
-	"admin-console-operator/pkg/apis/edp/v1alpha1"
 	"fmt"
 	"github.com/dchest/uniuri"
+	"github.com/epmd-edp/admin-console-operator/v2/pkg/apis/edp/v1alpha1"
 	"github.com/pkg/errors"
 	"log"
 	"reflect"
@@ -37,7 +37,7 @@ func (s AdminConsoleServiceImpl) Integrate(instance v1alpha1.AdminConsole) (*v1a
 
 	dbEnvironmentValue, err := s.platformService.GenerateDbSettings(instance)
 	if err != nil {
-		return &instance, errors.Wrap(err, "Failed to generate environment variables for shared database!" )
+		return &instance, errors.Wrap(err, "Failed to generate environment variables for shared database!")
 	}
 
 	keycloakEnvironmentValue, err := s.platformService.GenerateKeycloakSettings(instance)
@@ -176,7 +176,7 @@ func (s AdminConsoleServiceImpl) Install(instance v1alpha1.AdminConsole) (*v1alp
 		return &instance, logErrorAndReturn(err)
 	}
 
-	err = s.platformService.CreateUserRoleBinding(instance,"edp-resources-admin","edp-resources-admin","Role")
+	err = s.platformService.CreateUserRoleBinding(instance, "edp-resources-admin", "edp-resources-admin", "Role")
 	if err != nil {
 		return &instance, logErrorAndReturn(err)
 	}

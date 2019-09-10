@@ -1,9 +1,9 @@
 package service
 
 import (
-	"admin-console-operator/pkg/apis/edp/v1alpha1"
 	"encoding/json"
 	"fmt"
+	"github.com/epmd-edp/admin-console-operator/v2/pkg/apis/edp/v1alpha1"
 	"log"
 	"net/url"
 	"reflect"

@@ -1,7 +1,7 @@
 package client
 
 import (
-	"admin-console-operator/pkg/apis/edp/v1alpha1"
+	"github.com/epmd-edp/admin-console-operator/v2/pkg/apis/edp/v1alpha1"
 	_ "github.com/lib/pq"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -17,8 +17,6 @@ var SchemeGroupVersion = schema.GroupVersion{Group: "v2.edp.epam.com", Version: 
 type EdpV1Client struct {
 	crClient *rest.RESTClient
 }
-
-
 
 func NewForConfig(config *rest.Config) (*EdpV1Client, error) {
 	if err := createCrdClient(config); err != nil {
