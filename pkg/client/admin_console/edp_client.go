@@ -1,4 +1,4 @@
-package client
+package admin_console
 
 import (
 	"github.com/epmd-edp/admin-console-operator/v2/pkg/apis/edp/v1alpha1"

@@ -1,11 +1,14 @@
-package service
+package admin_console
 
 import (
 	"fmt"
 	"github.com/dchest/uniuri"
 	"github.com/epmd-edp/admin-console-operator/v2/pkg/apis/edp/v1alpha1"
+	adminConsoleSpec "github.com/epmd-edp/admin-console-operator/v2/pkg/service/admin_console/spec"
+	"github.com/epmd-edp/admin-console-operator/v2/pkg/service/platform"
+	keycloakV1Api "github.com/epmd-edp/keycloak-operator/pkg/apis/v1/v1alpha1"
+	keycloakControllerHelper "github.com/epmd-edp/keycloak-operator/pkg/controller/helper"
 	"github.com/pkg/errors"
-	"log"
 	"reflect"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -16,48 +19,71 @@ type AdminConsoleService interface {
 	Configure(instance v1alpha1.AdminConsole) (*v1alpha1.AdminConsole, error)
 	ExposeConfiguration(instance v1alpha1.AdminConsole) (*v1alpha1.AdminConsole, error)
 	Integrate(instance v1alpha1.AdminConsole) (*v1alpha1.AdminConsole, error)
+	IsDeploymentConfigReady(instance v1alpha1.AdminConsole) (bool, error)
 }
 
-func NewAdminConsoleService(platformService PlatformService, k8sClient client.Client) AdminConsoleService {
+func NewAdminConsoleService(platformService platform.PlatformService, k8sClient client.Client) AdminConsoleService {
 	return AdminConsoleServiceImpl{platformService: platformService, k8sClient: k8sClient}
 }
 
 type AdminConsoleServiceImpl struct {
 	// Providing sonar service implementation through the interface (platform abstract)
-	platformService PlatformService
+	platformService platform.PlatformService
 	k8sClient       client.Client
 }
 
 func (s AdminConsoleServiceImpl) Integrate(instance v1alpha1.AdminConsole) (*v1alpha1.AdminConsole, error) {
 
-	deployConf, err := s.platformService.GetDeployConf(instance)
-	if err != nil {
-		return &instance, errors.Wrap(err, fmt.Sprintf("Failed to get Deployment Config for %s!", instance.Name))
+	if instance.Spec.KeycloakSpec.Enabled {
+
+
+		keycloakClient, err := s.platformService.GetKeycloakClient(instance.Name, instance.Namespace)
+		if err != nil {
+			return &instance, errors.Wrap(err, "Failed to get Keycloak client data!")
+		}
+
+		keycloakRealm, err := keycloakControllerHelper.GetOwnerKeycloakRealm(s.k8sClient, keycloakClient.ObjectMeta)
+		if err != nil {
+			return &instance, nil
+		}
+
+		keycloak, err := keycloakControllerHelper.GetOwnerKeycloak(s.k8sClient, keycloakRealm.ObjectMeta)
+		if err != nil {
+			errMsg := fmt.Sprintf("Failed to get owner for %s/%s", keycloakClient.Namespace, keycloakClient.Name)
+			return &instance, errors.Wrap(err, errMsg)
+		}
+
+		deployConf, err := s.platformService.GetDeployConf(instance)
+		if err != nil {
+			return &instance, errors.Wrap(err, fmt.Sprintf("Failed to get Deployment Config for %s!", instance.Name))
+		}
+
+		dbEnvironmentValue, err := s.platformService.GenerateDbSettings(instance)
+		if err != nil {
+			return &instance, errors.Wrap(err, "Failed to generate environment variables for shared database!")
+		}
+
+		discoveryUrl := fmt.Sprintf("%s/auth/realms/%s", keycloak.Spec.Url, keycloakRealm.Spec.RealmName)
+		keycloakEnvironmentValue, err := s.platformService.GenerateKeycloakSettings(instance, discoveryUrl)
+		if err != nil {
+			return &instance, errors.Wrap(err, "Failed to generate environment variables for Keycloack!")
+		}
+
+		adminConsoleEnvironment := append(dbEnvironmentValue, keycloakEnvironmentValue...)
+
+		err = s.platformService.PatchDeployConfEnv(instance, deployConf, adminConsoleEnvironment)
+		if err != nil {
+			return &instance, nil
+		}
+
+		result, err := s.platformService.UpdateAdminConsole(instance)
+		if err != nil {
+			return &instance, errors.Wrap(err, fmt.Sprintf("Failed to update Admin Console %s!", instance.Name))
+		}
+		return result, nil
 	}
 
-	dbEnvironmentValue, err := s.platformService.GenerateDbSettings(instance)
-	if err != nil {
-		return &instance, errors.Wrap(err, "Failed to generate environment variables for shared database!")
-	}
-
-	keycloakEnvironmentValue, err := s.platformService.GenerateKeycloakSettings(instance)
-	if err != nil {
-		return &instance, errors.Wrap(err, "Failed to generate environment variables for Keycloack!")
-	}
-
-	adminConsoleEnvironment := append(dbEnvironmentValue, keycloakEnvironmentValue...)
-
-	err = s.platformService.PatchDeployConfEnv(instance, deployConf, adminConsoleEnvironment)
-	if err != nil {
-		return &instance, nil
-	}
-
-	result, err := s.platformService.UpdateAdminConsole(instance)
-	if err != nil {
-		return &instance, errors.Wrap(err, fmt.Sprintf("Failed to update Admin Console %s!", instance.Name))
-	}
-
-	return result, nil
+	return &instance, nil
 }
 
 func (s AdminConsoleServiceImpl) ExposeConfiguration(instance v1alpha1.AdminConsole) (*v1alpha1.AdminConsole, error) {
@@ -96,18 +122,34 @@ func (s AdminConsoleServiceImpl) ExposeConfiguration(instance v1alpha1.AdminCons
 		Description: "Credentials for admin console creator user",
 	}
 
-	adminConsoleClientPassword := uniuri.New()
-	adminConsoleClientCredentials := map[string][]byte{
-		"username": []byte("admin-console-client"),
-		"password": []byte(adminConsoleClientPassword),
-	}
+	if instance.Spec.KeycloakSpec.Enabled {
 
-	err = s.platformService.CreateSecret(instance, "admin-console-client", adminConsoleClientCredentials)
+		adminConsoleClientPassword := uniuri.New()
+		adminConsoleClientCredentials := map[string][]byte{
+			"username": []byte(adminConsoleSpec.DefaultKeycloakSecretName),
+			"password": []byte(adminConsoleClientPassword),
+		}
 
-	AdminConsoleClient := v1alpha1.ExternalConfigurationItem{
-		Name:        "admin-console-client",
-		Kind:        "Secret",
-		Description: "Credentials for admin console client",
+		err = s.platformService.CreateSecret(instance, adminConsoleSpec.DefaultKeycloakSecretName, adminConsoleClientCredentials)
+
+		routeObject,scheme,  err := s.platformService.GetRoute(instance.Namespace, instance.Name)
+		if err != nil {
+			return &instance, errors.Wrapf(err,"Failed to get Route %s!", instance.Name)
+		}
+		webUrl := fmt.Sprintf("%s://%s", scheme,routeObject.Spec.Host)
+		keycloakClient := keycloakV1Api.KeycloakClient{}
+		keycloakClient.Name = instance.Name
+		keycloakClient.Namespace = instance.Namespace
+		keycloakClient.Spec.ClientId = adminConsoleSpec.DefaultKeycloakSecretName
+		keycloakClient.Spec.DirectAccess = true
+		keycloakClient.Spec.WebUrl = webUrl
+		keycloakClient.Spec.Secret = adminConsoleSpec.DefaultKeycloakSecretName
+
+		err = s.platformService.CreateKeycloakClient(&keycloakClient)
+		if err != nil {
+			return &instance, errors.Wrapf(err, "Failed to create Keycloak Client!")
+		}
+
 	}
 
 	DbUserValue := v1alpha1.ExternalConfigurationItem{
@@ -119,7 +161,6 @@ func (s AdminConsoleServiceImpl) ExposeConfiguration(instance v1alpha1.AdminCons
 	newExternalConfig := []v1alpha1.ExternalConfigurationItem{
 		AdminConsoleReader,
 		AdminConsoleCreator,
-		AdminConsoleClient,
 		DbUserValue,
 	}
 
@@ -148,11 +189,10 @@ func (s AdminConsoleServiceImpl) Configure(instance v1alpha1.AdminConsole) (*v1a
 }
 
 func (s AdminConsoleServiceImpl) Install(instance v1alpha1.AdminConsole) (*v1alpha1.AdminConsole, error) {
-	log.Printf("Starting installation for Admin console")
 
-	sa, err := s.platformService.CreateServiceAccount(instance)
+	err := s.platformService.CreateServiceAccount(instance)
 	if err != nil {
-		return &instance, logErrorAndReturn(err)
+		return &instance, err
 	}
 
 	dbAdminPassword := uniuri.New()
@@ -166,39 +206,45 @@ func (s AdminConsoleServiceImpl) Install(instance v1alpha1.AdminConsole) (*v1alp
 		return &instance, errors.Wrap(err, "Failed to create admin credentials for tenant database.")
 	}
 
-	err = s.platformService.CreateSecurityContext(instance, sa)
+	err = s.platformService.CreateSecurityContext(instance)
 	if err != nil {
-		return &instance, logErrorAndReturn(err)
+		return &instance, err
 	}
 
 	err = s.platformService.CreateUserRole(instance)
 	if err != nil {
-		return &instance, logErrorAndReturn(err)
+		return &instance, err
 	}
 
 	err = s.platformService.CreateUserRoleBinding(instance, "edp-resources-admin", "edp-resources-admin", "Role")
 	if err != nil {
-		return &instance, logErrorAndReturn(err)
+		return &instance, err
 	}
 
 	err = s.platformService.CreateUserRoleBinding(instance, "edp-admin", "admin", "ClusterRole")
 	if err != nil {
-		return &instance, logErrorAndReturn(err)
+		return &instance, err
 	}
 
 	err = s.platformService.CreateService(instance)
 	if err != nil {
-		return &instance, logErrorAndReturn(err)
+		return &instance, err
 	}
 
 	err = s.platformService.CreateExternalEndpoint(instance)
 	if err != nil {
-		return &instance, logErrorAndReturn(err)
+		return &instance, err
 	}
 
-	err = s.platformService.CreateDeployConf(instance)
+	routeObject,scheme,  err := s.platformService.GetRoute(instance.Namespace, instance.Name)
 	if err != nil {
-		return &instance, logErrorAndReturn(err)
+		return &instance, errors.Wrapf(err,"Failed to get Route %s!", instance.Name)
+	}
+	webUrl := fmt.Sprintf("%s://%s", scheme,routeObject.Spec.Host)
+
+	err = s.platformService.CreateDeployConf(instance, webUrl)
+	if err != nil {
+		return &instance, err
 	}
 
 	result, err := s.platformService.UpdateAdminConsole(instance)
@@ -207,4 +253,19 @@ func (s AdminConsoleServiceImpl) Install(instance v1alpha1.AdminConsole) (*v1alp
 	}
 
 	return result, nil
+}
+
+func (s AdminConsoleServiceImpl) IsDeploymentConfigReady(instance v1alpha1.AdminConsole) (bool, error) {
+	sonarIsReady := false
+
+	sonarDc, err := s.platformService.GetDeploymentConfig(instance)
+	if err != nil {
+		return sonarIsReady, err
+	}
+
+	if sonarDc.Status.AvailableReplicas == 1 {
+		sonarIsReady = true
+	}
+
+	return sonarIsReady, nil
 }

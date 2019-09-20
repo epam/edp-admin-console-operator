@@ -2,15 +2,17 @@ package adminconsole
 
 import (
 	"context"
-	"github.com/epmd-edp/admin-console-operator/v2/pkg/service"
+	"fmt"
+	"github.com/epmd-edp/admin-console-operator/v2/pkg/service/admin_console"
+	"github.com/epmd-edp/admin-console-operator/v2/pkg/service/platform"
 	"time"
 
 	edpv1alpha1 "github.com/epmd-edp/admin-console-operator/v2/pkg/apis/edp/v1alpha1"
 
+	errorsf "github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
-	logPrint "log"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
@@ -30,6 +32,7 @@ const (
 	StatusExposeFinish     = "config exposed"
 	StatusIntegrationStart = "integration started"
 	StatusReady            = "ready"
+	DefaultRequeueTime     = 30
 )
 
 var log = logf.Log.WithName("controller_adminconsole")
@@ -49,8 +52,8 @@ func Add(mgr manager.Manager) error {
 func newReconciler(mgr manager.Manager) reconcile.Reconciler {
 	scheme := mgr.GetScheme()
 	client := mgr.GetClient()
-	platformService, _ := service.NewPlatformService(scheme)
-	adminConsoleService := service.NewAdminConsoleService(platformService, client)
+	platformService, _ := platform.NewPlatformService(scheme, &client)
+	adminConsoleService := admin_console.NewAdminConsoleService(platformService, client)
 
 	return &ReconcileAdminConsole{
 		client:  client,
@@ -95,7 +98,7 @@ type ReconcileAdminConsole struct {
 	// that reads objects from the cache and writes to the apiserver
 	client  client.Client
 	scheme  *runtime.Scheme
-	service service.AdminConsoleService
+	service admin_console.AdminConsoleService
 }
 
 // Reconcile reads that state of the cluster for a AdminConsole object and makes changes based on the state read
@@ -121,116 +124,137 @@ func (r *ReconcileAdminConsole) Reconcile(request reconcile.Request) (reconcile.
 	}
 
 	if instance.Status.Status == "" || instance.Status.Status == StatusFailed {
+		reqLogger.Info("Installation has been started")
 		err = r.updateStatus(instance, StatusInstall)
 		if err != nil {
-			r.resourceActionFailed(instance, err)
-			return reconcile.Result{RequeueAfter: 10 * time.Second}, nil
+			return reconcile.Result{RequeueAfter: DefaultRequeueTime * time.Second}, err
 		}
 	}
 
 	instance, err = r.service.Install(*instance)
 	if err != nil {
-		logPrint.Printf("[ERROR] Cannot install Admin Console %s. The reason: %s", instance.Name, err)
-		r.resourceActionFailed(instance, err)
-		return reconcile.Result{RequeueAfter: 10 * time.Second}, nil
+		err = r.updateStatus(instance, StatusFailed)
+		if err != nil {
+			return reconcile.Result{RequeueAfter: DefaultRequeueTime * time.Second}, err
+		}
+		return reconcile.Result{RequeueAfter: DefaultRequeueTime * time.Second}, errorsf.Wrapf(err, "Installation has failed")
 	}
 
 	if instance.Status.Status == StatusInstall {
-		logPrint.Printf("Installing Admin Console component has been finished")
+		log.Info("Installation has finished")
 		err = r.updateStatus(instance, StatusCreated)
 		if err != nil {
-			r.resourceActionFailed(instance, err)
-			return reconcile.Result{RequeueAfter: 10 * time.Second}, nil
+			return reconcile.Result{RequeueAfter: DefaultRequeueTime * time.Second}, err
 		}
 	}
 
+	if dcIsReady, err := r.service.IsDeploymentConfigReady(*instance); err != nil {
+		return reconcile.Result{RequeueAfter: DefaultRequeueTime * time.Second}, errorsf.Wrapf(err, "Checking if Deployment configs is ready has been failed")
+	} else if !dcIsReady {
+		reqLogger.Info("Deployment config is not ready for configuration yet")
+		return reconcile.Result{RequeueAfter: DefaultRequeueTime * time.Second}, nil
+	}
+
+
 	if instance.Status.Status == StatusCreated || instance.Status.Status == "" {
-		logPrint.Println("Admin Console configuration has been started")
+		reqLogger.Info("Configuration has started")
 		err := r.updateStatus(instance, StatusConfiguring)
 		if err != nil {
-			return reconcile.Result{RequeueAfter: 10 * time.Second}, nil
+			return reconcile.Result{RequeueAfter: DefaultRequeueTime * time.Second}, err
 		}
 	}
 
 	instance, err = r.service.Configure(*instance)
 	if err != nil {
-		logPrint.Printf("[ERROR] Cannot run Admin Console post-configuration %s %s. The reason: %s", instance.Name, instance.Spec.Version, err)
-		return reconcile.Result{RequeueAfter: 10 * time.Second}, nil
+		err = r.updateStatus(instance, StatusFailed)
+		if err != nil {
+			return reconcile.Result{RequeueAfter: DefaultRequeueTime * time.Second}, err
+		}
+		return reconcile.Result{RequeueAfter: DefaultRequeueTime * time.Second}, errorsf.Wrapf(err, "Configuration has failed")
 	}
 
 	if instance.Status.Status == StatusConfiguring {
-		logPrint.Println("Admin Console component configuration has been finished")
+		reqLogger.Info("Configuration has finished")
 		err = r.updateStatus(instance, StatusConfigured)
 		if err != nil {
-			return reconcile.Result{RequeueAfter: 10 * time.Second}, nil
+			return reconcile.Result{RequeueAfter: DefaultRequeueTime * time.Second}, err
 		}
 	}
 
 	if instance.Status.Status == StatusConfigured {
-		logPrint.Println("Admin Console component configuration has been finished")
+		reqLogger.Info("Exposing configuration has started")
 		err = r.updateStatus(instance, StatusExposeStart)
 		if err != nil {
-			return reconcile.Result{RequeueAfter: 10 * time.Second}, nil
+			return reconcile.Result{RequeueAfter: DefaultRequeueTime * time.Second}, err
 		}
 	}
 
 	instance, err = r.service.ExposeConfiguration(*instance)
 	if err != nil {
-		logPrint.Printf("[ERROR] Cannot expose configuration for Admin Console %s. The reason: %s", instance.Name, err)
-		return reconcile.Result{RequeueAfter: 10 * time.Second}, nil
+		err = r.updateStatus(instance, StatusFailed)
+		if err != nil {
+			return reconcile.Result{RequeueAfter: DefaultRequeueTime * time.Second}, err
+		}
+		return reconcile.Result{RequeueAfter: DefaultRequeueTime * time.Second}, errorsf.Wrapf(err, "Exposing configuration failed")
 	}
 
 	if instance.Status.Status == StatusExposeStart {
-		logPrint.Println("Admin Console component configuration has been finished")
+		reqLogger.Info("Exposing configuration has finished")
 		err = r.updateStatus(instance, StatusExposeFinish)
 		if err != nil {
-			return reconcile.Result{RequeueAfter: 10 * time.Second}, nil
+			return reconcile.Result{RequeueAfter: DefaultRequeueTime * time.Second}, err
 		}
 	}
 
+
 	if instance.Status.Status == StatusExposeFinish {
-		logPrint.Println("Admin Console component configuration has been finished")
+		reqLogger.Info("Integration has started")
 		err = r.updateStatus(instance, StatusIntegrationStart)
 		if err != nil {
-			return reconcile.Result{RequeueAfter: 10 * time.Second}, nil
+			return reconcile.Result{RequeueAfter: DefaultRequeueTime * time.Second}, err
 		}
 	}
 
 	instance, err = r.service.Integrate(*instance)
 	if err != nil {
-		logPrint.Printf("[ERROR] Cannot integrate Admin Console %s. The reason: %s", instance.Name, err)
-		return reconcile.Result{RequeueAfter: 10 * time.Second}, nil
+		err = r.updateStatus(instance, StatusFailed)
+		if err != nil {
+			return reconcile.Result{RequeueAfter: DefaultRequeueTime * time.Second}, err
+		}
+		return reconcile.Result{RequeueAfter: DefaultRequeueTime * time.Second}, errorsf.Wrapf(err, "Integration failed")
 	}
 
 	if instance.Status.Status == StatusIntegrationStart {
-		logPrint.Println("Admin Console component configuration has been finished")
+		reqLogger.Info("Exposing configuration has started")
 		err = r.updateStatus(instance, StatusReady)
 		if err != nil {
-			return reconcile.Result{RequeueAfter: 10 * time.Second}, nil
+			return reconcile.Result{RequeueAfter: DefaultRequeueTime * time.Second}, err
 		}
 	}
 
 	err = r.updateAvailableStatus(instance, true)
 	if err != nil {
-		r.resourceActionFailed(instance, err)
+		reqLogger.Info("Failed to update availability status")
+		return reconcile.Result{RequeueAfter: DefaultRequeueTime * time.Second}, err
 	}
 
 	return reconcile.Result{}, nil
 }
 
-func (r *ReconcileAdminConsole) updateStatus(instance *edpv1alpha1.AdminConsole, status string) error {
-
-	instance.Status.Status = status
+func (r *ReconcileAdminConsole) updateStatus(instance *edpv1alpha1.AdminConsole, newStatus string) error {
+	reqLogger := log.WithValues("Request.Namespace", instance.Namespace, "Request.Name", instance.Name).WithName("status_update")
+	currentStatus := instance.Status.Status
+	instance.Status.Status = newStatus
 	instance.Status.LastTimeUpdated = time.Now()
 	err := r.client.Status().Update(context.TODO(), instance)
 	if err != nil {
-		err := r.client.Update(context.TODO(), instance)
+		err = r.client.Update(context.TODO(), instance)
 		if err != nil {
-			return err
+			return errorsf.Wrapf(err, "Couldn't update status from '%v' to '%v'", currentStatus, newStatus)
 		}
 	}
 
-	logPrint.Printf("Status for Admin Console %v has been updated to '%v' at %v.", instance.Name, status, instance.Status.LastTimeUpdated)
+	reqLogger.Info(fmt.Sprintf("Status has been updated to '%v'", newStatus))
 	return nil
 }
 

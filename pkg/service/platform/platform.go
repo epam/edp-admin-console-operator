@@ -1,22 +1,25 @@
-package service
+package platform
 
 import (
 	"github.com/epmd-edp/admin-console-operator/v2/pkg/apis/edp/v1alpha1"
+	"github.com/epmd-edp/admin-console-operator/v2/pkg/service/platform/openshift"
+	keycloakV1Api "github.com/epmd-edp/keycloak-operator/pkg/apis/v1/v1alpha1"
 	appsV1Api "github.com/openshift/api/apps/v1"
+	routeV1Api "github.com/openshift/api/route/v1"
 	coreV1Api "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/clientcmd"
-	"log"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 type PlatformService interface {
 	AddServiceAccToSecurityContext(scc string, ac v1alpha1.AdminConsole) error
-	CreateDeployConf(ac v1alpha1.AdminConsole) error
+	CreateDeployConf(ac v1alpha1.AdminConsole, url string) error
 	CreateSecret(ac v1alpha1.AdminConsole, name string, data map[string][]byte) error
 	CreateExternalEndpoint(ac v1alpha1.AdminConsole) error
 	CreateService(ac v1alpha1.AdminConsole) error
-	CreateServiceAccount(ac v1alpha1.AdminConsole) (*coreV1Api.ServiceAccount, error)
-	CreateSecurityContext(ac v1alpha1.AdminConsole, sa *coreV1Api.ServiceAccount) error
+	CreateServiceAccount(ac v1alpha1.AdminConsole) error
+	CreateSecurityContext(ac v1alpha1.AdminConsole) error
 	CreateUserRole(ac v1alpha1.AdminConsole) error
 	CreateUserRoleBinding(ac v1alpha1.AdminConsole, name string, binding string, kind string) error
 	GetConfigmap(namespace string, name string) (map[string]string, error)
@@ -25,37 +28,31 @@ type PlatformService interface {
 	GetAdminConsole(ac v1alpha1.AdminConsole) (*v1alpha1.AdminConsole, error)
 	GetDeployConf(ac v1alpha1.AdminConsole) (*appsV1Api.DeploymentConfig, error)
 	GenerateDbSettings(ac v1alpha1.AdminConsole) ([]coreV1Api.EnvVar, error)
-	GenerateKeycloakSettings(ac v1alpha1.AdminConsole) ([]coreV1Api.EnvVar, error)
+	GenerateKeycloakSettings(ac v1alpha1.AdminConsole, keycloakUrl string) ([]coreV1Api.EnvVar, error)
 	PatchDeployConfEnv(ac v1alpha1.AdminConsole, dc *appsV1Api.DeploymentConfig, env []coreV1Api.EnvVar) error
 	UpdateAdminConsole(ac v1alpha1.AdminConsole) (*v1alpha1.AdminConsole, error)
+	GetKeycloakClient(name string, namespace string) (keycloakV1Api.KeycloakClient,error)
+	CreateKeycloakClient(kc *keycloakV1Api.KeycloakClient) error
+	GetRoute(namespace string, name string) (*routeV1Api.Route, string, error)
+	GetDeploymentConfig(instance v1alpha1.AdminConsole) (*appsV1Api.DeploymentConfig, error)
 }
 
-func NewPlatformService(scheme *runtime.Scheme) (PlatformService, error) {
+func NewPlatformService(scheme *runtime.Scheme, k8sClient *client.Client) (PlatformService, error) {
 	config := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
 		clientcmd.NewDefaultClientConfigLoadingRules(),
 		&clientcmd.ConfigOverrides{},
 	)
 	restConfig, err := config.ClientConfig()
 	if err != nil {
-		return nil, logErrorAndReturn(err)
+		return nil, err
 	}
 
-	platform := OpenshiftService{}
+	platform := openshift.OpenshiftService{}
 
-	err = platform.Init(restConfig, scheme)
+	err = platform.Init(restConfig, scheme, k8sClient)
 	if err != nil {
-		return nil, logErrorAndReturn(err)
+		return nil, err
 	}
 	return platform, nil
 }
 
-func logErrorAndReturn(err error) error {
-	log.Printf("[ERROR] %v", err)
-	return err
-}
-
-func generateLabels(name string) map[string]string {
-	return map[string]string{
-		"app": name,
-	}
-}
