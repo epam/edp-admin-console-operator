@@ -47,10 +47,18 @@ func (s AdminConsoleServiceImpl) Integrate(instance v1alpha1.AdminConsole) (*v1a
 			return &instance, nil
 		}
 
+		if keycloakRealm == nil {
+			return &instance, errors.New("Keycloak CR is not created yet!")
+		}
+
 		keycloak, err := keycloakControllerHelper.GetOwnerKeycloak(s.k8sClient, keycloakRealm.ObjectMeta)
 		if err != nil {
 			errMsg := fmt.Sprintf("Failed to get owner for %s/%s", keycloakClient.Namespace, keycloakClient.Name)
 			return &instance, errors.Wrap(err, errMsg)
+		}
+
+		if keycloak == nil {
+			return &instance, errors.New("Keycloak CR is not created yet!")
 		}
 
 		deployConf, err := s.platformService.GetDeployConf(instance)
