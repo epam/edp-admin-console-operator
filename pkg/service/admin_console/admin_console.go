@@ -36,7 +36,6 @@ func (s AdminConsoleServiceImpl) Integrate(instance v1alpha1.AdminConsole) (*v1a
 
 	if instance.Spec.KeycloakSpec.Enabled {
 
-
 		keycloakClient, err := s.platformService.GetKeycloakClient(instance.Name, instance.Namespace)
 		if err != nil {
 			return &instance, errors.Wrap(err, "Failed to get Keycloak client data!")
@@ -134,17 +133,18 @@ func (s AdminConsoleServiceImpl) ExposeConfiguration(instance v1alpha1.AdminCons
 
 		adminConsoleClientPassword := uniuri.New()
 		adminConsoleClientCredentials := map[string][]byte{
-			"username": []byte(adminConsoleSpec.DefaultKeycloakSecretName),
-			"password": []byte(adminConsoleClientPassword),
+			"username":     []byte(adminConsoleSpec.DefaultKeycloakSecretName),
+			"password":     []byte(adminConsoleClientPassword),
+			"clientSecret": []byte(adminConsoleClientPassword),
 		}
 
 		err = s.platformService.CreateSecret(instance, adminConsoleSpec.DefaultKeycloakSecretName, adminConsoleClientCredentials)
 
-		routeObject,scheme,  err := s.platformService.GetRoute(instance.Namespace, instance.Name)
+		routeObject, scheme, err := s.platformService.GetRoute(instance.Namespace, instance.Name)
 		if err != nil {
-			return &instance, errors.Wrapf(err,"Failed to get Route %s!", instance.Name)
+			return &instance, errors.Wrapf(err, "Failed to get Route %s!", instance.Name)
 		}
-		webUrl := fmt.Sprintf("%s://%s", scheme,routeObject.Spec.Host)
+		webUrl := fmt.Sprintf("%s://%s", scheme, routeObject.Spec.Host)
 		keycloakClient := keycloakV1Api.KeycloakClient{}
 		keycloakClient.Name = instance.Name
 		keycloakClient.Namespace = instance.Namespace
@@ -244,11 +244,11 @@ func (s AdminConsoleServiceImpl) Install(instance v1alpha1.AdminConsole) (*v1alp
 		return &instance, err
 	}
 
-	routeObject,scheme,  err := s.platformService.GetRoute(instance.Namespace, instance.Name)
+	routeObject, scheme, err := s.platformService.GetRoute(instance.Namespace, instance.Name)
 	if err != nil {
-		return &instance, errors.Wrapf(err,"Failed to get Route %s!", instance.Name)
+		return &instance, errors.Wrapf(err, "Failed to get Route %s!", instance.Name)
 	}
-	webUrl := fmt.Sprintf("%s://%s", scheme,routeObject.Spec.Host)
+	webUrl := fmt.Sprintf("%s://%s", scheme, routeObject.Spec.Host)
 
 	err = s.platformService.CreateDeployConf(instance, webUrl)
 	if err != nil {
