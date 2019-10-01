@@ -116,11 +116,11 @@ func (s AdminConsoleServiceImpl) ExposeConfiguration(instance v1alpha1.AdminCons
 
 		err = s.platformService.CreateSecret(instance, adminConsoleSpec.DefaultKeycloakSecretName, adminConsoleClientCredentials)
 
-		routeObject, scheme, err := s.platformService.GetRoute(instance.Namespace, instance.Name)
+		webUrl, _, err := s.platformService.GetExternalUrl(instance.Namespace, instance.Name)
 		if err != nil {
 			return &instance, errors.Wrapf(err, "Failed to get Route %s!", instance.Name)
 		}
-		webUrl := fmt.Sprintf("%s://%s", scheme, routeObject.Spec.Host)
+
 		keycloakClient := keycloakV1Api.KeycloakClient{}
 		keycloakClient.Name = instance.Name
 		keycloakClient.Namespace = instance.Namespace
@@ -202,11 +202,11 @@ func (s AdminConsoleServiceImpl) Install(instance v1alpha1.AdminConsole) (*v1alp
 		return &instance, err
 	}
 
-	routeObject, scheme, err := s.platformService.GetRoute(instance.Namespace, instance.Name)
+	webUrl, _, err := s.platformService.GetExternalUrl(instance.Namespace, instance.Name)
 	if err != nil {
 		return &instance, errors.Wrapf(err, "Failed to get Route %s!", instance.Name)
 	}
-	webUrl := fmt.Sprintf("%s://%s", scheme, routeObject.Spec.Host)
+
 
 	err = s.platformService.CreateDeployConf(instance, webUrl)
 	if err != nil {

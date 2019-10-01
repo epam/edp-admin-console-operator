@@ -5,7 +5,6 @@ import (
 	"github.com/epmd-edp/admin-console-operator/v2/pkg/service/platform/openshift"
 	keycloakV1Api "github.com/epmd-edp/keycloak-operator/pkg/apis/v1/v1alpha1"
 	appsV1Api "github.com/openshift/api/apps/v1"
-	routeV1Api "github.com/openshift/api/route/v1"
 	coreV1Api "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/clientcmd"
@@ -33,7 +32,7 @@ type PlatformService interface {
 	UpdateAdminConsole(ac v1alpha1.AdminConsole) (*v1alpha1.AdminConsole, error)
 	GetKeycloakClient(name string, namespace string) (keycloakV1Api.KeycloakClient,error)
 	CreateKeycloakClient(kc *keycloakV1Api.KeycloakClient) error
-	GetRoute(namespace string, name string) (*routeV1Api.Route, string, error)
+	GetExternalUrl(namespace string, name string) (string, string, error)
 	GetDeploymentConfig(instance v1alpha1.AdminConsole) (*appsV1Api.DeploymentConfig, error)
 }
 

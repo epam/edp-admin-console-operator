@@ -636,21 +636,23 @@ func (service OpenshiftService) getClusterURL() (string, error) {
 	return clusterURL, nil
 }
 
-// GetRoute returns Route object from Openshift
-func (service OpenshiftService) GetRoute(namespace string, name string) (*routeV1Api.Route, string, error) {
+// GetExternalUrl returns Route object from Openshift
+func (service OpenshiftService) GetExternalUrl(namespace string, name string) (string, string, error) {
 	route, err := service.routeClient.Routes(namespace).Get(name, metav1.GetOptions{})
 	if err != nil && k8serrors.IsNotFound(err) {
 		log.Info(fmt.Sprintf("Route %v in namespace %v not found", name, namespace))
-		return nil, "", nil
+		return "", "", nil
 	} else if err != nil {
-		return nil, "", err
+		return "", "", err
 	}
 
 	var routeScheme = "http"
 	if route.Spec.TLS.Termination != "" {
 		routeScheme = "https"
 	}
-	return route, routeScheme, nil
+
+	webUrl := fmt.Sprintf("%s://%s", routeScheme, route.Spec.Host)
+	return webUrl, routeScheme, nil
 }
 
 // GetDeploymentConfig gets Deployment Config from Openshift, based on data from Admin Console
