@@ -271,7 +271,7 @@ func (service OpenshiftService) CreateExternalEndpoint(ac v1alpha1.AdminConsole)
 			if err != nil {
 				return err
 			}
-			log.Info("Route %s/%s has been created", consoleRoute.Namespace, consoleRoute.Name)
+			log.Info(fmt.Sprintf("Route %s/%s has been created", consoleRoute.Namespace, consoleRoute.Name))
 			return nil
 		}
 		return err
@@ -352,7 +352,7 @@ func (service OpenshiftService) CreateSecurityContext(ac v1alpha1.AdminConsole) 
 			if err != nil {
 				return err
 			}
-			log.Info("Security Context Constraint %s has been created", consoleSCC.Name)
+			log.Info(fmt.Sprintf("Security Context Constraint %s has been created", consoleSCC.Name))
 			return nil
 		}
 	} else {
@@ -362,7 +362,7 @@ func (service OpenshiftService) CreateSecurityContext(ac v1alpha1.AdminConsole) 
 				return err
 			}
 
-			log.Info("Security Context Constraint %s has been updated", consoleSCC.Name)
+			log.Info(fmt.Sprintf("Security Context Constraint %s has been updated", consoleSCC.Name))
 		}
 	}
 
@@ -398,7 +398,7 @@ func (service OpenshiftService) CreateUserRole(ac v1alpha1.AdminConsole) error {
 			if err != nil {
 				return err
 			}
-			log.Info("Role %s for Admin Console %s created", consoleRole.Name, ac.Name)
+			log.Info(fmt.Sprintf("Role %s for Admin Console %s created", consoleRole.Name, ac.Name))
 			return nil
 		}
 		return err
@@ -428,7 +428,7 @@ func (service OpenshiftService) CreateUserRoleBinding(ac v1alpha1.AdminConsole, 
 			if err != nil {
 				return err
 			}
-			log.Info("RoleBinding %s/%s has been created", acBinding.Namespace, acBinding.Name)
+			log.Info(fmt.Sprintf("RoleBinding %s/%s has been created", acBinding.Namespace, acBinding.Name))
 			return nil
 		}
 		return err
