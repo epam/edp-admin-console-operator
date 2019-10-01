@@ -537,10 +537,19 @@ func (service OpenshiftService) GenerateKeycloakSettings(ac v1alpha1.AdminConsol
 		return out, nil
 }
 
-func (service OpenshiftService) PatchDeployConfEnv(ac v1alpha1.AdminConsole, dc *appsV1Api.DeploymentConfig, env []coreV1Api.EnvVar) error {
+func (service OpenshiftService) PatchDeploymentEnv(ac v1alpha1.AdminConsole, env []coreV1Api.EnvVar) error {
 
 	if len(env) == 0 {
 		return nil
+	}
+
+	dc, err := service.appClient.DeploymentConfigs(ac.Namespace).Get(ac.Name, metav1.GetOptions{})
+	if err != nil {
+		if k8serrors.IsNotFound(err) {
+			log.Info(fmt.Sprintf("Deployment %s not found!", ac.Name))
+			return nil
+		}
+		return err
 	}
 
 	container, err := platformHelper.SelectContainer(dc.Spec.Template.Spec.Containers, ac.Name)

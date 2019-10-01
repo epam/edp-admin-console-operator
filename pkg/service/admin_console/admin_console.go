@@ -59,11 +59,6 @@ func (s AdminConsoleServiceImpl) Integrate(instance v1alpha1.AdminConsole) (*v1a
 			return &instance, errors.New("Keycloak CR is not created yet!")
 		}
 
-		deployConf, err := s.platformService.GetDeployConf(instance)
-		if err != nil {
-			return &instance, errors.Wrap(err, fmt.Sprintf("Failed to get Deployment Config for %s!", instance.Name))
-		}
-
 		dbEnvironmentValue, err := s.platformService.GenerateDbSettings(instance)
 		if err != nil {
 			return &instance, errors.Wrap(err, "Failed to generate environment variables for shared database!")
@@ -77,7 +72,7 @@ func (s AdminConsoleServiceImpl) Integrate(instance v1alpha1.AdminConsole) (*v1a
 
 		adminConsoleEnvironment := append(dbEnvironmentValue, keycloakEnvironmentValue...)
 
-		err = s.platformService.PatchDeployConfEnv(instance, deployConf, adminConsoleEnvironment)
+		err = s.platformService.PatchDeploymentEnv(instance, adminConsoleEnvironment)
 		if err != nil {
 			return &instance, nil
 		}
