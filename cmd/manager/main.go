@@ -13,11 +13,11 @@ import (
 	"github.com/epmd-edp/admin-console-operator/v2/pkg/apis"
 	"github.com/epmd-edp/admin-console-operator/v2/pkg/controller"
 
+	keycloakApi "github.com/epmd-edp/keycloak-operator/pkg/apis"
 	"github.com/operator-framework/operator-sdk/pkg/k8sutil"
 	"github.com/operator-framework/operator-sdk/pkg/leader"
 	"github.com/operator-framework/operator-sdk/pkg/log/zap"
 	"github.com/operator-framework/operator-sdk/pkg/restmapper"
-	keycloakApi "github.com/epmd-edp/keycloak-operator/pkg/apis"
 	sdkVersion "github.com/operator-framework/operator-sdk/version"
 	"github.com/spf13/pflag"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"

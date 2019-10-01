@@ -18,7 +18,7 @@ type AdminConsoleService interface {
 	Configure(instance v1alpha1.AdminConsole) (*v1alpha1.AdminConsole, error)
 	ExposeConfiguration(instance v1alpha1.AdminConsole) (*v1alpha1.AdminConsole, error)
 	Integrate(instance v1alpha1.AdminConsole) (*v1alpha1.AdminConsole, error)
-	IsDeploymentConfigReady(instance v1alpha1.AdminConsole) (bool, error)
+	IsDeploymentReady(instance v1alpha1.AdminConsole) (bool, error)
 }
 
 func NewAdminConsoleService(platformService platform.PlatformService, k8sClient client.Client) AdminConsoleService {
@@ -202,7 +202,6 @@ func (s AdminConsoleServiceImpl) Install(instance v1alpha1.AdminConsole) (*v1alp
 		return &instance, errors.Wrapf(err, "Failed to get Route %s!", instance.Name)
 	}
 
-
 	err = s.platformService.CreateDeployConf(instance, webUrl)
 	if err != nil {
 		return &instance, err
@@ -216,17 +215,6 @@ func (s AdminConsoleServiceImpl) Install(instance v1alpha1.AdminConsole) (*v1alp
 	return result, nil
 }
 
-func (s AdminConsoleServiceImpl) IsDeploymentConfigReady(instance v1alpha1.AdminConsole) (bool, error) {
-	sonarIsReady := false
-
-	sonarDc, err := s.platformService.GetDeploymentConfig(instance)
-	if err != nil {
-		return sonarIsReady, err
-	}
-
-	if sonarDc.Status.AvailableReplicas == 1 {
-		sonarIsReady = true
-	}
-
-	return sonarIsReady, nil
+func (s AdminConsoleServiceImpl) IsDeploymentReady(instance v1alpha1.AdminConsole) (bool, error) {
+	return s.platformService.IsDeploymentReady(instance)
 }

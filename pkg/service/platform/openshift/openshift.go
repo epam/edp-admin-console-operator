@@ -450,16 +450,6 @@ func (service OpenshiftService) GetDisplayName(ac v1alpha1.AdminConsole) (string
 	return displayName, nil
 }
 
-func (service OpenshiftService) GetDeployConf(ac v1alpha1.AdminConsole) (*appsV1Api.DeploymentConfig, error) {
-
-	result, err := service.appClient.DeploymentConfigs(ac.Namespace).Get(ac.Name, metav1.GetOptions{})
-	if err != nil {
-		return &appsV1Api.DeploymentConfig{}, err
-	}
-
-	return result, nil
-}
-
 func (service OpenshiftService) GenerateDbSettings(ac v1alpha1.AdminConsole) ([]coreV1Api.EnvVar, error) {
 	var out []coreV1Api.EnvVar
 
@@ -664,12 +654,18 @@ func (service OpenshiftService) GetExternalUrl(namespace string, name string) (s
 	return webUrl, routeScheme, nil
 }
 
-// GetDeploymentConfig gets Deployment Config from Openshift, based on data from Admin Console
-func (service OpenshiftService) GetDeploymentConfig(instance v1alpha1.AdminConsole) (*appsV1Api.DeploymentConfig, error) {
+// IsDeploymentReady gets Deployment Config from Openshift, based on data from Admin Console
+func (service OpenshiftService) IsDeploymentReady(instance v1alpha1.AdminConsole) (bool, error) {
+
+
 	deploymentConfig, err := service.appClient.DeploymentConfigs(instance.Namespace).Get(instance.Name, metav1.GetOptions{})
 	if err != nil {
-		return nil, err
+		return false, err
 	}
 
-	return deploymentConfig, nil
+	if deploymentConfig.Status.UpdatedReplicas == 1 && deploymentConfig.Status.AvailableReplicas == 1 {
+		return true, nil
+	}
+
+	return false, nil
 }

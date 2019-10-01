@@ -3,8 +3,10 @@ package adminconsole
 import (
 	"context"
 	"fmt"
+	"github.com/epmd-edp/admin-console-operator/v2/pkg/controller/helper"
 	"github.com/epmd-edp/admin-console-operator/v2/pkg/service/admin_console"
 	"github.com/epmd-edp/admin-console-operator/v2/pkg/service/platform"
+	"os"
 	"time"
 
 	edpv1alpha1 "github.com/epmd-edp/admin-console-operator/v2/pkg/apis/edp/v1alpha1"
@@ -52,7 +54,13 @@ func Add(mgr manager.Manager) error {
 func newReconciler(mgr manager.Manager) reconcile.Reconciler {
 	scheme := mgr.GetScheme()
 	client := mgr.GetClient()
-	platformService, _ := platform.NewPlatformService(scheme, &client)
+	platformType := helper.GetPlatformTypeEnv()
+	platformService, err := platform.NewPlatformService(platformType, scheme, &client)
+	if err != nil {
+		log.Error(err, "")
+		os.Exit(1)
+	}
+
 	adminConsoleService := admin_console.NewAdminConsoleService(platformService, client)
 
 	return &ReconcileAdminConsole{
@@ -148,7 +156,7 @@ func (r *ReconcileAdminConsole) Reconcile(request reconcile.Request) (reconcile.
 		}
 	}
 
-	if dcIsReady, err := r.service.IsDeploymentConfigReady(*instance); err != nil {
+	if dcIsReady, err := r.service.IsDeploymentReady(*instance); err != nil {
 		return reconcile.Result{RequeueAfter: DefaultRequeueTime * time.Second}, errorsf.Wrapf(err, "Checking if Deployment configs is ready has been failed")
 	} else if !dcIsReady {
 		reqLogger.Info("Deployment config is not ready for configuration yet")

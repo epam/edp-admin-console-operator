@@ -1,14 +1,17 @@
 package platform
 
 import (
+	"fmt"
 	"github.com/epmd-edp/admin-console-operator/v2/pkg/apis/edp/v1alpha1"
+	"github.com/epmd-edp/admin-console-operator/v2/pkg/service/platform/kubernetes"
 	"github.com/epmd-edp/admin-console-operator/v2/pkg/service/platform/openshift"
 	keycloakV1Api "github.com/epmd-edp/keycloak-operator/pkg/apis/v1/v1alpha1"
-	appsV1Api "github.com/openshift/api/apps/v1"
+	"github.com/pkg/errors"
 	coreV1Api "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/clientcmd"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"strings"
 )
 
 type PlatformService interface {
@@ -25,18 +28,22 @@ type PlatformService interface {
 	GetDisplayName(ac v1alpha1.AdminConsole) (string, error)
 	GetSecret(namespace string, name string) (map[string][]byte, error)
 	GetAdminConsole(ac v1alpha1.AdminConsole) (*v1alpha1.AdminConsole, error)
-	GetDeployConf(ac v1alpha1.AdminConsole) (*appsV1Api.DeploymentConfig, error)
 	GenerateDbSettings(ac v1alpha1.AdminConsole) ([]coreV1Api.EnvVar, error)
 	GenerateKeycloakSettings(ac v1alpha1.AdminConsole, keycloakUrl string) ([]coreV1Api.EnvVar, error)
 	PatchDeploymentEnv(ac v1alpha1.AdminConsole, env []coreV1Api.EnvVar) error
 	UpdateAdminConsole(ac v1alpha1.AdminConsole) (*v1alpha1.AdminConsole, error)
-	GetKeycloakClient(name string, namespace string) (keycloakV1Api.KeycloakClient,error)
+	GetKeycloakClient(name string, namespace string) (keycloakV1Api.KeycloakClient, error)
 	CreateKeycloakClient(kc *keycloakV1Api.KeycloakClient) error
 	GetExternalUrl(namespace string, name string) (string, string, error)
-	GetDeploymentConfig(instance v1alpha1.AdminConsole) (*appsV1Api.DeploymentConfig, error)
+	IsDeploymentReady(instance v1alpha1.AdminConsole) (bool, error)
 }
 
-func NewPlatformService(scheme *runtime.Scheme, k8sClient *client.Client) (PlatformService, error) {
+const (
+	Openshift  string = "openshift"
+	Kubernetes string = "kubernetes"
+)
+
+func NewPlatformService(platformType string, scheme *runtime.Scheme, k8sClient *client.Client) (PlatformService, error) {
 	config := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
 		clientcmd.NewDefaultClientConfigLoadingRules(),
 		&clientcmd.ConfigOverrides{},
@@ -46,12 +53,26 @@ func NewPlatformService(scheme *runtime.Scheme, k8sClient *client.Client) (Platf
 		return nil, err
 	}
 
-	platform := openshift.OpenshiftService{}
-
-	err = platform.Init(restConfig, scheme, k8sClient)
-	if err != nil {
+	switch strings.ToLower(platformType) {
+	case Kubernetes:
+		platformService := kubernetes.K8SService{}
+		err = platformService.Init(restConfig, scheme, k8sClient)
+		if err != nil {
+			return nil, errors.Wrap(err, "Failed to initialize Kubernetes platform service!")
+		}
+		// Success
+		return platformService, nil
+	case Openshift:
+		platformService := openshift.OpenshiftService{}
+		err = platformService.Init(restConfig, scheme, k8sClient)
+		if err != nil {
+			return nil, errors.Wrap(err, "Failed to initialize OpenShift platform service!")
+		}
+		// Success
+		return platformService, nil
+	default:
+		// Unkown value
+		err := errors.New(fmt.Sprintf("Platform %s is not supported!", platformType))
 		return nil, err
 	}
-	return platform, nil
 }
-

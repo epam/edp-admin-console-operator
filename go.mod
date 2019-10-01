@@ -13,6 +13,7 @@ require (
 	github.com/openshift/client-go v3.9.0+incompatible
 	github.com/operator-framework/operator-sdk v0.0.0-20190530173525-d6f9cdf2f52e
 	github.com/pkg/errors v0.8.1
+	github.com/prometheus/common v0.6.0
 	github.com/spf13/pflag v1.0.3
 	github.com/totherme/unstructured v0.0.0-20170821094912-3faf2d56d8b8
 	github.com/xeipuuv/gojsonpointer v0.0.0-20190905194746-02993c407bfb // indirect

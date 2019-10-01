@@ -14,6 +14,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	appsV1Client "k8s.io/client-go/kubernetes/typed/apps/v1"
 	coreV1Client "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -28,6 +29,60 @@ type K8SService struct {
 	CoreClient            coreV1Client.CoreV1Client
 	EdpClient             admin_console.EdpV1Client
 	k8sUnstructuredClient client.Client
+	AppsClient            appsV1Client.AppsV1Client
+}
+
+func (service K8SService) AddServiceAccToSecurityContext(scc string, ac v1alpha1.AdminConsole) error {
+	return nil
+}
+
+func (service K8SService) CreateDeployConf(ac v1alpha1.AdminConsole, url string) error {
+	return nil
+}
+
+func (service K8SService) CreateSecurityContext(ac v1alpha1.AdminConsole) error {
+	return nil
+}
+
+func (service K8SService) CreateUserRole(ac v1alpha1.AdminConsole) error {
+	return nil
+}
+
+func (service K8SService) CreateUserRoleBinding(ac v1alpha1.AdminConsole, name string, binding string, kind string) error {
+	return nil
+}
+
+func (service K8SService) GetDisplayName(ac v1alpha1.AdminConsole) (string, error) {
+	return "", nil
+}
+
+func (service K8SService) GenerateDbSettings(ac v1alpha1.AdminConsole) ([]coreV1Api.EnvVar, error) {
+	return []coreV1Api.EnvVar{}, nil
+}
+
+func (service K8SService) GenerateKeycloakSettings(ac v1alpha1.AdminConsole, keycloakUrl string) ([]coreV1Api.EnvVar, error) {
+	return []coreV1Api.EnvVar{}, nil
+}
+
+func (service K8SService) PatchDeploymentEnv(ac v1alpha1.AdminConsole, env []coreV1Api.EnvVar) error {
+	return nil
+}
+
+func (service K8SService) GetExternalUrl(namespace string, name string) (string, string, error) {
+	return "", "", nil
+}
+
+func (service K8SService) IsDeploymentReady(instance v1alpha1.AdminConsole) (bool, error) {
+	deploymentConfig, err := service.AppsClient.Deployments(instance.Namespace).Get(instance.Name, metav1.GetOptions{})
+	if err != nil {
+		return false, err
+	}
+
+	if deploymentConfig.Status.UpdatedReplicas == 1 && deploymentConfig.Status.AvailableReplicas == 1 {
+		return true, nil
+	}
+
+	return false, nil
 }
 
 func (service K8SService) CreateSecret(ac v1alpha1.AdminConsole, name string, data map[string][]byte) error {
@@ -231,10 +286,16 @@ func (service *K8SService) Init(config *rest.Config, scheme *runtime.Scheme, k8s
 		return errors.Wrap(err, "EDP Client initialization failed!")
 	}
 
+	appsClient, err := appsV1Client.NewForConfig(config)
+	if err != nil {
+		return errors.New("appsV1 client initialization failed!")
+	}
+
 	service.EdpClient = *edpClient
 	service.CoreClient = *coreClient
 	service.Scheme = scheme
 	service.k8sUnstructuredClient = *k8sClient
+	service.AppsClient = *appsClient
 	return nil
 }
 
