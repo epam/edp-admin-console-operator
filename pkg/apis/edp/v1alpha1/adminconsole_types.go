@@ -16,7 +16,6 @@ type AdminConsoleSpec struct {
 	KeycloakSpec          KeycloakSpec                `json:"keycloakSpec, omitempty"`
 	EdpSpec               EdpSpec                     `json:"edpSpec"`
 	DbSpec                AdminConsoleDbSettings      `json:"dbSpec, omitempty"`
-	ExternalConfiguration []ExternalConfigurationItem `json:"externalConfiguration, omitempty"`
 	// Add custom validation using kubebuilder tags: https://book.kubebuilder.io/beyond_basics/generating_crd.html
 }
 
@@ -25,12 +24,6 @@ type EdpSpec struct {
 	Name                  string `json:"name, omitempty"`
 	DnsWildcard           string `json:"dnsWildcard"`
 	IntegrationStrategies string `json:"integrationStrategies, omitempty"`
-}
-
-type ExternalConfigurationItem struct {
-	Name        string `json:"name, omitempty"`
-	Kind        string `json:"kind, omitempty"`
-	Description string `json:"description, omitempty"`
 }
 
 type KeycloakSpec struct {

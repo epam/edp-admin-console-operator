@@ -9,7 +9,6 @@ import (
 	keycloakV1Api "github.com/epmd-edp/keycloak-operator/pkg/apis/v1/v1alpha1"
 	keycloakControllerHelper "github.com/epmd-edp/keycloak-operator/pkg/controller/helper"
 	"github.com/pkg/errors"
-	"reflect"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -106,29 +105,6 @@ func (s AdminConsoleServiceImpl) ExposeConfiguration(instance v1alpha1.AdminCons
 		return &instance, errors.Wrap(err, "Failed to create credentials for Admin Console read user.")
 	}
 
-	AdminConsoleReader := v1alpha1.ExternalConfigurationItem{
-		Name:        "admin-console-reader",
-		Kind:        "Secret",
-		Description: "Credentials for admin console reader user",
-	}
-
-	adminConsoleCreatorPassword := uniuri.New()
-	adminConsoleCreatorCredentials := map[string][]byte{
-		"username": []byte("admin-console-creator"),
-		"password": []byte(adminConsoleCreatorPassword),
-	}
-
-	err = s.platformService.CreateSecret(instance, "admin-console-creator", adminConsoleCreatorCredentials)
-	if err != nil {
-		return &instance, errors.Wrap(err, "Failed to create credentials for Admin Console read user.")
-	}
-
-	AdminConsoleCreator := v1alpha1.ExternalConfigurationItem{
-		Name:        "admin-console-creator",
-		Kind:        "Secret",
-		Description: "Credentials for admin console creator user",
-	}
-
 	if instance.Spec.KeycloakSpec.Enabled {
 
 		adminConsoleClientPassword := uniuri.New()
@@ -159,24 +135,6 @@ func (s AdminConsoleServiceImpl) ExposeConfiguration(instance v1alpha1.AdminCons
 		}
 
 	}
-
-	DbUserValue := v1alpha1.ExternalConfigurationItem{
-		Name:        "admin-console-db",
-		Kind:        "Secret",
-		Description: "Credentials for shared database",
-	}
-
-	newExternalConfig := []v1alpha1.ExternalConfigurationItem{
-		AdminConsoleReader,
-		AdminConsoleCreator,
-		DbUserValue,
-	}
-
-	if reflect.DeepEqual(newExternalConfig, instance.Spec.ExternalConfiguration) {
-		return &instance, nil
-	}
-
-	instance.Spec.ExternalConfiguration = newExternalConfig
 
 	result, err := s.platformService.UpdateAdminConsole(instance)
 	if err != nil {
