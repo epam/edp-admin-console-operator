@@ -177,12 +177,12 @@ func (s AdminConsoleServiceImpl) Install(instance v1alpha1.AdminConsole) (*v1alp
 		return &instance, err
 	}
 
-	err = s.platformService.CreateUserRoleBinding(instance, "edp-resources-admin", "edp-resources-admin", "Role")
+	err = s.platformService.CreateRoleBinding(instance, "edp-resources-admin", "edp-resources-admin")
 	if err != nil {
 		return &instance, err
 	}
 
-	err = s.platformService.CreateUserRoleBinding(instance, "edp-admin", "admin", "ClusterRole")
+	err = s.platformService.CreateClusterRoleBinding(instance, "edp-admin", "admin")
 	if err != nil {
 		return &instance, err
 	}
@@ -207,12 +207,7 @@ func (s AdminConsoleServiceImpl) Install(instance v1alpha1.AdminConsole) (*v1alp
 		return &instance, err
 	}
 
-	result, err := s.platformService.UpdateAdminConsole(instance)
-	if err != nil {
-		return &instance, errors.Wrap(err, "Failed to update Admin Console after installation!")
-	}
-
-	return result, nil
+	return &instance, nil
 }
 
 func (s AdminConsoleServiceImpl) IsDeploymentReady(instance v1alpha1.AdminConsole) (bool, error) {

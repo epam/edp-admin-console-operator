@@ -399,16 +399,72 @@ func (service OpenshiftService) CreateUserRole(ac v1alpha1.AdminConsole) error {
 		}
 		return err
 	}
-
 	return nil
 }
 
-func (service OpenshiftService) CreateUserRoleBinding(ac v1alpha1.AdminConsole, name string, binding string, kind string) error {
+func (service OpenshiftService) CreateClusterRoleBinding(ac v1alpha1.AdminConsole, name string, binding string) error {
+	acClusterBindingObject := &authV1Api.ClusterRoleBinding{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: ac.Namespace,
+		},
+		RoleRef: coreV1Api.ObjectReference{
+			APIVersion: "rbac.authorization.k8s.io",
+			Kind:       "ClusterRole",
+			Name:       binding,
+		},
+		Subjects: []coreV1Api.ObjectReference{
+			{
+				Kind: "ServiceAccount",
+				Name: ac.Name,
+			},
+		},
+	}
 
-	acBindingObject, err := platformHelper.GetNewRoleObject(ac, name, binding, kind)
-	if err != nil {
+	if err := controllerutil.SetControllerReference(&ac, acClusterBindingObject, service.Scheme); err != nil {
 		return err
 	}
+
+	acBinding, err := service.authClient.ClusterRoleBindings().Get(acClusterBindingObject.Name, metav1.GetOptions{})
+
+	if err != nil {
+		if k8serrors.IsNotFound(err) {
+			log.V(1).Info("Creating a new ClusterRoleBinding for Admin Console",
+				"Namespace", ac.Namespace, "Name", ac.Name)
+			acBinding, err = service.authClient.ClusterRoleBindings().Create(acClusterBindingObject)
+			if err != nil {
+				return err
+			}
+			log.Info("ClusterRoleBinding has been created",
+				"Namespace", acBinding.Namespace, "Name", acBinding.Name)
+			return nil
+		}
+		return err
+	}
+	return err
+}
+
+func (service OpenshiftService) CreateRoleBinding(ac v1alpha1.AdminConsole, name string, binding string) error {
+
+	acBindingObject := &authV1Api.RoleBinding{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: ac.Namespace,
+		},
+		RoleRef: coreV1Api.ObjectReference{
+			APIVersion: "rbac.authorization.k8s.io",
+			Kind:       "Role",
+			Name:       binding,
+			Namespace:  ac.Namespace,
+		},
+		Subjects: []coreV1Api.ObjectReference{
+			{
+				Kind: "ServiceAccount",
+				Name: ac.Name,
+			},
+		},
+	}
+
 
 	if err := controllerutil.SetControllerReference(&ac, acBindingObject, service.Scheme); err != nil {
 		return err
@@ -418,19 +474,18 @@ func (service OpenshiftService) CreateUserRoleBinding(ac v1alpha1.AdminConsole, 
 
 	if err != nil {
 		if k8serrors.IsNotFound(err) {
-			msg := fmt.Sprintf("Creating a new RoleBinding %s for Admin Console %s/%s", acBindingObject.Name, ac.Name, ac.Namespace)
-			log.Info(msg)
+			log.V(1).Info("Creating a new RoleBinding for Admin Console",
+				"Namespace", ac.Namespace, "Name", ac.Name)
 			acBinding, err = service.authClient.RoleBindings(acBindingObject.Namespace).Create(acBindingObject)
 			if err != nil {
 				return err
 			}
-			log.Info(fmt.Sprintf("RoleBinding %s/%s has been created", acBinding.Namespace, acBinding.Name))
+			log.Info("RoleBinding has been created", "Namespace", acBinding.Namespace, "Name", acBinding.Name)
 			return nil
 		}
 		return err
 	}
-
-	return nil
+	return err
 }
 
 func (service OpenshiftService) GetDisplayName(ac v1alpha1.AdminConsole) (string, error) {

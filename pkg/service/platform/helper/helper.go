@@ -2,19 +2,10 @@ package helper
 
 import (
 	"fmt"
-	"github.com/epmd-edp/admin-console-operator/v2/pkg/apis/edp/v1alpha1"
-	authV1Api "github.com/openshift/api/authorization/v1"
 	"github.com/pkg/errors"
 	"github.com/totherme/unstructured"
 	coreV1Api "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"net/url"
-	"strings"
-)
-
-const (
-	ClusterRole      string = "clusterrole"
-	Role             string = "role"
 )
 
 func GenerateLabels(name string) map[string]string {
@@ -113,62 +104,6 @@ func findEnv(env []coreV1Api.EnvVar, name string) (coreV1Api.EnvVar, bool) {
 		}
 	}
 	return coreV1Api.EnvVar{}, false
-}
-
-func GetNewRoleObject(ac v1alpha1.AdminConsole, name string, binding string, kind string) (*authV1Api.RoleBinding, error) {
-	switch strings.ToLower(kind) {
-	case ClusterRole:
-		return newCluseterRoleObject(ac, name, binding), nil
-	case Role:
-		return newRoleObject(ac, name, binding), nil
-	default:
-		return &authV1Api.RoleBinding{}, errors.New(fmt.Sprintf("Wrong role kind %s! Cant't create rolebinding", kind))
-
-	}
-
-}
-
-func newCluseterRoleObject(ac v1alpha1.AdminConsole, name string, binding string) *authV1Api.RoleBinding {
-	return &authV1Api.RoleBinding{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      name,
-			Namespace: ac.Namespace,
-		},
-		RoleRef: coreV1Api.ObjectReference{
-			APIVersion: "rbac.authorization.k8s.io",
-			Kind:       "ClusterRole",
-			Name:       binding,
-		},
-		Subjects: []coreV1Api.ObjectReference{
-			{
-				Kind: "ServiceAccount",
-				Name: ac.Name,
-			},
-		},
-	}
-}
-
-func newRoleObject(ac v1alpha1.AdminConsole, name string, binding string) *authV1Api.RoleBinding {
-
-	return &authV1Api.RoleBinding{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      name,
-			Namespace: ac.Namespace,
-		},
-		RoleRef: coreV1Api.ObjectReference{
-			APIVersion: "rbac.authorization.k8s.io",
-			Kind:       "Role",
-			Name:       binding,
-			Namespace:  ac.Namespace,
-		},
-		Subjects: []coreV1Api.ObjectReference{
-			{
-				Kind: "ServiceAccount",
-				Name: ac.Name,
-			},
-		},
-	}
-
 }
 
 func ContainsEmptyString(ss ...string) bool {

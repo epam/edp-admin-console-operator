@@ -13,7 +13,7 @@ import (
 	appsV1Api "k8s.io/api/apps/v1"
 	coreV1Api "k8s.io/api/core/v1"
 	"k8s.io/api/extensions/v1beta1"
-	_ "k8s.io/api/rbac/v1"
+	authV1Api "k8s.io/api/rbac/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -210,11 +210,121 @@ func (service K8SService) CreateSecurityContext(ac v1alpha1.AdminConsole) error 
 }
 
 func (service K8SService) CreateUserRole(ac v1alpha1.AdminConsole) error {
+	consoleRoleObject := &authV1Api.Role{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "edp-resources-admin",
+			Namespace: ac.Namespace,
+		},
+		Rules: []authV1Api.PolicyRule{
+			{
+				APIGroups: []string{"*"},
+				Resources: []string{"codebases", "applicationbranches", "codebasebranches", "cdpipelines", "stages"},
+				Verbs:     []string{"get", "create", "update"},
+			},
+		},
+	}
+
+	if err := controllerutil.SetControllerReference(&ac, consoleRoleObject, service.Scheme); err != nil {
+		return err
+	}
+
+	consoleRole, err := service.AuthClient.Roles(consoleRoleObject.Namespace).Get(consoleRoleObject.Name, metav1.GetOptions{})
+	if err == nil {
+		return nil
+	}
+	if !k8serrors.IsNotFound(err) {
+		return err
+	}
+	log.V(1).Info("Creating Role for Admin Console",
+		"Namespace", consoleRoleObject.Namespace, "Name", consoleRoleObject.Name)
+
+	consoleRole, err = service.AuthClient.Roles(consoleRoleObject.Namespace).Create(consoleRoleObject)
+	if err != nil {
+		return err
+	}
+	log.Info("Role for Admin Console created", "Namespace", consoleRole.Namespace, "Name", consoleRole.Name)
 	return nil
 }
 
-func (service K8SService) CreateUserRoleBinding(ac v1alpha1.AdminConsole, name string, binding string, kind string) error {
+func (service K8SService) CreateClusterRoleBinding(ac v1alpha1.AdminConsole, name string, binding string) error {
+	acClusterBindingObject := &authV1Api.ClusterRoleBinding{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: name,
+		},
+		RoleRef: authV1Api.RoleRef{
+			Kind: "ClusterRole",
+			Name: binding,
+		},
+		Subjects: []authV1Api.Subject{
+			{
+				Kind:      "ServiceAccount",
+				Name:      ac.Name,
+				Namespace: ac.Namespace,
+			},
+		},
+	}
+
+	if err := controllerutil.SetControllerReference(&ac, acClusterBindingObject, service.Scheme); err != nil {
+		return err
+	}
+
+	acBinding, err := service.AuthClient.ClusterRoleBindings().Get(acClusterBindingObject.Name, metav1.GetOptions{})
+	if err == nil {
+		return nil
+	}
+	if !k8serrors.IsNotFound(err) {
+		return err
+	}
+	log.V(1).Info("Creating a new ClusterRoleBinding for Admin Console",
+		"Namespace", ac.Namespace, "Name", ac.Name)
+	acBinding, err = service.AuthClient.ClusterRoleBindings().Create(acClusterBindingObject)
+	if err != nil {
+		return err
+	}
+	log.Info("ClusterRoleBinding has been created",
+		"Namespace", acBinding.Namespace, "Name", acBinding.Name)
 	return nil
+}
+
+func (service K8SService) CreateRoleBinding(ac v1alpha1.AdminConsole, name string, binding string) error {
+	acBindingObject := &authV1Api.RoleBinding{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: ac.Namespace,
+		},
+		RoleRef: authV1Api.RoleRef{
+			Kind: "Role",
+			Name: binding,
+		},
+		Subjects: []authV1Api.Subject{
+			{
+				Kind: "ServiceAccount",
+				Name: ac.Name,
+			},
+		},
+	}
+
+	if err := controllerutil.SetControllerReference(&ac, acBindingObject, service.Scheme); err != nil {
+		return err
+	}
+
+	acBinding, err := service.AuthClient.RoleBindings(acBindingObject.Namespace).Get(acBindingObject.Name, metav1.GetOptions{})
+
+	if err == nil {
+		return nil
+	}
+	if !k8serrors.IsNotFound(err) {
+		return err
+	}
+	log.V(1).Info("Creating a new RoleBinding for Admin Console",
+		"Namespace", ac.Namespace, "Name", ac.Name)
+	acBinding, err = service.AuthClient.RoleBindings(acBindingObject.Namespace).Create(acBindingObject)
+	if err != nil {
+		return err
+	}
+	log.Info("RoleBinding has been created", "Namespace", acBinding.Namespace, "Name", acBinding.Name)
+	return nil
+
 }
 
 func (service K8SService) GetDisplayName(ac v1alpha1.AdminConsole) (string, error) {
@@ -486,14 +596,15 @@ func (service K8SService) CreateServiceAccount(ac v1alpha1.AdminConsole) error {
 }
 
 func (service K8SService) CreateExternalEndpoint(ac v1alpha1.AdminConsole) error {
-	reqLog := log.WithValues("admin console ", ac)
-	reqLog.Info("Start creating admin console external endpoint...")
+
+	log.V(1).Info("Creating Admin Console external endpoint.",
+		"Namespace", ac.Namespace, "Name", ac.Name)
 
 	labels := platformHelper.GenerateLabels(ac.Name)
 
 	consoleService, err := service.CoreClient.Services(ac.Namespace).Get(ac.Name, metav1.GetOptions{})
 	if err != nil {
-		reqLog.Info("Console Service has not been found")
+		log.Info("Console Service has not been found")
 		return err
 	}
 
@@ -534,12 +645,13 @@ func (service K8SService) CreateExternalEndpoint(ac v1alpha1.AdminConsole) error
 
 	if err != nil {
 		if k8serrors.IsNotFound(err) {
-			reqLog.V(1).Info("Creating a new ingress for Admin Console", "ingress", consoleIngressObject, "admin console", ac)
+			log.V(1).Info("Creating a new ingress for Admin Console", "ingress", consoleIngressObject, "admin console", ac)
 			consoleIngress, err = service.ExtensionsV1Client.Ingresses(consoleIngressObject.Namespace).Create(consoleIngressObject)
 			if err != nil {
 				return err
 			}
-			reqLog.Info("Ingress has been created", "ingress", consoleIngress)
+			log.Info("Ingress has been created",
+				"Namespace", consoleIngress.Namespace, "Name", consoleIngress.Name)
 			return nil
 		}
 		return err
@@ -624,12 +736,12 @@ func (service *K8SService) Init(config *rest.Config, scheme *runtime.Scheme, k8s
 		return errors.New("appsV1 client initialization failed!")
 	}
 
-	extensionsV1Client, err := extensionsV1Client.NewForConfig(config)
+	extensionsClient, err := extensionsV1Client.NewForConfig(config)
 	if err != nil {
 		return errors.New("extensionsV1 client initialization failed!")
 	}
 
-	rbacV1Client, err := authV1Client.NewForConfig(config)
+	rbacClient, err := authV1Client.NewForConfig(config)
 	if err != nil {
 		return errors.New("extensionsV1 client initialization failed!")
 	}
@@ -639,8 +751,8 @@ func (service *K8SService) Init(config *rest.Config, scheme *runtime.Scheme, k8s
 	service.Scheme = scheme
 	service.k8sUnstructuredClient = *k8sClient
 	service.AppsClient = *appsClient
-	service.ExtensionsV1Client = *extensionsV1Client
-	service.AuthClient = *rbacV1Client
+	service.ExtensionsV1Client = *extensionsClient
+	service.AuthClient = *rbacClient
 	return nil
 }
 

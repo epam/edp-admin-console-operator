@@ -23,7 +23,8 @@ type PlatformService interface {
 	CreateServiceAccount(ac v1alpha1.AdminConsole) error
 	CreateSecurityContext(ac v1alpha1.AdminConsole) error
 	CreateUserRole(ac v1alpha1.AdminConsole) error
-	CreateUserRoleBinding(ac v1alpha1.AdminConsole, name string, binding string, kind string) error
+	CreateRoleBinding(ac v1alpha1.AdminConsole, name string, binding string) error
+	CreateClusterRoleBinding(ac v1alpha1.AdminConsole, name string, binding string) error
 	GetConfigmap(namespace string, name string) (map[string]string, error)
 	GetDisplayName(ac v1alpha1.AdminConsole) (string, error)
 	GetSecret(namespace string, name string) (map[string][]byte, error)
@@ -60,7 +61,7 @@ func NewPlatformService(platformType string, scheme *runtime.Scheme, k8sClient *
 		if err != nil {
 			return nil, errors.Wrap(err, "Failed to initialize Kubernetes platform service!")
 		}
-		// Success
+
 		return platformService, nil
 	case Openshift:
 		platformService := openshift.OpenshiftService{}
@@ -68,10 +69,9 @@ func NewPlatformService(platformType string, scheme *runtime.Scheme, k8sClient *
 		if err != nil {
 			return nil, errors.Wrap(err, "Failed to initialize OpenShift platform service!")
 		}
-		// Success
+
 		return platformService, nil
 	default:
-		// Unkown value
 		err := errors.New(fmt.Sprintf("Platform %s is not supported!", platformType))
 		return nil, err
 	}
