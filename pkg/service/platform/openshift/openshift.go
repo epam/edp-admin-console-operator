@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/epmd-edp/admin-console-operator/v2/pkg/apis/edp/v1alpha1"
+	adminConsoleSpec "github.com/epmd-edp/admin-console-operator/v2/pkg/service/admin_console/spec"
 	platformHelper "github.com/epmd-edp/admin-console-operator/v2/pkg/service/platform/helper"
 	"github.com/epmd-edp/admin-console-operator/v2/pkg/service/platform/kubernetes"
 	"reflect"
@@ -34,10 +35,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
-const (
-	AdminConsolePort = 8080
-	MemoryRequest    = "500Mi"
-)
+
 
 var log = logf.Log.WithName("platform")
 
@@ -175,7 +173,7 @@ func (service OpenshiftService) CreateDeployConf(ac v1alpha1.AdminConsole, url s
 							},
 							Ports: []coreV1Api.ContainerPort{
 								{
-									ContainerPort: AdminConsolePort,
+									ContainerPort: adminConsoleSpec.AdminConsolePort,
 								},
 							},
 							LivenessProbe: &coreV1Api.Probe{
@@ -185,7 +183,7 @@ func (service OpenshiftService) CreateDeployConf(ac v1alpha1.AdminConsole, url s
 								SuccessThreshold:    1,
 								Handler: coreV1Api.Handler{
 									TCPSocket: &coreV1Api.TCPSocketAction{
-										Port: intstr.FromInt(AdminConsolePort),
+										Port: intstr.FromInt(adminConsoleSpec.AdminConsolePort),
 									},
 								},
 							},
@@ -196,14 +194,14 @@ func (service OpenshiftService) CreateDeployConf(ac v1alpha1.AdminConsole, url s
 								SuccessThreshold:    1,
 								Handler: coreV1Api.Handler{
 									TCPSocket: &coreV1Api.TCPSocketAction{
-										Port: intstr.FromInt(AdminConsolePort),
+										Port: intstr.FromInt(adminConsoleSpec.AdminConsolePort),
 									},
 								},
 							},
 							TerminationMessagePath: "/dev/termination-log",
 							Resources: coreV1Api.ResourceRequirements{
 								Requests: map[coreV1Api.ResourceName]resource.Quantity{
-									coreV1Api.ResourceMemory: resource.MustParse(MemoryRequest),
+									coreV1Api.ResourceMemory: resource.MustParse(adminConsoleSpec.MemoryRequest),
 								},
 							},
 						},

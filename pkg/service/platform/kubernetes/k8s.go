@@ -5,12 +5,15 @@ import (
 	"fmt"
 	"github.com/epmd-edp/admin-console-operator/v2/pkg/apis/edp/v1alpha1"
 	"github.com/epmd-edp/admin-console-operator/v2/pkg/client/admin_console"
+	adminConsoleSpec "github.com/epmd-edp/admin-console-operator/v2/pkg/service/admin_console/spec"
 	platformHelper "github.com/epmd-edp/admin-console-operator/v2/pkg/service/platform/helper"
 	keycloakV1Api "github.com/epmd-edp/keycloak-operator/pkg/apis/v1/v1alpha1"
 	"github.com/pkg/errors"
+	appsV1Api "k8s.io/api/apps/v1"
 	coreV1Api "k8s.io/api/core/v1"
 	"k8s.io/api/extensions/v1beta1"
-	k8serr "k8s.io/apimachinery/pkg/api/errors"
+	k8serrors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
@@ -40,6 +43,160 @@ func (service K8SService) AddServiceAccToSecurityContext(scc string, ac v1alpha1
 }
 
 func (service K8SService) CreateDeployConf(ac v1alpha1.AdminConsole, url string) error {
+
+	dbEnabled := "false"
+	keycloakEnabled := "false"
+	var replicaCount int32 = 1
+
+	labels := platformHelper.GenerateLabels(ac.Name)
+	consoleDeployObj := &appsV1Api.Deployment{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      ac.Name,
+			Namespace: ac.Namespace,
+			Labels:    labels,
+		},
+
+		Spec: appsV1Api.DeploymentSpec{
+			Replicas: &replicaCount,
+			Selector: &metav1.LabelSelector{
+				MatchLabels: labels,
+			},
+			Template: coreV1Api.PodTemplateSpec{
+				ObjectMeta: metav1.ObjectMeta{
+					Labels: labels,
+				},
+				Spec: coreV1Api.PodSpec{
+					Containers: []coreV1Api.Container{
+						{
+							Name:            ac.Name,
+							Image:           ac.Spec.Image + ":" + ac.Spec.Version,
+							ImagePullPolicy: coreV1Api.PullAlways,
+							Env: []coreV1Api.EnvVar{
+								{
+									Name: "NAMESPACE",
+									ValueFrom: &coreV1Api.EnvVarSource{
+										FieldRef: &coreV1Api.ObjectFieldSelector{
+											FieldPath: "metadata.namespace",
+										},
+									},
+								},
+								{
+									Name:  "HOST",
+									Value: url,
+								},
+								{
+									Name:  "EDP_ADMIN_CONSOLE_VERSION",
+									Value: ac.Spec.Version,
+								},
+								{
+									Name:  "DB_ENABLED",
+									Value: dbEnabled,
+								},
+								{
+									Name:  "EDP_VERSION",
+									Value: ac.Spec.EdpSpec.Version,
+								},
+								{
+									Name:  "AUTH_KEYCLOAK_ENABLED",
+									Value: keycloakEnabled,
+								},
+								{
+									Name:  "DNS_WILDCARD",
+									Value: ac.Spec.EdpSpec.DnsWildcard,
+								},
+								{
+									Name: "PG_USER",
+									ValueFrom: &coreV1Api.EnvVarSource{
+										SecretKeyRef: &coreV1Api.SecretKeySelector{
+											LocalObjectReference: coreV1Api.LocalObjectReference{
+												Name: "admin-console-db",
+											},
+											Key: "username",
+										},
+									},
+								},
+								{
+									Name: "PG_PASSWORD",
+									ValueFrom: &coreV1Api.EnvVarSource{
+										SecretKeyRef: &coreV1Api.SecretKeySelector{
+											LocalObjectReference: coreV1Api.LocalObjectReference{
+												Name: "admin-console-db",
+											},
+											Key: "password",
+										},
+									},
+								},
+								{
+									Name:  "INTEGRATION_STRATEGIES",
+									Value: ac.Spec.EdpSpec.IntegrationStrategies,
+								},
+							},
+							Ports: []coreV1Api.ContainerPort{
+								{
+									ContainerPort: adminConsoleSpec.AdminConsolePort,
+								},
+							},
+							LivenessProbe: &coreV1Api.Probe{
+								FailureThreshold:    5,
+								InitialDelaySeconds: 180,
+								PeriodSeconds:       20,
+								SuccessThreshold:    1,
+								Handler: coreV1Api.Handler{
+									TCPSocket: &coreV1Api.TCPSocketAction{
+										Port: intstr.FromInt(adminConsoleSpec.AdminConsolePort),
+									},
+								},
+							},
+							ReadinessProbe: &coreV1Api.Probe{
+								FailureThreshold:    5,
+								InitialDelaySeconds: 60,
+								PeriodSeconds:       20,
+								SuccessThreshold:    1,
+								Handler: coreV1Api.Handler{
+									TCPSocket: &coreV1Api.TCPSocketAction{
+										Port: intstr.FromInt(adminConsoleSpec.AdminConsolePort),
+									},
+								},
+							},
+							TerminationMessagePath: "/dev/termination-log",
+							Resources: coreV1Api.ResourceRequirements{
+								Requests: map[coreV1Api.ResourceName]resource.Quantity{
+									coreV1Api.ResourceMemory: resource.MustParse(adminConsoleSpec.MemoryRequest),
+								},
+							},
+						},
+					},
+					ServiceAccountName: ac.Name,
+				},
+			},
+			Strategy: appsV1Api.DeploymentStrategy{
+				Type: appsV1Api.RollingUpdateDeploymentStrategyType,
+			},
+		},
+	}
+
+	if err := controllerutil.SetControllerReference(&ac, consoleDeployObj, service.Scheme); err != nil {
+		return err
+	}
+
+	consoleDeployment, err := service.AppsClient.Deployments(consoleDeployObj.Namespace).Get(consoleDeployObj.Name, metav1.GetOptions{})
+	if err != nil {
+		if k8serrors.IsNotFound(err) {
+			log.V(1).Info("Creating Deployment for Admin Console",
+				"Namespace", consoleDeployObj.Namespace, "Name", consoleDeployObj.Name)
+
+			consoleDeployment, err = service.AppsClient.Deployments(consoleDeployObj.Namespace).Create(consoleDeployObj)
+			if err != nil {
+				return err
+			}
+			log.Info("Deployment has been created",
+				"Namespace", consoleDeployment.Name, "Name", consoleDeployment.Name)
+			
+			return nil
+		}
+		return err
+	}
+
 	return nil
 }
 
@@ -108,7 +265,7 @@ func (service K8SService) CreateSecret(ac v1alpha1.AdminConsole, name string, da
 	consoleSecret, err := service.CoreClient.Secrets(consoleSecretObject.Namespace).Get(consoleSecretObject.Name, metav1.GetOptions{})
 
 	if err != nil {
-		if k8serr.IsNotFound(err) {
+		if k8serrors.IsNotFound(err) {
 			msg := fmt.Sprintf("Creating a new Secret %s/%s for Admin Console", consoleSecretObject.Namespace, consoleSecretObject.Name)
 			log.V(1).Info(msg)
 			consoleSecret, err = service.CoreClient.Secrets(consoleSecretObject.Namespace).Create(consoleSecretObject)
@@ -153,7 +310,7 @@ func (service K8SService) CreateService(ac v1alpha1.AdminConsole) error {
 
 	consoleService, err := service.CoreClient.Services(ac.Namespace).Get(ac.Name, metav1.GetOptions{})
 	if err != nil {
-		if k8serr.IsNotFound(err) {
+		if k8serrors.IsNotFound(err) {
 			msg := fmt.Sprintf("Creating a new service %s/%s for Admin Console %s",
 				consoleServiceObject.Namespace, consoleServiceObject.Name, ac.Name)
 			log.V(1).Info(msg)
@@ -192,7 +349,7 @@ func (service K8SService) CreateServiceAccount(ac v1alpha1.AdminConsole) error {
 	consoleServiceAccount, err := service.CoreClient.ServiceAccounts(consoleServiceAccountObject.Namespace).Get(consoleServiceAccountObject.Name, metav1.GetOptions{})
 
 	if err != nil {
-		if k8serr.IsNotFound(err) {
+		if k8serrors.IsNotFound(err) {
 			msg := fmt.Sprintf("Creating ServiceAccount %s/%s for Admin Console %s", consoleServiceAccountObject.Namespace, consoleServiceAccountObject.Name, ac.Name)
 			log.V(1).Info(msg)
 			consoleServiceAccount, err = service.CoreClient.ServiceAccounts(consoleServiceAccountObject.Namespace).Create(consoleServiceAccountObject)
@@ -260,7 +417,7 @@ func (service K8SService) CreateExternalEndpoint(ac v1alpha1.AdminConsole) error
 	consoleIngress, err := service.ExtensionsV1Client.Ingresses(consoleIngressObject.Namespace).Get(consoleIngressObject.Name, metav1.GetOptions{})
 
 	if err != nil {
-		if k8serr.IsNotFound(err) {
+		if k8serrors.IsNotFound(err) {
 			reqLog.V(1).Info("Creating a new ingress for Admin Console", "ingress", consoleIngressObject, "admin console", ac)
 			consoleIngress, err = service.ExtensionsV1Client.Ingresses(consoleIngressObject.Namespace).Create(consoleIngressObject)
 			if err != nil {
@@ -280,15 +437,15 @@ func (service K8SService) GetConfigmap(namespace string, name string) (map[strin
 	configmap, err := service.CoreClient.ConfigMaps(namespace).Get(name, metav1.GetOptions{})
 
 	if err != nil {
-		if k8serr.IsNotFound(err) {
+		if k8serrors.IsNotFound(err) {
 			log.Info(fmt.Sprintf("Config map %v in namespace %v not found", name, namespace))
 			return out, nil
 		}
-
+		// Some error occurred
 		return out, err
 	}
 	out = configmap.Data
-
+	// Success
 	return out, nil
 }
 
@@ -296,7 +453,7 @@ func (service K8SService) GetSecret(namespace string, name string) (map[string][
 	out := map[string][]byte{}
 	adminDBSecret, err := service.CoreClient.Secrets(namespace).Get(name, metav1.GetOptions{})
 	if err != nil {
-		if k8serr.IsNotFound(err) {
+		if k8serrors.IsNotFound(err) {
 			log.Info(fmt.Sprintf("Secret %v in namespace %v not found", name, namespace))
 			return nil, nil
 		}
@@ -373,7 +530,7 @@ func (service K8SService) CreateKeycloakClient(kc *keycloakV1Api.KeycloakClient)
 
 	err := service.k8sUnstructuredClient.Get(context.TODO(), nsn, kc)
 	if err != nil {
-		if k8serr.IsNotFound(err) {
+		if k8serrors.IsNotFound(err) {
 			err := service.k8sUnstructuredClient.Create(context.TODO(), kc)
 			if err != nil {
 				return errors.Wrapf(err, "Failed to create Keycloak client %s/%s", kc.Namespace, kc.Name)
