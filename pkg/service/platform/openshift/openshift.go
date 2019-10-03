@@ -35,8 +35,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
-
-
 var log = logf.Log.WithName("platform")
 
 type OpenshiftService struct {
@@ -486,43 +484,42 @@ func (service OpenshiftService) GenerateDbSettings(ac v1alpha1.AdminConsole) ([]
 func (service OpenshiftService) GenerateKeycloakSettings(ac v1alpha1.AdminConsole, keycloakUrl string) ([]coreV1Api.EnvVar, error) {
 	var out []coreV1Api.EnvVar
 
-		log.V(1).Info(fmt.Sprintf("Generating Keycloak settings for Admin Console %s", ac.Name))
+	log.V(1).Info(fmt.Sprintf("Generating Keycloak settings for Admin Console %s", ac.Name))
 
-
-		out = []coreV1Api.EnvVar{
-			{
-				Name: "KEYCLOAK_CLIENT_ID",
-				ValueFrom: &coreV1Api.EnvVarSource{
-					SecretKeyRef: &coreV1Api.SecretKeySelector{
-						LocalObjectReference: coreV1Api.LocalObjectReference{
-							Name: "admin-console-client",
-						},
-						Key: "username",
+	out = []coreV1Api.EnvVar{
+		{
+			Name: "KEYCLOAK_CLIENT_ID",
+			ValueFrom: &coreV1Api.EnvVarSource{
+				SecretKeyRef: &coreV1Api.SecretKeySelector{
+					LocalObjectReference: coreV1Api.LocalObjectReference{
+						Name: "admin-console-client",
 					},
+					Key: "username",
 				},
 			},
-			{
-				Name: "KEYCLOAK_CLIENT_SECRET",
-				ValueFrom: &coreV1Api.EnvVarSource{
-					SecretKeyRef: &coreV1Api.SecretKeySelector{
-						LocalObjectReference: coreV1Api.LocalObjectReference{
-							Name: "admin-console-client",
-						},
-						Key: "password",
+		},
+		{
+			Name: "KEYCLOAK_CLIENT_SECRET",
+			ValueFrom: &coreV1Api.EnvVarSource{
+				SecretKeyRef: &coreV1Api.SecretKeySelector{
+					LocalObjectReference: coreV1Api.LocalObjectReference{
+						Name: "admin-console-client",
 					},
+					Key: "password",
 				},
 			},
-			{
-				Name:  "KEYCLOAK_URL",
-				Value: keycloakUrl,
-			},
-			{
-				Name:  "AUTH_KEYCLOAK_ENABLED",
-				Value: strconv.FormatBool(ac.Spec.KeycloakSpec.Enabled),
-			},
-		}
+		},
+		{
+			Name:  "KEYCLOAK_URL",
+			Value: keycloakUrl,
+		},
+		{
+			Name:  "AUTH_KEYCLOAK_ENABLED",
+			Value: strconv.FormatBool(ac.Spec.KeycloakSpec.Enabled),
+		},
+	}
 
-		return out, nil
+	return out, nil
 }
 
 func (service OpenshiftService) PatchDeploymentEnv(ac v1alpha1.AdminConsole, env []coreV1Api.EnvVar) error {
@@ -654,7 +651,6 @@ func (service OpenshiftService) GetExternalUrl(namespace string, name string) (s
 
 // IsDeploymentReady gets Deployment Config from Openshift, based on data from Admin Console
 func (service OpenshiftService) IsDeploymentReady(instance v1alpha1.AdminConsole) (bool, error) {
-
 
 	deploymentConfig, err := service.appClient.DeploymentConfigs(instance.Namespace).Get(instance.Name, metav1.GetOptions{})
 	if err != nil {

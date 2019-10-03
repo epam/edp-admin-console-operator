@@ -2,6 +2,7 @@ package kubernetes
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"github.com/epmd-edp/admin-console-operator/v2/pkg/apis/edp/v1alpha1"
 	"github.com/epmd-edp/admin-console-operator/v2/pkg/client/admin_console"
@@ -12,6 +13,7 @@ import (
 	appsV1Api "k8s.io/api/apps/v1"
 	coreV1Api "k8s.io/api/core/v1"
 	"k8s.io/api/extensions/v1beta1"
+	_ "k8s.io/api/rbac/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -21,10 +23,12 @@ import (
 	appsV1Client "k8s.io/client-go/kubernetes/typed/apps/v1"
 	coreV1Client "k8s.io/client-go/kubernetes/typed/core/v1"
 	extensionsV1Client "k8s.io/client-go/kubernetes/typed/extensions/v1beta1"
+	authV1Client "k8s.io/client-go/kubernetes/typed/rbac/v1"
 	"k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
+	"strconv"
 )
 
 var log = logf.Log.WithName("platform")
@@ -36,6 +40,7 @@ type K8SService struct {
 	EdpClient             admin_console.EdpV1Client
 	k8sUnstructuredClient client.Client
 	AppsClient            appsV1Client.AppsV1Client
+	AuthClient            authV1Client.RbacV1Client
 }
 
 func (service K8SService) AddServiceAccToSecurityContext(scc string, ac v1alpha1.AdminConsole) error {
@@ -191,7 +196,7 @@ func (service K8SService) CreateDeployConf(ac v1alpha1.AdminConsole, url string)
 			}
 			log.Info("Deployment has been created",
 				"Namespace", consoleDeployment.Name, "Name", consoleDeployment.Name)
-			
+
 			return nil
 		}
 		return err
@@ -217,19 +222,132 @@ func (service K8SService) GetDisplayName(ac v1alpha1.AdminConsole) (string, erro
 }
 
 func (service K8SService) GenerateDbSettings(ac v1alpha1.AdminConsole) ([]coreV1Api.EnvVar, error) {
-	return []coreV1Api.EnvVar{}, nil
+
+	if !ac.Spec.DbSpec.Enabled {
+		return []coreV1Api.EnvVar{}, nil
+	}
+
+	log.V(1).Info("Generating DB settings for Admin Console ",
+		"Namespace", ac.Namespace, "Name", ac.Name)
+	if platformHelper.ContainsEmptyString(ac.Spec.DbSpec.Name, ac.Spec.DbSpec.Hostname, ac.Spec.DbSpec.Port) {
+		return nil, errors.New("One or many DB settings field are empty!")
+	}
+
+	return []coreV1Api.EnvVar{
+		{
+			Name:  "PG_HOST",
+			Value: ac.Spec.DbSpec.Hostname,
+		},
+		{
+			Name:  "PG_PORT",
+			Value: ac.Spec.DbSpec.Port,
+		},
+		{
+			Name:  "PG_DATABASE",
+			Value: ac.Spec.DbSpec.Name,
+		},
+		{
+			Name:  "DB_ENABLED",
+			Value: strconv.FormatBool(ac.Spec.DbSpec.Enabled),
+		},
+	}, nil
+
 }
 
 func (service K8SService) GenerateKeycloakSettings(ac v1alpha1.AdminConsole, keycloakUrl string) ([]coreV1Api.EnvVar, error) {
-	return []coreV1Api.EnvVar{}, nil
+
+	log.V(1).Info("Generating Keycloak settings for Admin Console",
+		"Namespace", ac.Namespace, "Name", ac.Name)
+
+	if !ac.Spec.KeycloakSpec.Enabled {
+		return []coreV1Api.EnvVar{}, nil
+	}
+
+	return []coreV1Api.EnvVar{
+		{
+			Name: "KEYCLOAK_CLIENT_ID",
+			ValueFrom: &coreV1Api.EnvVarSource{
+				SecretKeyRef: &coreV1Api.SecretKeySelector{
+					LocalObjectReference: coreV1Api.LocalObjectReference{
+						Name: "admin-console-client",
+					},
+					Key: "username",
+				},
+			},
+		},
+		{
+			Name: "KEYCLOAK_CLIENT_SECRET",
+			ValueFrom: &coreV1Api.EnvVarSource{
+				SecretKeyRef: &coreV1Api.SecretKeySelector{
+					LocalObjectReference: coreV1Api.LocalObjectReference{
+						Name: "admin-console-client",
+					},
+					Key: "password",
+				},
+			},
+		},
+		{
+			Name:  "KEYCLOAK_URL",
+			Value: keycloakUrl,
+		},
+		{
+			Name:  "AUTH_KEYCLOAK_ENABLED",
+			Value: strconv.FormatBool(ac.Spec.KeycloakSpec.Enabled),
+		},
+	}, nil
 }
 
 func (service K8SService) PatchDeploymentEnv(ac v1alpha1.AdminConsole, env []coreV1Api.EnvVar) error {
-	return nil
+	if len(env) == 0 {
+		return nil
+	}
+
+	dc, err := service.AppsClient.Deployments(ac.Namespace).Get(ac.Name, metav1.GetOptions{})
+	if err != nil {
+		if k8serrors.IsNotFound(err) {
+			log.Info("Deployment not found!", "Namespace", ac.Namespace, "Name", ac.Name)
+			return nil
+		}
+		return err
+	}
+
+	container, err := platformHelper.SelectContainer(dc.Spec.Template.Spec.Containers, ac.Name)
+	if err != nil {
+		return err
+	}
+
+	container.Env = platformHelper.UpdateEnv(container.Env, env)
+
+	dc.Spec.Template.Spec.Containers = append(dc.Spec.Template.Spec.Containers, container)
+
+	jsonDc, err := json.Marshal(dc)
+	if err != nil {
+		return err
+	}
+
+	_, err = service.AppsClient.Deployments(dc.Namespace).Patch(dc.Name, types.StrategicMergePatchType, jsonDc)
+	if err != nil {
+		return err
+	}
+
+	return err
 }
 
 func (service K8SService) GetExternalUrl(namespace string, name string) (string, string, error) {
-	return "", "", nil
+	ingress, err := service.ExtensionsV1Client.Ingresses(namespace).Get(name, metav1.GetOptions{})
+	if err != nil {
+		if k8serrors.IsNotFound(err) {
+			log.Info("Ingress not found", "Namespace", namespace, "Name", name)
+			return "", "", nil
+		}
+		return "", "", err
+	}
+
+	host := ingress.Spec.Rules[0].Host
+	routeScheme := "https"
+
+	webUrl := fmt.Sprintf("%s://%s", routeScheme, host)
+	return webUrl, routeScheme, nil
 }
 
 func (service K8SService) IsDeploymentReady(instance v1alpha1.AdminConsole) (bool, error) {
@@ -319,14 +437,12 @@ func (service K8SService) CreateService(ac v1alpha1.AdminConsole) error {
 				return err
 			}
 			log.Info(fmt.Sprintf("Service %s/%s has been created", consoleService.Namespace, consoleService.Name))
-			// Created successfully
+
 			return nil
 		}
-		// Some error occurred
 		return err
 	}
 
-	// Nothing to do
 	return nil
 }
 
@@ -513,12 +629,18 @@ func (service *K8SService) Init(config *rest.Config, scheme *runtime.Scheme, k8s
 		return errors.New("extensionsV1 client initialization failed!")
 	}
 
+	rbacV1Client, err := authV1Client.NewForConfig(config)
+	if err != nil {
+		return errors.New("extensionsV1 client initialization failed!")
+	}
+
 	service.EdpClient = *edpClient
 	service.CoreClient = *coreClient
 	service.Scheme = scheme
 	service.k8sUnstructuredClient = *k8sClient
 	service.AppsClient = *appsClient
 	service.ExtensionsV1Client = *extensionsV1Client
+	service.AuthClient = *rbacV1Client
 	return nil
 }
 
