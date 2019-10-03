@@ -9,6 +9,7 @@ import (
 	keycloakV1Api "github.com/epmd-edp/keycloak-operator/pkg/apis/v1/v1alpha1"
 	"github.com/pkg/errors"
 	coreV1Api "k8s.io/api/core/v1"
+	"k8s.io/api/extensions/v1beta1"
 	k8serr "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -16,6 +17,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 	appsV1Client "k8s.io/client-go/kubernetes/typed/apps/v1"
 	coreV1Client "k8s.io/client-go/kubernetes/typed/core/v1"
+	extensionsV1Client "k8s.io/client-go/kubernetes/typed/extensions/v1beta1"
 	"k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -27,6 +29,7 @@ var log = logf.Log.WithName("platform")
 type K8SService struct {
 	Scheme                *runtime.Scheme
 	CoreClient            coreV1Client.CoreV1Client
+	ExtensionsV1Client    extensionsV1Client.ExtensionsV1beta1Client
 	EdpClient             admin_console.EdpV1Client
 	k8sUnstructuredClient client.Client
 	AppsClient            appsV1Client.AppsV1Client
@@ -210,8 +213,65 @@ func (service K8SService) CreateServiceAccount(ac v1alpha1.AdminConsole) error {
 }
 
 func (service K8SService) CreateExternalEndpoint(ac v1alpha1.AdminConsole) error {
-	log.Info("Not implemented.")
-	// Nothing to do
+	reqLog := log.WithValues("admin console ", ac)
+	reqLog.Info("Start creating admin console external endpoint...")
+
+	labels := platformHelper.GenerateLabels(ac.Name)
+
+	consoleService, err := service.CoreClient.Services(ac.Namespace).Get(ac.Name, metav1.GetOptions{})
+	if err != nil {
+		reqLog.Info("Console Service has not been found")
+		return err
+	}
+
+	consoleIngressObject := &v1beta1.Ingress{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      ac.Name,
+			Namespace: ac.Namespace,
+			Labels:    labels,
+		},
+		Spec: v1beta1.IngressSpec{
+			Rules: []v1beta1.IngressRule{
+				{
+					Host: fmt.Sprintf("%s.%s", ac.Name, ac.Spec.EdpSpec.DnsWildcard),
+					IngressRuleValue: v1beta1.IngressRuleValue{
+						HTTP: &v1beta1.HTTPIngressRuleValue{
+							Paths: []v1beta1.HTTPIngressPath{
+								{
+									Path: "/",
+									Backend: v1beta1.IngressBackend{
+										ServiceName: ac.Name,
+										ServicePort: intstr.IntOrString{
+											IntVal: consoleService.Spec.Ports[0].TargetPort.IntVal,
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+	if err := controllerutil.SetControllerReference(&ac, consoleIngressObject, service.Scheme); err != nil {
+		return err
+	}
+
+	consoleIngress, err := service.ExtensionsV1Client.Ingresses(consoleIngressObject.Namespace).Get(consoleIngressObject.Name, metav1.GetOptions{})
+
+	if err != nil {
+		if k8serr.IsNotFound(err) {
+			reqLog.V(1).Info("Creating a new ingress for Admin Console", "ingress", consoleIngressObject, "admin console", ac)
+			consoleIngress, err = service.ExtensionsV1Client.Ingresses(consoleIngressObject.Namespace).Create(consoleIngressObject)
+			if err != nil {
+				return err
+			}
+			reqLog.Info("Ingress has been created", "ingress", consoleIngress)
+			return nil
+		}
+		return err
+	}
+
 	return nil
 }
 
@@ -224,11 +284,11 @@ func (service K8SService) GetConfigmap(namespace string, name string) (map[strin
 			log.Info(fmt.Sprintf("Config map %v in namespace %v not found", name, namespace))
 			return out, nil
 		}
-		// Some error occurred
+
 		return out, err
 	}
 	out = configmap.Data
-	// Success
+
 	return out, nil
 }
 
@@ -291,11 +351,17 @@ func (service *K8SService) Init(config *rest.Config, scheme *runtime.Scheme, k8s
 		return errors.New("appsV1 client initialization failed!")
 	}
 
+	extensionsV1Client, err := extensionsV1Client.NewForConfig(config)
+	if err != nil {
+		return errors.New("extensionsV1 client initialization failed!")
+	}
+
 	service.EdpClient = *edpClient
 	service.CoreClient = *coreClient
 	service.Scheme = scheme
 	service.k8sUnstructuredClient = *k8sClient
 	service.AppsClient = *appsClient
+	service.ExtensionsV1Client = *extensionsV1Client
 	return nil
 }
 
