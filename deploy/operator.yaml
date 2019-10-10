@@ -30,4 +30,4 @@ spec:
             - name: OPERATOR_NAME
               value: "admin-console-operator-v2"
             - name: PLATFORM_TYPE
-              value: ""
+              value: "openshift"
