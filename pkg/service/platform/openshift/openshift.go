@@ -417,6 +417,7 @@ func (service OpenshiftService) CreateClusterRoleBinding(ac v1alpha1.AdminConsol
 			{
 				Kind: "ServiceAccount",
 				Name: ac.Name,
+				Namespace: ac.Namespace,
 			},
 		},
 	}
