@@ -247,7 +247,7 @@ func (service K8SService) CreateUserRole(ac v1alpha1.AdminConsole) error {
 }
 
 func (service K8SService) CreateClusterRoleBinding(ac v1alpha1.AdminConsole, name string, binding string) error {
-	acClusterBindingObject := &authV1Api.ClusterRoleBinding{
+	acClusterBindingObject := &authV1Api.RoleBinding{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: name,
 		},
@@ -268,7 +268,7 @@ func (service K8SService) CreateClusterRoleBinding(ac v1alpha1.AdminConsole, nam
 		return err
 	}
 
-	acBinding, err := service.AuthClient.ClusterRoleBindings().Get(acClusterBindingObject.Name, metav1.GetOptions{})
+	acBinding, err := service.AuthClient.RoleBindings(ac.Namespace).Get(acClusterBindingObject.Name, metav1.GetOptions{})
 	if err == nil {
 		return nil
 	}
@@ -277,7 +277,7 @@ func (service K8SService) CreateClusterRoleBinding(ac v1alpha1.AdminConsole, nam
 	}
 	log.V(1).Info("Creating a new ClusterRoleBinding for Admin Console",
 		"Namespace", ac.Namespace, "Name", ac.Name)
-	acBinding, err = service.AuthClient.ClusterRoleBindings().Create(acClusterBindingObject)
+	acBinding, err = service.AuthClient.RoleBindings(ac.Namespace).Create(acClusterBindingObject)
 	if err != nil {
 		return err
 	}
