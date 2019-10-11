@@ -403,7 +403,7 @@ func (service OpenshiftService) CreateUserRole(ac v1alpha1.AdminConsole) error {
 }
 
 func (service OpenshiftService) CreateClusterRoleBinding(ac v1alpha1.AdminConsole, name string, binding string) error {
-	acClusterBindingObject := &authV1Api.ClusterRoleBinding{
+	acClusterBindingObject := &authV1Api.RoleBinding{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: ac.Namespace,
@@ -426,13 +426,13 @@ func (service OpenshiftService) CreateClusterRoleBinding(ac v1alpha1.AdminConsol
 		return err
 	}
 
-	acBinding, err := service.authClient.ClusterRoleBindings().Get(acClusterBindingObject.Name, metav1.GetOptions{})
+	acBinding, err := service.authClient.RoleBindings(ac.Namespace).Get(acClusterBindingObject.Name, metav1.GetOptions{})
 
 	if err != nil {
 		if k8serrors.IsNotFound(err) {
 			log.V(1).Info("Creating a new ClusterRoleBinding for Admin Console",
 				"Namespace", ac.Namespace, "Name", ac.Name)
-			acBinding, err = service.authClient.ClusterRoleBindings().Create(acClusterBindingObject)
+			acBinding, err = service.authClient.RoleBindings(ac.Namespace).Create(acClusterBindingObject)
 			if err != nil {
 				return err
 			}
