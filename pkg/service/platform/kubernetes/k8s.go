@@ -135,6 +135,10 @@ func (service K8SService) CreateDeployConf(ac v1alpha1.AdminConsole, url string)
 									Name:  "INTEGRATION_STRATEGIES",
 									Value: ac.Spec.EdpSpec.IntegrationStrategies,
 								},
+								{
+									Name:  "BUILD_TOOLS",
+									Value: "maven",
+								},
 							},
 							Ports: []coreV1Api.ContainerPort{
 								{

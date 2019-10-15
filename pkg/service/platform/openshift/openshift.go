@@ -168,6 +168,10 @@ func (service OpenshiftService) CreateDeployConf(ac v1alpha1.AdminConsole, url s
 									Name:  "INTEGRATION_STRATEGIES",
 									Value: ac.Spec.EdpSpec.IntegrationStrategies,
 								},
+								{
+									Name:  "BUILD_TOOLS",
+									Value: "maven",
+								},
 							},
 							Ports: []coreV1Api.ContainerPort{
 								{
@@ -415,8 +419,8 @@ func (service OpenshiftService) CreateClusterRoleBinding(ac v1alpha1.AdminConsol
 		},
 		Subjects: []coreV1Api.ObjectReference{
 			{
-				Kind: "ServiceAccount",
-				Name: ac.Name,
+				Kind:      "ServiceAccount",
+				Name:      ac.Name,
 				Namespace: ac.Namespace,
 			},
 		},
@@ -465,7 +469,6 @@ func (service OpenshiftService) CreateRoleBinding(ac v1alpha1.AdminConsole, name
 			},
 		},
 	}
-
 
 	if err := controllerutil.SetControllerReference(&ac, acBindingObject, service.Scheme); err != nil {
 		return err
