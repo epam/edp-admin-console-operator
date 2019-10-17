@@ -43,10 +43,6 @@ type K8SService struct {
 	AuthClient            authV1Client.RbacV1Client
 }
 
-func (service K8SService) AddServiceAccToSecurityContext(scc string, ac v1alpha1.AdminConsole) error {
-	return nil
-}
-
 func (service K8SService) CreateDeployConf(ac v1alpha1.AdminConsole, url string) error {
 
 	dbEnabled := "false"

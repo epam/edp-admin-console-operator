@@ -15,7 +15,6 @@ import (
 type AdminConsoleService interface {
 	// This is an entry point for service package. Invoked in err = r.service.Install(*instance) sonar_controller.go, Reconcile method.
 	Install(instance v1alpha1.AdminConsole) (*v1alpha1.AdminConsole, error)
-	Configure(instance v1alpha1.AdminConsole) (*v1alpha1.AdminConsole, error)
 	ExposeConfiguration(instance v1alpha1.AdminConsole) (*v1alpha1.AdminConsole, error)
 	Integrate(instance v1alpha1.AdminConsole) (*v1alpha1.AdminConsole, error)
 	IsDeploymentReady(instance v1alpha1.AdminConsole) (bool, error)
@@ -137,16 +136,6 @@ func (s AdminConsoleServiceImpl) ExposeConfiguration(instance v1alpha1.AdminCons
 	}
 
 	return result, nil
-}
-
-func (s AdminConsoleServiceImpl) Configure(instance v1alpha1.AdminConsole) (*v1alpha1.AdminConsole, error) {
-
-	err := s.platformService.AddServiceAccToSecurityContext("anyuid", instance)
-	if err != nil {
-		return &instance, errors.Wrap(err, "Failed to add user in anyuid Security Context.")
-	}
-
-	return &instance, nil
 }
 
 func (s AdminConsoleServiceImpl) Install(instance v1alpha1.AdminConsole) (*v1alpha1.AdminConsole, error) {

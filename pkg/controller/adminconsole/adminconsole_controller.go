@@ -28,8 +28,6 @@ const (
 	StatusInstall          = "installing"
 	StatusFailed           = "failed"
 	StatusCreated          = "created"
-	StatusConfiguring      = "configuring"
-	StatusConfigured       = "configured"
 	StatusExposeStart      = "exposing config"
 	StatusExposeFinish     = "config exposed"
 	StatusIntegrationStart = "integration started"
@@ -159,37 +157,11 @@ func (r *ReconcileAdminConsole) Reconcile(request reconcile.Request) (reconcile.
 	if dcIsReady, err := r.service.IsDeploymentReady(*instance); err != nil {
 		return reconcile.Result{RequeueAfter: DefaultRequeueTime * time.Second}, errorsf.Wrapf(err, "Checking if Deployment configs is ready has been failed")
 	} else if !dcIsReady {
-		reqLogger.Info("Deployment config is not ready for configuration yet")
+		reqLogger.Info("Deployment config is not ready for exposing configuration yet")
 		return reconcile.Result{RequeueAfter: DefaultRequeueTime * time.Second}, nil
 	}
 
-
-	if instance.Status.Status == StatusCreated || instance.Status.Status == "" {
-		reqLogger.Info("Configuration has started")
-		err := r.updateStatus(instance, StatusConfiguring)
-		if err != nil {
-			return reconcile.Result{RequeueAfter: DefaultRequeueTime * time.Second}, err
-		}
-	}
-
-	instance, err = r.service.Configure(*instance)
-	if err != nil {
-		err = r.updateStatus(instance, StatusFailed)
-		if err != nil {
-			return reconcile.Result{RequeueAfter: DefaultRequeueTime * time.Second}, err
-		}
-		return reconcile.Result{RequeueAfter: DefaultRequeueTime * time.Second}, errorsf.Wrapf(err, "Configuration has failed")
-	}
-
-	if instance.Status.Status == StatusConfiguring {
-		reqLogger.Info("Configuration has finished")
-		err = r.updateStatus(instance, StatusConfigured)
-		if err != nil {
-			return reconcile.Result{RequeueAfter: DefaultRequeueTime * time.Second}, err
-		}
-	}
-
-	if instance.Status.Status == StatusConfigured {
+	if instance.Status.Status == StatusCreated {
 		reqLogger.Info("Exposing configuration has started")
 		err = r.updateStatus(instance, StatusExposeStart)
 		if err != nil {

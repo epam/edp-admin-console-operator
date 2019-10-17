@@ -15,7 +15,6 @@ import (
 )
 
 type PlatformService interface {
-	AddServiceAccToSecurityContext(scc string, ac v1alpha1.AdminConsole) error
 	CreateDeployConf(ac v1alpha1.AdminConsole, url string) error
 	CreateSecret(ac v1alpha1.AdminConsole, name string, data map[string][]byte) error
 	CreateExternalEndpoint(ac v1alpha1.AdminConsole) error

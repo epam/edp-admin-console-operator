@@ -48,26 +48,6 @@ type OpenshiftService struct {
 	routeClient    routeV1Client.RouteV1Client
 }
 
-func (service OpenshiftService) AddServiceAccToSecurityContext(scc string, ac v1alpha1.AdminConsole) error {
-	saName := fmt.Sprintf("system:serviceaccount:%s:%s", ac.Namespace, ac.Name)
-	consoleSCC, err := service.securityClient.SecurityContextConstraints().Get(scc, metav1.GetOptions{})
-	if err != nil {
-		return err
-	}
-
-	if !platformHelper.StringInSlice(saName, consoleSCC.Users) {
-		log.V(1).Info("Adding Service Account to anyuid Security Context")
-		consoleSCC.Users = append(consoleSCC.Users, saName)
-		_, err = service.securityClient.SecurityContextConstraints().Update(consoleSCC)
-		if err != nil {
-			return err
-		}
-		log.Info("anyuid Security Context updated succesfully.")
-	}
-
-	return nil
-}
-
 func (service OpenshiftService) CreateDeployConf(ac v1alpha1.AdminConsole, url string) error {
 	openshiftClusterURL, err := service.getClusterURL()
 	if err != nil {
@@ -284,6 +264,7 @@ func (service OpenshiftService) CreateSecurityContext(ac v1alpha1.AdminConsole) 
 
 	labels := platformHelper.GenerateLabels(ac.Name)
 	priority := int32(1)
+	id := int64(1001)
 
 	displayName, err := service.GetDisplayName(ac)
 	if err != nil {
@@ -305,7 +286,7 @@ func (service OpenshiftService) CreateSecurityContext(ac v1alpha1.AdminConsole) 
 			securityV1Api.FSTypeConfigMap,
 		},
 		AllowHostDirVolumePlugin: false,
-		AllowHostIPC:             true,
+		AllowHostIPC:             false,
 		AllowHostNetwork:         false,
 		AllowHostPID:             false,
 		AllowHostPorts:           false,
@@ -314,17 +295,14 @@ func (service OpenshiftService) CreateSecurityContext(ac v1alpha1.AdminConsole) 
 		AllowedFlexVolumes:       []securityV1Api.AllowedFlexVolume{},
 		DefaultAddCapabilities:   []coreV1Api.Capability{},
 		FSGroup: securityV1Api.FSGroupStrategyOptions{
-			Type:   securityV1Api.FSGroupStrategyRunAsAny,
-			Ranges: []securityV1Api.IDRange{},
+			Type:   securityV1Api.FSGroupStrategyMustRunAs,
 		},
 		Groups:                 []string{},
 		Priority:               &priority,
 		ReadOnlyRootFilesystem: false,
 		RunAsUser: securityV1Api.RunAsUserStrategyOptions{
-			Type:        securityV1Api.RunAsUserStrategyRunAsAny,
-			UID:         nil,
-			UIDRangeMin: nil,
-			UIDRangeMax: nil,
+			Type:        securityV1Api.RunAsUserStrategyMustRunAs,
+			UID:         &id,
 		},
 		SELinuxContext: securityV1Api.SELinuxContextStrategyOptions{
 			Type:           securityV1Api.SELinuxStrategyMustRunAs,
