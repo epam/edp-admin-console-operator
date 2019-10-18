@@ -621,7 +621,7 @@ func (service K8SService) CreateExternalEndpoint(ac v1alpha1.AdminConsole) error
 		Spec: v1beta1.IngressSpec{
 			Rules: []v1beta1.IngressRule{
 				{
-					Host: fmt.Sprintf("%s.%s", ac.Name, ac.Spec.EdpSpec.DnsWildcard),
+					Host: fmt.Sprintf("%s-%s.%s", ac.Name, ac.Namespace, ac.Spec.EdpSpec.DnsWildcard),
 					IngressRuleValue: v1beta1.IngressRuleValue{
 						HTTP: &v1beta1.HTTPIngressRuleValue{
 							Paths: []v1beta1.HTTPIngressPath{
