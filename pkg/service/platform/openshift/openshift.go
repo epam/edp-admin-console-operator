@@ -152,6 +152,10 @@ func (service OpenshiftService) CreateDeployConf(ac v1alpha1.AdminConsole, url s
 									Name:  "BUILD_TOOLS",
 									Value: "maven",
 								},
+								{
+									Name:  "DEPLOYMENT_SCRIPT",
+									Value: "helm-chart,openshift-template",
+								},
 							},
 							Ports: []coreV1Api.ContainerPort{
 								{
@@ -295,14 +299,14 @@ func (service OpenshiftService) CreateSecurityContext(ac v1alpha1.AdminConsole) 
 		AllowedFlexVolumes:       []securityV1Api.AllowedFlexVolume{},
 		DefaultAddCapabilities:   []coreV1Api.Capability{},
 		FSGroup: securityV1Api.FSGroupStrategyOptions{
-			Type:   securityV1Api.FSGroupStrategyMustRunAs,
+			Type: securityV1Api.FSGroupStrategyMustRunAs,
 		},
 		Groups:                 []string{},
 		Priority:               &priority,
 		ReadOnlyRootFilesystem: false,
 		RunAsUser: securityV1Api.RunAsUserStrategyOptions{
-			Type:        securityV1Api.RunAsUserStrategyMustRunAs,
-			UID:         &id,
+			Type: securityV1Api.RunAsUserStrategyMustRunAs,
+			UID:  &id,
 		},
 		SELinuxContext: securityV1Api.SELinuxContextStrategyOptions{
 			Type:           securityV1Api.SELinuxStrategyMustRunAs,

@@ -135,6 +135,10 @@ func (service K8SService) CreateDeployConf(ac v1alpha1.AdminConsole, url string)
 									Name:  "BUILD_TOOLS",
 									Value: "maven",
 								},
+								{
+									Name:  "DEPLOYMENT_SCRIPT",
+									Value: "helm-chart,openshift-template",
+								},
 							},
 							Ports: []coreV1Api.ContainerPort{
 								{
