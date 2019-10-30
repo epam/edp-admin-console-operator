@@ -2,10 +2,17 @@ package helper
 
 import (
 	"fmt"
+	"github.com/epmd-edp/admin-console-operator/v2/pkg/helper"
+	"github.com/operator-framework/operator-sdk/pkg/k8sutil"
 	"github.com/pkg/errors"
 	"github.com/totherme/unstructured"
 	coreV1Api "k8s.io/api/core/v1"
 	"net/url"
+)
+
+const (
+	defaultConfigsAbsolutePath        = "/usr/local/configs/"
+	localConfigsRelativePath          = "configs"
 )
 
 func GenerateLabels(name string) map[string]string {
@@ -113,4 +120,31 @@ func ContainsEmptyString(ss ...string) bool {
 		}
 	}
 	return false
+}
+
+func CreatePathToTemplateDirectory(directory string) (string, error) {
+	localRun := checkIfRunningLocally()
+	return createPath(directory, localRun)
+}
+
+func checkIfRunningLocally() bool {
+	if _, err := k8sutil.GetOperatorNamespace(); err != nil && err == k8sutil.ErrNoNamespace {
+		return true
+	}
+	return false
+}
+
+func createPath(directory string, localRun bool) (string, error) {
+	if localRun {
+		executableFilePath, err := helper.GetExecutableFilePath()
+		if err != nil {
+			return "", errors.Wrapf(err, "Unable to get executable file path")
+		}
+		templatePath := fmt.Sprintf("%v/../%v/%v", executableFilePath, localConfigsRelativePath, directory)
+		return templatePath, nil
+	}
+
+	templatePath := fmt.Sprintf("%s/%s", defaultConfigsAbsolutePath, directory)
+	return templatePath, nil
+
 }

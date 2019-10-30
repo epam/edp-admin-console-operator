@@ -1,15 +1,25 @@
 package admin_console
 
 import (
+	"bufio"
+	"encoding/base64"
 	"fmt"
 	"github.com/dchest/uniuri"
 	"github.com/epmd-edp/admin-console-operator/v2/pkg/apis/edp/v1alpha1"
 	adminConsoleSpec "github.com/epmd-edp/admin-console-operator/v2/pkg/service/admin_console/spec"
 	"github.com/epmd-edp/admin-console-operator/v2/pkg/service/platform"
+	platformHelper "github.com/epmd-edp/admin-console-operator/v2/pkg/service/platform/helper"
 	keycloakV1Api "github.com/epmd-edp/keycloak-operator/pkg/apis/v1/v1alpha1"
 	keycloakControllerHelper "github.com/epmd-edp/keycloak-operator/pkg/controller/helper"
 	"github.com/pkg/errors"
+	"io/ioutil"
+	"os"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+)
+
+const (
+	imgFolder = "img"
+	acIcon    = "admin-console.svg"
 )
 
 type AdminConsoleService interface {
@@ -135,7 +145,50 @@ func (s AdminConsoleServiceImpl) ExposeConfiguration(instance v1alpha1.AdminCons
 		return &instance, errors.Wrap(err, fmt.Sprintf("Failed to update Admin Console %s!", instance.Name))
 	}
 
+	err = s.createEDPComponent(instance)
 	return result, nil
+}
+
+func (s AdminConsoleServiceImpl) createEDPComponent(ac v1alpha1.AdminConsole) error {
+	url, err := s.getUrl(ac)
+	if err != nil {
+		return err
+	}
+
+	icon, err := s.getIcon()
+	if err != nil {
+		return err
+	}
+
+	return s.platformService.CreateEDPComponentIfNotExist(ac, *url, *icon)
+}
+
+func (s AdminConsoleServiceImpl) getUrl(ac v1alpha1.AdminConsole) (*string, error) {
+	host, scheme, err := s.platformService.GetExternalUrl(ac.Namespace, ac.Name)
+	if err != nil {
+		return nil, err
+	}
+	url := fmt.Sprintf("%v://%v", scheme, host)
+	return &url, nil
+}
+
+func (j AdminConsoleServiceImpl) getIcon() (*string, error) {
+	p, err := platformHelper.CreatePathToTemplateDirectory(imgFolder)
+	if err != nil {
+		return nil, err
+	}
+	fp := fmt.Sprintf("%v/%v", p, acIcon)
+	f, err := os.Open(fp)
+	if err != nil {
+		return nil, err
+	}
+	reader := bufio.NewReader(f)
+	content, err := ioutil.ReadAll(reader)
+	if err != nil {
+		return nil, err
+	}
+	encoded := base64.StdEncoding.EncodeToString(content)
+	return &encoded, nil
 }
 
 func (s AdminConsoleServiceImpl) Install(instance v1alpha1.AdminConsole) (*v1alpha1.AdminConsole, error) {

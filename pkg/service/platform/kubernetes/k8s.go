@@ -8,6 +8,8 @@ import (
 	"github.com/epmd-edp/admin-console-operator/v2/pkg/client/admin_console"
 	adminConsoleSpec "github.com/epmd-edp/admin-console-operator/v2/pkg/service/admin_console/spec"
 	platformHelper "github.com/epmd-edp/admin-console-operator/v2/pkg/service/platform/helper"
+	edpCompApi "github.com/epmd-edp/edp-component-operator/pkg/apis/v1/v1alpha1"
+	edpCompClient "github.com/epmd-edp/edp-component-operator/pkg/client"
 	keycloakV1Api "github.com/epmd-edp/keycloak-operator/pkg/apis/v1/v1alpha1"
 	"github.com/pkg/errors"
 	appsV1Api "k8s.io/api/apps/v1"
@@ -41,6 +43,7 @@ type K8SService struct {
 	k8sUnstructuredClient client.Client
 	AppsClient            appsV1Client.AppsV1Client
 	AuthClient            authV1Client.RbacV1Client
+	edpCompClient         edpCompClient.EDPComponentV1Client
 }
 
 func (service K8SService) CreateDeployConf(ac v1alpha1.AdminConsole, url string) error {
@@ -750,6 +753,11 @@ func (service *K8SService) Init(config *rest.Config, scheme *runtime.Scheme, k8s
 		return errors.New("extensionsV1 client initialization failed!")
 	}
 
+	compCl, err := edpCompClient.NewForConfig(config)
+	if err != nil {
+		return errors.Wrap(err, "failed to init edp component client")
+	}
+
 	service.EdpClient = *edpClient
 	service.CoreClient = *coreClient
 	service.Scheme = scheme
@@ -757,6 +765,7 @@ func (service *K8SService) Init(config *rest.Config, scheme *runtime.Scheme, k8s
 	service.AppsClient = *appsClient
 	service.ExtensionsV1Client = *extensionsClient
 	service.AuthClient = *rbacClient
+	service.edpCompClient = *compCl
 	return nil
 }
 
@@ -799,4 +808,38 @@ func (service K8SService) GetKeycloakClient(name string, namespace string) (keyc
 
 	// Success
 	return out, nil
+}
+
+func (service K8SService) CreateEDPComponentIfNotExist(ac v1alpha1.AdminConsole, url string, icon string) error {
+	comp, err := service.edpCompClient.
+		EDPComponents(ac.Namespace).
+		Get(ac.Name, metav1.GetOptions{})
+	if err == nil {
+		log.Info("edp component already exists", "name", comp.Name)
+		return nil
+	}
+	if k8serrors.IsNotFound(err) {
+		return service.createEDPComponent(ac, url, icon)
+	}
+	return errors.Wrapf(err, "failed to get edp component: %v", ac.Name)
+}
+
+func (service K8SService) createEDPComponent(ac v1alpha1.AdminConsole, url string, icon string) error {
+	obj := &edpCompApi.EDPComponent{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: ac.Name,
+		},
+		Spec: edpCompApi.EDPComponentSpec{
+			Type: "admin-console",
+			Url:  url,
+			Icon: icon,
+		},
+	}
+	if err := controllerutil.SetControllerReference(&ac, obj, service.Scheme); err != nil {
+		return err
+	}
+	_, err := service.edpCompClient.
+		EDPComponents(ac.Namespace).
+		Create(obj)
+	return err
 }
