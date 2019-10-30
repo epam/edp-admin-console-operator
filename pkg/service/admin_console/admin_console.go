@@ -146,7 +146,7 @@ func (s AdminConsoleServiceImpl) ExposeConfiguration(instance v1alpha1.AdminCons
 	}
 
 	err = s.createEDPComponent(instance)
-	return result, nil
+	return result, err
 }
 
 func (s AdminConsoleServiceImpl) createEDPComponent(ac v1alpha1.AdminConsole) error {
@@ -177,6 +177,7 @@ func (j AdminConsoleServiceImpl) getIcon() (*string, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	fp := fmt.Sprintf("%v/%v", p, acIcon)
 	f, err := os.Open(fp)
 	if err != nil {
