@@ -156,6 +156,10 @@ func (service OpenshiftService) CreateDeployConf(ac v1alpha1.AdminConsole, url s
 									Name:  "DEPLOYMENT_SCRIPT",
 									Value: "helm-chart,openshift-template",
 								},
+								{
+									Name:  "PLATFORM_TYPE",
+									Value: "openshift",
+								},
 							},
 							Ports: []coreV1Api.ContainerPort{
 								{

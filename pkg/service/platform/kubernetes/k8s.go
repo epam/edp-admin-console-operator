@@ -142,6 +142,10 @@ func (service K8SService) CreateDeployConf(ac v1alpha1.AdminConsole, url string)
 									Name:  "DEPLOYMENT_SCRIPT",
 									Value: "helm-chart,openshift-template",
 								},
+								{
+									Name:  "PLATFORM_TYPE",
+									Value: "kubernetes",
+								},
 							},
 							Ports: []coreV1Api.ContainerPort{
 								{
