@@ -460,11 +460,9 @@ func (service K8SService) GetExternalUrl(namespace string, name string) (string,
 		return "", "", err
 	}
 
-	host := ingress.Spec.Rules[0].Host
 	routeScheme := "https"
 
-	webUrl := fmt.Sprintf("%s://%s", routeScheme, host)
-	return webUrl, routeScheme, nil
+	return ingress.Spec.Rules[0].Host, routeScheme, nil
 }
 
 func (service K8SService) IsDeploymentReady(instance v1alpha1.AdminConsole) (bool, error) {
