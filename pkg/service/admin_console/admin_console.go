@@ -216,17 +216,27 @@ func (s AdminConsoleServiceImpl) Install(instance v1alpha1.AdminConsole) (*v1alp
 		return &instance, err
 	}
 
-	err = s.platformService.CreateUserRole(instance)
+	err = s.platformService.CreateRole(instance)
 	if err != nil {
 		return &instance, err
 	}
 
-	err = s.platformService.CreateRoleBinding(instance, "edp-resources-admin", "edp-resources-admin")
+	err = s.platformService.CreateRoleBinding(instance, "edp-resources-admin", "edp-resources-admin", "Role")
 	if err != nil {
 		return &instance, err
 	}
 
-	err = s.platformService.CreateClusterRoleBinding(instance, "edp-admin", "admin")
+	err = s.platformService.CreateRoleBinding(instance, "edp-admin", "admin", "ClusterRole")
+	if err != nil {
+		return &instance, err
+	}
+
+	err = s.platformService.CreateClusterRole(instance)
+	if err != nil {
+		return &instance, err
+	}
+
+	err = s.platformService.CreateClusterRoleBinding(instance,"admin-console-sc-access")
 	if err != nil {
 		return &instance, err
 	}

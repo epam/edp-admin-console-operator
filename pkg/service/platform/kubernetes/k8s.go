@@ -220,8 +220,8 @@ func (service K8SService) CreateSecurityContext(ac v1alpha1.AdminConsole) error 
 	return nil
 }
 
-func (service K8SService) CreateUserRole(ac v1alpha1.AdminConsole) error {
-	consoleRoleObject := &authV1Api.Role{
+func (service K8SService) CreateRole(ac v1alpha1.AdminConsole) error {
+	ro := &authV1Api.Role{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "edp-resources-admin",
 			Namespace: ac.Namespace,
@@ -235,11 +235,11 @@ func (service K8SService) CreateUserRole(ac v1alpha1.AdminConsole) error {
 		},
 	}
 
-	if err := controllerutil.SetControllerReference(&ac, consoleRoleObject, service.Scheme); err != nil {
+	if err := controllerutil.SetControllerReference(&ac, ro, service.Scheme); err != nil {
 		return err
 	}
 
-	consoleRole, err := service.AuthClient.Roles(consoleRoleObject.Namespace).Get(consoleRoleObject.Name, metav1.GetOptions{})
+	r, err := service.AuthClient.Roles(ro.Namespace).Get(ro.Name, metav1.GetOptions{})
 	if err == nil {
 		return nil
 	}
@@ -247,20 +247,56 @@ func (service K8SService) CreateUserRole(ac v1alpha1.AdminConsole) error {
 		return err
 	}
 	log.V(1).Info("Creating Role for Admin Console",
-		"Namespace", consoleRoleObject.Namespace, "Name", consoleRoleObject.Name)
+		"Namespace", ro.Namespace, "Name", ro.Name)
 
-	consoleRole, err = service.AuthClient.Roles(consoleRoleObject.Namespace).Create(consoleRoleObject)
+	r, err = service.AuthClient.Roles(ro.Namespace).Create(ro)
 	if err != nil {
 		return err
 	}
-	log.Info("Role for Admin Console created", "Namespace", consoleRole.Namespace, "Name", consoleRole.Name)
+	log.Info("Role for Admin Console created", "Namespace", r.Namespace, "Name", r.Name)
 	return nil
 }
 
-func (service K8SService) CreateClusterRoleBinding(ac v1alpha1.AdminConsole, name string, binding string) error {
-	acClusterBindingObject := &authV1Api.RoleBinding{
+func (service K8SService) CreateClusterRole(ac v1alpha1.AdminConsole) error {
+	cro := &authV1Api.ClusterRole{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: name,
+			Name: "admin-console-sc-access",
+		},
+		Rules: []authV1Api.PolicyRule{
+			{
+				APIGroups: []string{"storage.k8s.io"},
+				Resources: []string{"storageclasses"},
+				Verbs:     []string{"get", "list"},
+			},
+		},
+	}
+
+	if err := controllerutil.SetControllerReference(&ac, cro, service.Scheme); err != nil {
+		return err
+	}
+
+	cr, err := service.AuthClient.ClusterRoles().Get(cro.Name, metav1.GetOptions{})
+	if err == nil {
+		return nil
+	}
+	if !k8serrors.IsNotFound(err) {
+		return err
+	}
+	log.V(1).Info("Creating Role for Admin Console","Name", cro.Name, "ClusterRoleName", cro.Name)
+
+	cr, err = service.AuthClient.ClusterRoles().Create(cro)
+	if err != nil {
+		return err
+	}
+	log.Info("Role for Admin Console created", "Name", cr.Name, "ClusterRoleName", cro.Name)
+	return nil
+
+}
+
+func (service K8SService) CreateClusterRoleBinding(ac v1alpha1.AdminConsole, binding string) error {
+	crbo := &authV1Api.ClusterRoleBinding{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: fmt.Sprintf("%s-%s", ac.Name, ac.Namespace),
 		},
 		RoleRef: authV1Api.RoleRef{
 			Kind: "ClusterRole",
@@ -275,11 +311,11 @@ func (service K8SService) CreateClusterRoleBinding(ac v1alpha1.AdminConsole, nam
 		},
 	}
 
-	if err := controllerutil.SetControllerReference(&ac, acClusterBindingObject, service.Scheme); err != nil {
+	if err := controllerutil.SetControllerReference(&ac, crbo, service.Scheme); err != nil {
 		return err
 	}
 
-	acBinding, err := service.AuthClient.RoleBindings(ac.Namespace).Get(acClusterBindingObject.Name, metav1.GetOptions{})
+	crb, err := service.AuthClient.ClusterRoleBindings().Get(crbo.Name, metav1.GetOptions{})
 	if err == nil {
 		return nil
 	}
@@ -288,23 +324,23 @@ func (service K8SService) CreateClusterRoleBinding(ac v1alpha1.AdminConsole, nam
 	}
 	log.V(1).Info("Creating a new ClusterRoleBinding for Admin Console",
 		"Namespace", ac.Namespace, "Name", ac.Name)
-	acBinding, err = service.AuthClient.RoleBindings(ac.Namespace).Create(acClusterBindingObject)
+	crb, err = service.AuthClient.ClusterRoleBindings().Create(crbo)
 	if err != nil {
 		return err
 	}
 	log.Info("ClusterRoleBinding has been created",
-		"Namespace", acBinding.Namespace, "Name", acBinding.Name)
+		"Namespace", crb.Namespace, "Name", crb.Name)
 	return nil
 }
 
-func (service K8SService) CreateRoleBinding(ac v1alpha1.AdminConsole, name string, binding string) error {
-	acBindingObject := &authV1Api.RoleBinding{
+func (service K8SService) CreateRoleBinding(ac v1alpha1.AdminConsole, name string, binding string, kind string) error {
+	rbo := &authV1Api.RoleBinding{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: ac.Namespace,
 		},
 		RoleRef: authV1Api.RoleRef{
-			Kind: "Role",
+			Kind: kind,
 			Name: binding,
 		},
 		Subjects: []authV1Api.Subject{
@@ -315,11 +351,11 @@ func (service K8SService) CreateRoleBinding(ac v1alpha1.AdminConsole, name strin
 		},
 	}
 
-	if err := controllerutil.SetControllerReference(&ac, acBindingObject, service.Scheme); err != nil {
+	if err := controllerutil.SetControllerReference(&ac, rbo, service.Scheme); err != nil {
 		return err
 	}
 
-	acBinding, err := service.AuthClient.RoleBindings(acBindingObject.Namespace).Get(acBindingObject.Name, metav1.GetOptions{})
+	rb, err := service.AuthClient.RoleBindings(rbo.Namespace).Get(rbo.Name, metav1.GetOptions{})
 
 	if err == nil {
 		return nil
@@ -329,11 +365,11 @@ func (service K8SService) CreateRoleBinding(ac v1alpha1.AdminConsole, name strin
 	}
 	log.V(1).Info("Creating a new RoleBinding for Admin Console",
 		"Namespace", ac.Namespace, "Name", ac.Name)
-	acBinding, err = service.AuthClient.RoleBindings(acBindingObject.Namespace).Create(acBindingObject)
+	rb, err = service.AuthClient.RoleBindings(rbo.Namespace).Create(rbo)
 	if err != nil {
 		return err
 	}
-	log.Info("RoleBinding has been created", "Namespace", acBinding.Namespace, "Name", acBinding.Name)
+	log.Info("RoleBinding has been created", "Namespace", rb.Namespace, "Name", rb.Name)
 	return nil
 
 }

@@ -21,9 +21,9 @@ type PlatformService interface {
 	CreateService(ac v1alpha1.AdminConsole) error
 	CreateServiceAccount(ac v1alpha1.AdminConsole) error
 	CreateSecurityContext(ac v1alpha1.AdminConsole) error
-	CreateUserRole(ac v1alpha1.AdminConsole) error
-	CreateRoleBinding(ac v1alpha1.AdminConsole, name string, binding string) error
-	CreateClusterRoleBinding(ac v1alpha1.AdminConsole, name string, binding string) error
+	CreateRole(ac v1alpha1.AdminConsole) error
+	CreateRoleBinding(ac v1alpha1.AdminConsole, name string, binding string, kind string) error
+	CreateClusterRoleBinding(ac v1alpha1.AdminConsole, binding string) error
 	GetConfigmap(namespace string, name string) (map[string]string, error)
 	GetDisplayName(ac v1alpha1.AdminConsole) (string, error)
 	GetSecret(namespace string, name string) (map[string][]byte, error)
@@ -37,6 +37,7 @@ type PlatformService interface {
 	GetExternalUrl(namespace string, name string) (string, string, error)
 	IsDeploymentReady(instance v1alpha1.AdminConsole) (bool, error)
 	CreateEDPComponentIfNotExist(instance v1alpha1.AdminConsole, url string, icon string) error
+	CreateClusterRole(instance v1alpha1.AdminConsole) error
 }
 
 const (

@@ -48,6 +48,14 @@ type OpenshiftService struct {
 	routeClient    routeV1Client.RouteV1Client
 }
 
+func (service OpenshiftService) CreateClusterRole(instance v1alpha1.AdminConsole) error {
+	return nil
+}
+
+func (service OpenshiftService) CreateClusterRoleBinding(ac v1alpha1.AdminConsole, binding string) error {
+	return nil
+}
+
 func (service OpenshiftService) CreateDeployConf(ac v1alpha1.AdminConsole, url string) error {
 	openshiftClusterURL, err := service.getClusterURL()
 	if err != nil {
@@ -355,7 +363,7 @@ func (service OpenshiftService) CreateSecurityContext(ac v1alpha1.AdminConsole) 
 	return nil
 }
 
-func (service OpenshiftService) CreateUserRole(ac v1alpha1.AdminConsole) error {
+func (service OpenshiftService) CreateRole(ac v1alpha1.AdminConsole) error {
 	consoleRoleObject := &authV1Api.Role{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "edp-resources-admin",
@@ -392,50 +400,7 @@ func (service OpenshiftService) CreateUserRole(ac v1alpha1.AdminConsole) error {
 	return nil
 }
 
-func (service OpenshiftService) CreateClusterRoleBinding(ac v1alpha1.AdminConsole, name string, binding string) error {
-	acClusterBindingObject := &authV1Api.RoleBinding{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      name,
-			Namespace: ac.Namespace,
-		},
-		RoleRef: coreV1Api.ObjectReference{
-			APIVersion: "rbac.authorization.k8s.io",
-			Kind:       "ClusterRole",
-			Name:       binding,
-		},
-		Subjects: []coreV1Api.ObjectReference{
-			{
-				Kind:      "ServiceAccount",
-				Name:      ac.Name,
-				Namespace: ac.Namespace,
-			},
-		},
-	}
-
-	if err := controllerutil.SetControllerReference(&ac, acClusterBindingObject, service.Scheme); err != nil {
-		return err
-	}
-
-	acBinding, err := service.authClient.RoleBindings(ac.Namespace).Get(acClusterBindingObject.Name, metav1.GetOptions{})
-
-	if err != nil {
-		if k8serrors.IsNotFound(err) {
-			log.V(1).Info("Creating a new ClusterRoleBinding for Admin Console",
-				"Namespace", ac.Namespace, "Name", ac.Name)
-			acBinding, err = service.authClient.RoleBindings(ac.Namespace).Create(acClusterBindingObject)
-			if err != nil {
-				return err
-			}
-			log.Info("ClusterRoleBinding has been created",
-				"Namespace", acBinding.Namespace, "Name", acBinding.Name)
-			return nil
-		}
-		return err
-	}
-	return err
-}
-
-func (service OpenshiftService) CreateRoleBinding(ac v1alpha1.AdminConsole, name string, binding string) error {
+func (service OpenshiftService) CreateRoleBinding(ac v1alpha1.AdminConsole, name string, binding string, kind string) error {
 
 	acBindingObject := &authV1Api.RoleBinding{
 		ObjectMeta: metav1.ObjectMeta{
@@ -444,7 +409,7 @@ func (service OpenshiftService) CreateRoleBinding(ac v1alpha1.AdminConsole, name
 		},
 		RoleRef: coreV1Api.ObjectReference{
 			APIVersion: "rbac.authorization.k8s.io",
-			Kind:       "Role",
+			Kind:       kind,
 			Name:       binding,
 			Namespace:  ac.Namespace,
 		},
