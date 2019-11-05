@@ -402,40 +402,23 @@ func (service OpenshiftService) CreateRole(ac v1alpha1.AdminConsole) error {
 
 func (service OpenshiftService) CreateRoleBinding(ac v1alpha1.AdminConsole, name string, binding string, kind string) error {
 
-	acBindingObject := &authV1Api.RoleBinding{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      name,
-			Namespace: ac.Namespace,
-		},
-		RoleRef: coreV1Api.ObjectReference{
-			APIVersion: "rbac.authorization.k8s.io",
-			Kind:       kind,
-			Name:       binding,
-			Namespace:  ac.Namespace,
-		},
-		Subjects: []coreV1Api.ObjectReference{
-			{
-				Kind: "ServiceAccount",
-				Name: ac.Name,
-			},
-		},
-	}
+	rbo := getRoleBindingObjectByKind(ac, name, binding, kind)
 
-	if err := controllerutil.SetControllerReference(&ac, acBindingObject, service.Scheme); err != nil {
+	if err := controllerutil.SetControllerReference(&ac, rbo, service.Scheme); err != nil {
 		return err
 	}
 
-	acBinding, err := service.authClient.RoleBindings(acBindingObject.Namespace).Get(acBindingObject.Name, metav1.GetOptions{})
+	rb, err := service.authClient.RoleBindings(rbo.Namespace).Get(rbo.Name, metav1.GetOptions{})
 
 	if err != nil {
 		if k8serrors.IsNotFound(err) {
 			log.V(1).Info("Creating a new RoleBinding for Admin Console",
 				"Namespace", ac.Namespace, "Name", ac.Name)
-			acBinding, err = service.authClient.RoleBindings(acBindingObject.Namespace).Create(acBindingObject)
+			rb, err = service.authClient.RoleBindings(rbo.Namespace).Create(rbo)
 			if err != nil {
 				return err
 			}
-			log.Info("RoleBinding has been created", "Namespace", acBinding.Namespace, "Name", acBinding.Name)
+			log.Info("RoleBinding has been created", "Namespace", rb.Namespace, "Name", rb.Name)
 			return nil
 		}
 		return err
@@ -671,4 +654,48 @@ func (service OpenshiftService) IsDeploymentReady(instance v1alpha1.AdminConsole
 	}
 
 	return false, nil
+}
+
+func getRoleBindingObjectByKind(ac v1alpha1.AdminConsole, name string, binding string, kind string) *authV1Api.RoleBinding {
+	switch kind {
+	case "ClusterRole":
+		return &authV1Api.RoleBinding{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      name,
+				Namespace: ac.Namespace,
+			},
+			RoleRef: coreV1Api.ObjectReference{
+				APIVersion: "rbac.authorization.k8s.io",
+				Kind:       kind,
+				Name:       binding,
+			},
+			Subjects: []coreV1Api.ObjectReference{
+				{
+					Kind: "ServiceAccount",
+					Name: ac.Name,
+				},
+			},
+		}
+	case "Role":
+		return &authV1Api.RoleBinding{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      name,
+				Namespace: ac.Namespace,
+			},
+			RoleRef: coreV1Api.ObjectReference{
+				APIVersion: "rbac.authorization.k8s.io",
+				Kind:       kind,
+				Name:       binding,
+				Namespace:  ac.Namespace,
+			},
+			Subjects: []coreV1Api.ObjectReference{
+				{
+					Kind: "ServiceAccount",
+					Name: ac.Name,
+				},
+			},
+		}
+	}
+
+	return &authV1Api.RoleBinding{}
 }
