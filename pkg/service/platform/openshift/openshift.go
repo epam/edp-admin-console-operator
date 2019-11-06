@@ -135,7 +135,7 @@ func (service OpenshiftService) CreateDeployConf(ac v1alpha1.AdminConsole, url s
 									ValueFrom: &coreV1Api.EnvVarSource{
 										SecretKeyRef: &coreV1Api.SecretKeySelector{
 											LocalObjectReference: coreV1Api.LocalObjectReference{
-												Name: "admin-console-db",
+												Name: "db-admin-console",
 											},
 											Key: "username",
 										},
@@ -146,7 +146,7 @@ func (service OpenshiftService) CreateDeployConf(ac v1alpha1.AdminConsole, url s
 									ValueFrom: &coreV1Api.EnvVarSource{
 										SecretKeyRef: &coreV1Api.SecretKeySelector{
 											LocalObjectReference: coreV1Api.LocalObjectReference{
-												Name: "admin-console-db",
+												Name: "db-admin-console",
 											},
 											Key: "password",
 										},

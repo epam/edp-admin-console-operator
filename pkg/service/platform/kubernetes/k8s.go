@@ -113,7 +113,7 @@ func (service K8SService) CreateDeployConf(ac v1alpha1.AdminConsole, url string)
 									ValueFrom: &coreV1Api.EnvVarSource{
 										SecretKeyRef: &coreV1Api.SecretKeySelector{
 											LocalObjectReference: coreV1Api.LocalObjectReference{
-												Name: "admin-console-db",
+												Name: "db-admin-console",
 											},
 											Key: "username",
 										},
@@ -124,7 +124,7 @@ func (service K8SService) CreateDeployConf(ac v1alpha1.AdminConsole, url string)
 									ValueFrom: &coreV1Api.EnvVarSource{
 										SecretKeyRef: &coreV1Api.SecretKeySelector{
 											LocalObjectReference: coreV1Api.LocalObjectReference{
-												Name: "admin-console-db",
+												Name: "db-admin-console",
 											},
 											Key: "password",
 										},
@@ -282,7 +282,7 @@ func (service K8SService) CreateClusterRole(ac v1alpha1.AdminConsole) error {
 	if !k8serrors.IsNotFound(err) {
 		return err
 	}
-	log.V(1).Info("Creating Role for Admin Console","Name", cro.Name, "ClusterRoleName", cro.Name)
+	log.V(1).Info("Creating Role for Admin Console", "Name", cro.Name, "ClusterRoleName", cro.Name)
 
 	cr, err = service.AuthClient.ClusterRoles().Create(cro)
 	if err != nil {
