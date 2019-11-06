@@ -200,17 +200,6 @@ func (s AdminConsoleServiceImpl) Install(instance v1alpha1.AdminConsole) (*v1alp
 		return &instance, err
 	}
 
-	dbAdminPassword := uniuri.New()
-	dbAdminSecret := map[string][]byte{
-		"username": []byte(fmt.Sprintf("admin-%s", instance.Spec.EdpSpec.Name)),
-		"password": []byte(dbAdminPassword),
-	}
-
-	err = s.platformService.CreateSecret(instance, "admin-console-db", dbAdminSecret)
-	if err != nil {
-		return &instance, errors.Wrap(err, "Failed to create admin credentials for tenant database.")
-	}
-
 	err = s.platformService.CreateSecurityContext(instance)
 	if err != nil {
 		return &instance, err
@@ -236,7 +225,7 @@ func (s AdminConsoleServiceImpl) Install(instance v1alpha1.AdminConsole) (*v1alp
 		return &instance, err
 	}
 
-	err = s.platformService.CreateClusterRoleBinding(instance,"admin-console-sc-access")
+	err = s.platformService.CreateClusterRoleBinding(instance, "admin-console-sc-access")
 	if err != nil {
 		return &instance, err
 	}
