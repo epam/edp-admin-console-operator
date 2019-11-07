@@ -48,32 +48,41 @@ type K8SService struct {
 
 func (service K8SService) CreateDeployConf(ac v1alpha1.AdminConsole, url string) error {
 
-	dbEnabled := "false"
-	keycloakEnabled := "false"
-	var replicaCount int32 = 1
+	db := "false"
+	k := "false"
+	t := true
+	f := false
+	var rc int32 = 1
+	var id int64 = 1001
 
-	labels := platformHelper.GenerateLabels(ac.Name)
-	consoleDeployObj := &appsV1Api.Deployment{
+	l := platformHelper.GenerateLabels(ac.Name)
+	do := &appsV1Api.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      ac.Name,
 			Namespace: ac.Namespace,
-			Labels:    labels,
+			Labels:    l,
 		},
 
 		Spec: appsV1Api.DeploymentSpec{
-			Replicas: &replicaCount,
+			Replicas: &rc,
 			Selector: &metav1.LabelSelector{
-				MatchLabels: labels,
+				MatchLabels: l,
 			},
 			Template: coreV1Api.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
-					Labels: labels,
+					Labels: l,
 				},
 				Spec: coreV1Api.PodSpec{
 					Containers: []coreV1Api.Container{
 						{
+							SecurityContext: &coreV1Api.SecurityContext{
+								Privileged:               &f,
+								ReadOnlyRootFilesystem:   &t,
+								AllowPrivilegeEscalation: &f,
+
+							},
 							Name:            ac.Name,
-							Image:           ac.Spec.Image + ":" + ac.Spec.Version,
+							Image:           fmt.Sprintf("%s:%s", ac.Spec.Image, ac.Spec.Version),
 							ImagePullPolicy: coreV1Api.PullAlways,
 							Env: []coreV1Api.EnvVar{
 								{
@@ -94,7 +103,7 @@ func (service K8SService) CreateDeployConf(ac v1alpha1.AdminConsole, url string)
 								},
 								{
 									Name:  "DB_ENABLED",
-									Value: dbEnabled,
+									Value: db,
 								},
 								{
 									Name:  "EDP_VERSION",
@@ -102,7 +111,7 @@ func (service K8SService) CreateDeployConf(ac v1alpha1.AdminConsole, url string)
 								},
 								{
 									Name:  "AUTH_KEYCLOAK_ENABLED",
-									Value: keycloakEnabled,
+									Value: k,
 								},
 								{
 									Name:  "DNS_WILDCARD",
@@ -183,6 +192,12 @@ func (service K8SService) CreateDeployConf(ac v1alpha1.AdminConsole, url string)
 						},
 					},
 					ServiceAccountName: ac.Name,
+					SecurityContext: &coreV1Api.PodSecurityContext{
+						RunAsUser:    &id,
+						RunAsGroup:   &id,
+						RunAsNonRoot: &t,
+						FSGroup:      &id,
+					},
 				},
 			},
 			Strategy: appsV1Api.DeploymentStrategy{
@@ -191,27 +206,21 @@ func (service K8SService) CreateDeployConf(ac v1alpha1.AdminConsole, url string)
 		},
 	}
 
-	if err := controllerutil.SetControllerReference(&ac, consoleDeployObj, service.Scheme); err != nil {
+	if err := controllerutil.SetControllerReference(&ac, do, service.Scheme); err != nil {
 		return err
 	}
 
-	consoleDeployment, err := service.AppsClient.Deployments(consoleDeployObj.Namespace).Get(consoleDeployObj.Name, metav1.GetOptions{})
+	d, err := service.AppsClient.Deployments(do.Namespace).Get(do.Name, metav1.GetOptions{})
+	if !k8serrors.IsNotFound(err) {
+		return err
+	}
+
+	d, err = service.AppsClient.Deployments(do.Namespace).Create(do)
 	if err != nil {
-		if k8serrors.IsNotFound(err) {
-			log.V(1).Info("Creating Deployment for Admin Console",
-				"Namespace", consoleDeployObj.Namespace, "Name", consoleDeployObj.Name)
-
-			consoleDeployment, err = service.AppsClient.Deployments(consoleDeployObj.Namespace).Create(consoleDeployObj)
-			if err != nil {
-				return err
-			}
-			log.Info("Deployment has been created",
-				"Namespace", consoleDeployment.Name, "Name", consoleDeployment.Name)
-
-			return nil
-		}
 		return err
 	}
+	log.Info("Deployment has been created",
+		"Namespace", d.Name, "Name", d.Name)
 
 	return nil
 }
