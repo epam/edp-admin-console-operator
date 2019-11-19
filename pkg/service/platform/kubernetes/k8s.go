@@ -79,7 +79,6 @@ func (service K8SService) CreateDeployConf(ac v1alpha1.AdminConsole, url string)
 								Privileged:               &f,
 								ReadOnlyRootFilesystem:   &t,
 								AllowPrivilegeEscalation: &f,
-
 							},
 							Name:            ac.Name,
 							Image:           fmt.Sprintf("%s:%s", ac.Spec.Image, ac.Spec.Version),
@@ -107,15 +106,29 @@ func (service K8SService) CreateDeployConf(ac v1alpha1.AdminConsole, url string)
 								},
 								{
 									Name:  "EDP_VERSION",
-									Value: ac.Spec.EdpSpec.Version,
+									ValueFrom: &coreV1Api.EnvVarSource{
+										ConfigMapKeyRef: &coreV1Api.ConfigMapKeySelector{
+											LocalObjectReference: coreV1Api.LocalObjectReference{
+												Name: "edp-config",
+											},
+											Key: "edp_version",
+										},
+									},
 								},
 								{
 									Name:  "AUTH_KEYCLOAK_ENABLED",
 									Value: k,
 								},
 								{
-									Name:  "DNS_WILDCARD",
-									Value: ac.Spec.EdpSpec.DnsWildcard,
+									Name: "DNS_WILDCARD",
+									ValueFrom: &coreV1Api.EnvVarSource{
+										ConfigMapKeyRef: &coreV1Api.ConfigMapKeySelector{
+											LocalObjectReference: coreV1Api.LocalObjectReference{
+												Name: "edp-config",
+											},
+											Key: "dns_wildcard",
+										},
+									},
 								},
 								{
 									Name: "PG_USER",
@@ -651,27 +664,32 @@ func (service K8SService) CreateServiceAccount(ac v1alpha1.AdminConsole) error {
 
 func (service K8SService) CreateExternalEndpoint(ac v1alpha1.AdminConsole) error {
 
-	log.V(1).Info("Creating Admin Console external endpoint.",
-		"Namespace", ac.Namespace, "Name", ac.Name)
-
-	labels := platformHelper.GenerateLabels(ac.Name)
-
-	consoleService, err := service.CoreClient.Services(ac.Namespace).Get(ac.Name, metav1.GetOptions{})
+	c, err := service.GetConfigmapData(ac.Namespace, "edp-config")
 	if err != nil {
-		log.Info("Console Service has not been found")
 		return err
 	}
 
-	consoleIngressObject := &v1beta1.Ingress{
+	log.V(1).Info("Creating Admin Console external endpoint.",
+		"Namespace", ac.Namespace, "Name", ac.Name)
+
+	l := platformHelper.GenerateLabels(ac.Name)
+
+	so, err := service.CoreClient.Services(ac.Namespace).Get(ac.Name, metav1.GetOptions{})
+	if err != nil {
+		log.Info("Console Service has not been found","Namespace", ac.Namespace, "Name", ac.Name)
+		return err
+	}
+
+	io := &v1beta1.Ingress{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      ac.Name,
 			Namespace: ac.Namespace,
-			Labels:    labels,
+			Labels:    l,
 		},
 		Spec: v1beta1.IngressSpec{
 			Rules: []v1beta1.IngressRule{
 				{
-					Host: fmt.Sprintf("%s-%s.%s", ac.Name, ac.Namespace, ac.Spec.EdpSpec.DnsWildcard),
+					Host: fmt.Sprintf("%s-%s.%s", ac.Name, ac.Namespace, c["dns_wildcard"]),
 					IngressRuleValue: v1beta1.IngressRuleValue{
 						HTTP: &v1beta1.HTTPIngressRuleValue{
 							Paths: []v1beta1.HTTPIngressPath{
@@ -680,7 +698,7 @@ func (service K8SService) CreateExternalEndpoint(ac v1alpha1.AdminConsole) error
 									Backend: v1beta1.IngressBackend{
 										ServiceName: ac.Name,
 										ServicePort: intstr.IntOrString{
-											IntVal: consoleService.Spec.Ports[0].TargetPort.IntVal,
+											IntVal: so.Spec.Ports[0].TargetPort.IntVal,
 										},
 									},
 								},
@@ -691,44 +709,37 @@ func (service K8SService) CreateExternalEndpoint(ac v1alpha1.AdminConsole) error
 			},
 		},
 	}
-	if err := controllerutil.SetControllerReference(&ac, consoleIngressObject, service.Scheme); err != nil {
+	if err := controllerutil.SetControllerReference(&ac, io, service.Scheme); err != nil {
 		return err
 	}
 
-	consoleIngress, err := service.ExtensionsV1Client.Ingresses(consoleIngressObject.Namespace).Get(consoleIngressObject.Name, metav1.GetOptions{})
+	i, err := service.ExtensionsV1Client.Ingresses(io.Namespace).Get(io.Name, metav1.GetOptions{})
 
+	if !k8serrors.IsNotFound(err) {
+		return err
+	}
+
+	i, err = service.ExtensionsV1Client.Ingresses(io.Namespace).Create(io)
 	if err != nil {
-		if k8serrors.IsNotFound(err) {
-			log.V(1).Info("Creating a new ingress for Admin Console", "ingress", consoleIngressObject, "admin console", ac)
-			consoleIngress, err = service.ExtensionsV1Client.Ingresses(consoleIngressObject.Namespace).Create(consoleIngressObject)
-			if err != nil {
-				return err
-			}
-			log.Info("Ingress has been created",
-				"Namespace", consoleIngress.Namespace, "Name", consoleIngress.Name)
-			return nil
-		}
 		return err
 	}
+
+	log.Info("Ingress has been created",
+		"Namespace", i.Namespace, "Name", i.Name)
 
 	return nil
 }
 
-func (service K8SService) GetConfigmap(namespace string, name string) (map[string]string, error) {
-	out := map[string]string{}
-	configmap, err := service.CoreClient.ConfigMaps(namespace).Get(name, metav1.GetOptions{})
-
+func (service K8SService) GetConfigmapData(namespace string, name string) (map[string]string, error) {
+	c, err := service.CoreClient.ConfigMaps(namespace).Get(name, metav1.GetOptions{})
 	if err != nil {
-		if k8serrors.IsNotFound(err) {
-			log.Info(fmt.Sprintf("Config map %v in namespace %v not found", name, namespace))
-			return out, nil
+		if k8serrors.IsNotFound(err)  {
+			log.Info("Config Map not found", "Namespace", namespace, "Name", name)
+			return map[string]string{}, nil
 		}
-		// Some error occurred
-		return out, err
+		return map[string]string{}, err
 	}
-	out = configmap.Data
-	// Success
-	return out, nil
+	return c.Data, nil
 }
 
 func (service K8SService) GetSecret(namespace string, name string) (map[string][]byte, error) {

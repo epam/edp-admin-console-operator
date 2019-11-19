@@ -116,7 +116,14 @@ func (service OpenshiftService) CreateDeployConf(ac v1alpha1.AdminConsole, url s
 								},
 								{
 									Name:  "EDP_VERSION",
-									Value: ac.Spec.EdpSpec.Version,
+									ValueFrom: &coreV1Api.EnvVarSource{
+										ConfigMapKeyRef: &coreV1Api.ConfigMapKeySelector{
+											LocalObjectReference: coreV1Api.LocalObjectReference{
+												Name: "edp-config",
+											},
+											Key: "edp_version",
+										},
+									},
 								},
 								{
 									Name:  "AUTH_KEYCLOAK_ENABLED",
@@ -124,7 +131,14 @@ func (service OpenshiftService) CreateDeployConf(ac v1alpha1.AdminConsole, url s
 								},
 								{
 									Name:  "DNS_WILDCARD",
-									Value: ac.Spec.EdpSpec.DnsWildcard,
+									ValueFrom: &coreV1Api.EnvVarSource{
+										ConfigMapKeyRef: &coreV1Api.ConfigMapKeySelector{
+											LocalObjectReference: coreV1Api.LocalObjectReference{
+												Name: "edp-config",
+											},
+											Key: "dns_wildcard",
+										},
+									},
 								},
 								{
 									Name:  "OPENSHIFT_CLUSTER_URL",

@@ -24,7 +24,7 @@ type PlatformService interface {
 	CreateRole(ac v1alpha1.AdminConsole) error
 	CreateRoleBinding(ac v1alpha1.AdminConsole, name string, binding string, kind string) error
 	CreateClusterRoleBinding(ac v1alpha1.AdminConsole, binding string) error
-	GetConfigmap(namespace string, name string) (map[string]string, error)
+	GetConfigmapData(namespace string, name string) (map[string]string, error)
 	GetDisplayName(ac v1alpha1.AdminConsole) (string, error)
 	GetSecret(namespace string, name string) (map[string][]byte, error)
 	GetAdminConsole(ac v1alpha1.AdminConsole) (*v1alpha1.AdminConsole, error)
