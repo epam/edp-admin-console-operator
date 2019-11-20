@@ -182,6 +182,17 @@ func (service OpenshiftService) CreateDeployConf(ac v1alpha1.AdminConsole, url s
 									Name:  "PLATFORM_TYPE",
 									Value: "openshift",
 								},
+								{
+									Name: "EDP_NAME",
+									ValueFrom: &coreV1Api.EnvVarSource{
+										ConfigMapKeyRef: &coreV1Api.ConfigMapKeySelector{
+											LocalObjectReference: coreV1Api.LocalObjectReference{
+												Name: "edp-config",
+											},
+											Key: "edp_name",
+										},
+									},
+								},
 							},
 							Ports: []coreV1Api.ContainerPort{
 								{

@@ -168,6 +168,17 @@ func (service K8SService) CreateDeployConf(ac v1alpha1.AdminConsole, url string)
 									Name:  "PLATFORM_TYPE",
 									Value: "kubernetes",
 								},
+								{
+									Name: "EDP_NAME",
+									ValueFrom: &coreV1Api.EnvVarSource{
+										ConfigMapKeyRef: &coreV1Api.ConfigMapKeySelector{
+											LocalObjectReference: coreV1Api.LocalObjectReference{
+												Name: "edp-config",
+											},
+											Key: "edp_name",
+										},
+									},
+								},
 							},
 							Ports: []coreV1Api.ContainerPort{
 								{
