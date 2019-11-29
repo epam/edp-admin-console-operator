@@ -273,7 +273,7 @@ func (service K8SService) CreateRole(ac v1alpha1.AdminConsole) error {
 		Rules: []authV1Api.PolicyRule{
 			{
 				APIGroups: []string{"*"},
-				Resources: []string{"codebases", "applicationbranches", "codebasebranches", "cdpipelines", "stages"},
+				Resources: []string{"codebases", "codebasebranches", "cdpipelines", "stages"},
 				Verbs:     []string{"get", "create", "update"},
 			},
 		},
