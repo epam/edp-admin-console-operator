@@ -20,7 +20,7 @@ for file in $(ls deploy/crds/*_crd.yaml); do kubectl apply -f $file; done
 
 * Deploy operator:
 ```bash
-`kubectl patch -n <edp_cicd_project> -f deploy/operator.yaml --local=true --patch='{"spec":{"template":{"spec":{"containers":[{"image":"epamedp/admin-console-operator:<operator_version>", "name":"admin-console-operator-v2", "env": [{"name":"WATCH_NAMESPACE", "value":"<edp_cicd_project>"}, {"name":"PLATFORM_TYPE","value":"kubernetes"}]}]}}}}' -o yaml | kubectl -n <edp_cicd_project> apply -f -
+kubectl patch -n <edp_cicd_project> -f deploy/operator.yaml --local=true --patch='{"spec":{"template":{"spec":{"containers":[{"image":"epamedp/admin-console-operator:<operator_version>", "name":"admin-console-operator-v2", "env": [{"name":"WATCH_NAMESPACE", "value":"<edp_cicd_project>"}, {"name":"PLATFORM_TYPE","value":"kubernetes"}]}]}}}}' -o yaml | kubectl -n <edp_cicd_project> apply -f -
 ```
 
 - _<operator_version> - a selected release version;_
