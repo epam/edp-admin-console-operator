@@ -105,7 +105,7 @@ func (service K8SService) CreateDeployConf(ac v1alpha1.AdminConsole, url string)
 									Value: db,
 								},
 								{
-									Name:  "EDP_VERSION",
+									Name: "EDP_VERSION",
 									ValueFrom: &coreV1Api.EnvVarSource{
 										ConfigMapKeyRef: &coreV1Api.ConfigMapKeySelector{
 											LocalObjectReference: coreV1Api.LocalObjectReference{
@@ -274,7 +274,7 @@ func (service K8SService) CreateRole(ac v1alpha1.AdminConsole) error {
 			{
 				APIGroups: []string{"*"},
 				Resources: []string{"codebases", "codebasebranches", "cdpipelines", "stages"},
-				Verbs:     []string{"get", "create", "update"},
+				Verbs:     []string{"get", "create", "update", "delete"},
 			},
 		},
 	}
@@ -698,7 +698,7 @@ func (service K8SService) CreateExternalEndpoint(ac v1alpha1.AdminConsole) error
 
 	so, err := service.CoreClient.Services(ac.Namespace).Get(ac.Name, metav1.GetOptions{})
 	if err != nil {
-		log.Info("Console Service has not been found","Namespace", ac.Namespace, "Name", ac.Name)
+		log.Info("Console Service has not been found", "Namespace", ac.Namespace, "Name", ac.Name)
 		return err
 	}
 
@@ -755,7 +755,7 @@ func (service K8SService) CreateExternalEndpoint(ac v1alpha1.AdminConsole) error
 func (service K8SService) GetConfigmapData(namespace string, name string) (map[string]string, error) {
 	c, err := service.CoreClient.ConfigMaps(namespace).Get(name, metav1.GetOptions{})
 	if err != nil {
-		if k8serrors.IsNotFound(err)  {
+		if k8serrors.IsNotFound(err) {
 			log.Info("Config Map not found", "Namespace", namespace, "Name", name)
 			return map[string]string{}, nil
 		}

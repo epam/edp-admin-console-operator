@@ -115,7 +115,7 @@ func (service OpenshiftService) CreateDeployConf(ac v1alpha1.AdminConsole, url s
 									Value: dbEnabled,
 								},
 								{
-									Name:  "EDP_VERSION",
+									Name: "EDP_VERSION",
 									ValueFrom: &coreV1Api.EnvVarSource{
 										ConfigMapKeyRef: &coreV1Api.ConfigMapKeySelector{
 											LocalObjectReference: coreV1Api.LocalObjectReference{
@@ -130,7 +130,7 @@ func (service OpenshiftService) CreateDeployConf(ac v1alpha1.AdminConsole, url s
 									Value: keycloakEnabled,
 								},
 								{
-									Name:  "DNS_WILDCARD",
+									Name: "DNS_WILDCARD",
 									ValueFrom: &coreV1Api.EnvVarSource{
 										ConfigMapKeyRef: &coreV1Api.ConfigMapKeySelector{
 											LocalObjectReference: coreV1Api.LocalObjectReference{
@@ -409,7 +409,7 @@ func (service OpenshiftService) CreateRole(ac v1alpha1.AdminConsole) error {
 			{
 				APIGroups: []string{"*"},
 				Resources: []string{"codebases", "codebasebranches", "cdpipelines", "stages"},
-				Verbs:     []string{"get", "create", "update"},
+				Verbs:     []string{"get", "create", "update", "delete"},
 			},
 		},
 	}
