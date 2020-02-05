@@ -30,3 +30,6 @@ for file in $(ls deploy/crds/*_crd.yaml); do kubectl apply -f $file; done
 - _<platform_type> - a platform type that can be "kubernetes" or "openshift"_.
 
 * Check the <edp_cicd_project> namespace that should contain Deployment with your operator in a running status.
+
+# Local Development
+In order to develop the operator, first set up a local environment. For details, please refer to the [Local Development](documentation/local_development.md) page.
