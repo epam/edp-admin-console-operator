@@ -1,0 +1,12 @@
+name: admin-console-operator
+namespace: ""
+cdPipelineName: ""
+cdPipelineStageName: ""
+dnsWildcard: ""
+database:
+  required: false
+ingress:
+  required: false
+image:
+  name: admin-console-operator
+  version: latest
