@@ -16,7 +16,6 @@ spec:
       securityContext:
         runAsUser: 1001
         runAsNonRoot: true
-        runAsGroup: 1001
         fsGroup: 1001
       containers:
         - name: {{ .Values.name }}
@@ -39,9 +38,5 @@ spec:
             - name: OPERATOR_NAME
               value: "{{ .Values.name }}"
             - name: PLATFORM_TYPE
-{{if eq .cdPipelineName "admin-console-operator-master-eks "}}
-              value: "kubernetes"
-{{end}}
-{{else}}
-              value: "openshift"
-{{end}}
+              value: "{{ .Values.platform }}"
+

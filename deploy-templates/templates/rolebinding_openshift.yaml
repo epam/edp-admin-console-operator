@@ -1,3 +1,4 @@
+{{- if eq .Values.platform "openshift" -}}
 apiVersion: authorization.openshift.io/v1
 kind: RoleBinding
 metadata:
@@ -10,3 +11,5 @@ subjects:
     namespace: {{ .Values.namespace }}
 userNames:
   - system:serviceaccount:{{ .Values.namespace }}:edp
+groupNames: []
+{{- end -}}

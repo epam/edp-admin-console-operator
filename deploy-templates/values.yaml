@@ -1,5 +1,6 @@
 name: admin-console-operator
 namespace: ""
+platform: "openshift"
 cdPipelineName: ""
 cdPipelineStageName: ""
 dnsWildcard: ""
