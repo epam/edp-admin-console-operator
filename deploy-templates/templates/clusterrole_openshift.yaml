@@ -1,0 +1,45 @@
+{{ if eq .Values.platform "openshift" }}
+apiVersion: authorization.openshift.io/v1
+kind: ClusterRole
+metadata:
+    annotations:
+        openshift.io/description: Role for {{ .Values.name }}-edp service account
+        openshift.io/reconcile-protect: "false"
+    name: edp-{{ .Values.name }}-clusterrole-{{ .Values.namespace }}
+rules:
+- apiGroups:
+  - '*'
+  attributeRestrictions: null
+  resources:
+  - configmaps
+  verbs:
+  - get
+- apiGroups:
+  - '*'
+  attributeRestrictions: null
+  resources:
+  - securitycontextconstraints
+  verbs:
+  - create
+  - get
+  - list
+  - delete
+  - update
+- apiGroups:
+    - '*'
+  attributeRestrictions: null
+  resources:
+    - adminconsoles
+    - adminconsoles/finalizers
+    - adminconsoles/status
+    - keycloaks
+    - keycloaks/status
+    - keycloakclients
+    - keycloakclients/finalizers
+    - keycloakclients/status
+    - keycloakrealms
+    - keycloakrealms/status
+    - edpcomponents
+  verbs:
+    - '*'
+{{ end }}

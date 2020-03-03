@@ -12,11 +12,9 @@ spec:
       labels:
         name: {{ .Values.name }}
     spec:
-      serviceAccountName: edp
+      serviceAccountName: {{ .Values.name }}-edp
       securityContext:
-        runAsUser: 1001
         runAsNonRoot: true
-        fsGroup: 1001
       containers:
         - name: {{ .Values.name }}
           # Replace this with the built image name
