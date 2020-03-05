@@ -7,6 +7,7 @@ package com.epam.edp.adminconsole {
     -- spec --
         String image
         String version
+        []LocalObjectReference imagePullSecrets
         AdminConsoleKeycloakSpec keycloakSpec
         AdminConsoleEDPSpec edpSpec
         AdminConsoleDBSpec dbSpec
@@ -38,7 +39,10 @@ package com.epam.edp.adminconsole {
     }
     AdminConsoleDBSpec <-- AdminConsole : "internal structure"
 }
-
+class LocalObjectReference {
+    String name
+}
+AdminConsole -l-> LocalObjectReference : imagePullSecrets
 KeycloakClient <.u. AdminConsole : "owner reference"
 EdpComponent <.u. AdminConsole : "owner reference"
 

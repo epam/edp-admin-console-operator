@@ -88,6 +88,7 @@ func (service OpenshiftService) CreateDeployConf(ac v1alpha1.AdminConsole, url s
 					Labels: labels,
 				},
 				Spec: coreV1Api.PodSpec{
+					ImagePullSecrets: ac.Spec.ImagePullSecrets,
 					Containers: []coreV1Api.Container{
 						{
 							Name:            ac.Name,

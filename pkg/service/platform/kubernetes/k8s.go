@@ -73,6 +73,7 @@ func (service K8SService) CreateDeployConf(ac v1alpha1.AdminConsole, url string)
 					Labels: l,
 				},
 				Spec: coreV1Api.PodSpec{
+					ImagePullSecrets: ac.Spec.ImagePullSecrets,
 					Containers: []coreV1Api.Container{
 						{
 							SecurityContext: &coreV1Api.SecurityContext{
