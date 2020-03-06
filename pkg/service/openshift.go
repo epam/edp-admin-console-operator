@@ -106,6 +106,7 @@ func (service OpenshiftService) CreateDeployConf(ac v1alpha1.AdminConsole) error
 					Labels: labels,
 				},
 				Spec: coreV1Api.PodSpec{
+					ImagePullSecrets: ac.Spec.ImagePullSecrets,
 					Containers: []coreV1Api.Container{
 						{
 							Name:            ac.Name,

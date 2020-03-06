@@ -4,6 +4,8 @@ go 1.12
 
 replace git.apache.org/thrift.git => github.com/apache/thrift v0.12.0
 
+replace github.com/openshift/api => github.com/openshift/api v0.0.0-20180801171038-322a19404e37
+
 require (
 	cloud.google.com/go v0.44.3 // indirect
 	github.com/Azure/go-autorest/autorest v0.9.1 // indirect
