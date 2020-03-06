@@ -41,7 +41,7 @@ type OpenshiftService struct {
 	kubernetes.K8SService
 
 	authClient     authV1Client.AuthorizationV1Client
-	templateClient templateV1Client.TemplateV1Client
+	templateClient templateV1Client.TemplateV1Client 
 	projectClient  projectV1Client.ProjectV1Client
 	securityClient securityV1Client.SecurityV1Client
 	appClient      appsV1client.AppsV1Client
@@ -88,6 +88,7 @@ func (service OpenshiftService) CreateDeployConf(ac v1alpha1.AdminConsole, url s
 					Labels: labels,
 				},
 				Spec: coreV1Api.PodSpec{
+					ImagePullSecrets: ac.Spec.ImagePullSecrets,
 					Containers: []coreV1Api.Container{
 						{
 							Name:            ac.Name,
