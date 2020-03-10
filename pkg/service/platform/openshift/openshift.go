@@ -184,6 +184,10 @@ func (service OpenshiftService) CreateDeployConf(ac v1alpha1.AdminConsole, url s
 									Value: "openshift",
 								},
 								{
+									Name:  "VERSIONING_TYPE",
+									Value: "default,edp",
+								},
+								{
 									Name: "VCS_INTEGRATION_ENABLED",
 									ValueFrom: &coreV1Api.EnvVarSource{
 										ConfigMapKeyRef: &coreV1Api.ConfigMapKeySelector{

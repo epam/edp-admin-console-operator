@@ -170,6 +170,10 @@ func (service K8SService) CreateDeployConf(ac v1alpha1.AdminConsole, url string)
 									Value: "kubernetes",
 								},
 								{
+									Name:  "VERSIONING_TYPE",
+									Value: "default,edp",
+								},
+								{
 									Name: "VCS_INTEGRATION_ENABLED",
 									ValueFrom: &coreV1Api.EnvVarSource{
 										ConfigMapKeyRef: &coreV1Api.ConfigMapKeySelector{
