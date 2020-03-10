@@ -170,7 +170,7 @@ func (service K8SService) CreateDeployConf(ac v1alpha1.AdminConsole, url string)
 									Value: "kubernetes",
 								},
 								{
-									Name:  "VERSIONING_TYPE",
+									Name:  "VERSIONING_TYPES",
 									Value: "default,edp",
 								},
 								{

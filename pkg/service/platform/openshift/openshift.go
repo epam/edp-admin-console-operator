@@ -184,7 +184,7 @@ func (service OpenshiftService) CreateDeployConf(ac v1alpha1.AdminConsole, url s
 									Value: "openshift",
 								},
 								{
-									Name:  "VERSIONING_TYPE",
+									Name:  "VERSIONING_TYPES",
 									Value: "default,edp",
 								},
 								{
