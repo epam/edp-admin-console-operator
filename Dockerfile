@@ -8,7 +8,7 @@ ENV OPERATOR=/usr/local/bin/admin-console-operator \
 # install operator binary
 COPY admin-console-operator ${OPERATOR}
 
-COPY bin /usr/local/bin
+COPY build/bin /usr/local/bin
 
 RUN  chmod u+x /usr/local/bin/user_setup && \
      chmod ugo+x /usr/local/bin/entrypoint && \
