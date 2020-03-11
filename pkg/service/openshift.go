@@ -44,7 +44,7 @@ type OpenshiftService struct {
 	K8SService
 
 	authClient     authV1Client.AuthorizationV1Client
-	templateClient templateV1Client.TemplateV1Client
+	templateClient templateV1Client.TemplateV1Client 
 	projectClient  projectV1Client.ProjectV1Client
 	securityClient securityV1Client.SecurityV1Client
 	appClient      appsV1client.AppsV1Client
