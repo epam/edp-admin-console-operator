@@ -2,13 +2,14 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
-  name: {{ .Values.name }}-edp-{{ .Values.namespace }}
+  name: {{ .Values.name }}-edp-admin-{{ .Values.namespace }}
 roleRef:
-  kind: Role
+  kind: ClusterRole
+  name: admin
   apiGroup: rbac.authorization.k8s.io
-  name: edp-{{ .Values.name }}-role-{{ .Values.namespace }}
 subjects:
   - kind: ServiceAccount
     name: {{ .Values.name }}-edp
     namespace: {{ .Values.namespace }}
+
 {{- end -}}

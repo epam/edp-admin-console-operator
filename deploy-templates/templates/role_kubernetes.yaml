@@ -1,0 +1,24 @@
+{{ if eq .Values.platform "kubernetes" }}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: edp-{{ .Values.name }}-role-{{ .Values.namespace }}
+rules:
+- apiGroups:
+  - '*'
+  attributeRestrictions: null
+  resources:
+  - codebases
+  - codebasebranches
+  - cdpipelines
+  - stages
+  - codebases/finalizers
+  - codebasebranches/finalizers
+  - cdpipelines/finalizers
+  - stages/finalizers
+  verbs:
+  - create
+  - get
+  - delete
+  - update
+{{ end}}
