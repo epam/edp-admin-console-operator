@@ -39,4 +39,13 @@ rules:
   verbs:
   - get
   - list
+- apiGroups:
+    - '*'
+  attributeRestrictions: null
+  resources:
+    - clusterrolebindings
+  verbs:
+    - get
+    - create
+    - delete
 {{ end }}
