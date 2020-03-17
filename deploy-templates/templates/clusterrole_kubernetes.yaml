@@ -31,4 +31,12 @@ rules:
     - edpcomponents
   verbs:
     - '*'
+- apiGroups:
+  - 'storage.k8s.io'
+  attributeRestrictions: null
+  resources:
+  - storageclasses
+  verbs:
+  - get
+  - list
 {{ end }}
