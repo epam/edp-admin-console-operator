@@ -133,6 +133,7 @@ func (s AdminConsoleServiceImpl) ExposeConfiguration(instance v1alpha1.AdminCons
 		keycloakClient.Spec.DirectAccess = true
 		keycloakClient.Spec.WebUrl = webUrl
 		keycloakClient.Spec.Secret = adminConsoleSpec.DefaultKeycloakSecretName
+		keycloakClient.Spec.AudRequired = true
 
 		err = s.platformService.CreateKeycloakClient(&keycloakClient)
 		if err != nil {
