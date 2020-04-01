@@ -17,4 +17,3 @@ spec:
     port: ""
   keycloakSpec:
     enabled: false
-    url: ""

@@ -29,8 +29,7 @@ type EdpSpec struct {
 }
 
 type KeycloakSpec struct {
-	Enabled bool   `json:"enabled,omitempty"`
-	Url     string `json:"url,omitempty"`
+	Enabled bool `json:"enabled,omitempty"`
 }
 
 type AdminConsoleDbSettings struct {
