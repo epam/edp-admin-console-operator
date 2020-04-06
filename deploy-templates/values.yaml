@@ -1,13 +1,7 @@
 name: admin-console-operator
 namespace: ""
 platform: "openshift"
-cdPipelineName: ""
-cdPipelineStageName: ""
 dnsWildcard: ""
-database:
-  required: false
-ingress:
-  required: false
 image:
-  name: admin-console-operator
-  version: latest
+  name: epamedp/admin-console-operator
+  version: v2.3.0
