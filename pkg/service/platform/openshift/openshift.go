@@ -415,7 +415,7 @@ func (service OpenshiftService) CreateRole(ac v1alpha1.AdminConsole) error {
 				APIGroups: []string{"*"},
 				Resources: []string{"codebases", "codebasebranches", "cdpipelines", "stages",
 					"codebases/finalizers", "codebasebranches/finalizers", "cdpipelines/finalizers", "stages/finalizers"},
-				Verbs: []string{"get", "create", "update", "delete"},
+				Verbs: []string{"get", "create", "update", "delete", "patch"},
 			},
 		},
 	}

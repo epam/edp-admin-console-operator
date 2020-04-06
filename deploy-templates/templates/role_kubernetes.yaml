@@ -21,4 +21,5 @@ rules:
   - get
   - delete
   - update
+  - patch
 {{ end}}
