@@ -10,6 +10,7 @@ spec:
     dnsWildcard: delivery.aws.main.edp.projects.epam.com
     version: "2.0"
     integrationStrategies: "Create,Clone"
+    testReportTools: "Allure,Gatling"
   dbSpec:
     enabled: false
     name: ""

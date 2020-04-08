@@ -28,6 +28,7 @@ package com.epam.edp.adminconsole {
         String name
         String dnsWildcard
         String integrationStrategies
+        String testReportTools
     }
     AdminConsoleEDPSpec <-- AdminConsole : "internal structure"
 
