@@ -1,0 +1,64 @@
+@startuml
+
+package com.epam.edp.adminconsole {
+    class AdminConsole {
+    -- metadata --
+        String name
+    -- spec --
+        String image
+        String version
+        []LocalObjectReference imagePullSecrets
+        AdminConsoleKeycloakSpec keycloakSpec
+        AdminConsoleEDPSpec edpSpec
+        AdminConsoleDBSpec dbSpec
+    -- status --
+        Boolean available
+        Date lastTimeUpdated
+        String status
+    }
+
+    class AdminConsoleKeycloakSpec {
+        Boolean enabled
+        String url
+    }
+    AdminConsoleKeycloakSpec <-- AdminConsole : "internal structure"
+
+    class AdminConsoleEDPSpec {
+        String version
+        String name
+        String dnsWildcard
+        String integrationStrategies
+        String testReportTools
+    }
+    AdminConsoleEDPSpec <-- AdminConsole : "internal structure"
+
+    class AdminConsoleDBSpec {
+        String name
+        String hostname
+        String port
+        Boolean enabled
+    }
+    AdminConsoleDBSpec <-- AdminConsole : "internal structure"
+}
+class LocalObjectReference {
+    String name
+}
+AdminConsole -l-> LocalObjectReference : imagePullSecrets
+KeycloakClient <.u. AdminConsole : "owner reference"
+EdpComponent <.u. AdminConsole : "owner reference"
+
+legend
+|= arrow   |= meaning|
+|  ..>     |   owner references  |
+|  -->     |   creates     |
+|<back:LightGoldenRodYellow>    </back>| Work In Progress |
+|<back:LightGreen>    </back>| Implemented |
+|<back:Khaki>    </back>| TBD |
+endlegend
+
+skinparam class {
+	backgroundColor<<impl>> LightGoldenRodYellow
+	backgroundColor<<wip>> LightGreen
+	backgroundColor<<tbd>> Khaki
+}
+@enduml

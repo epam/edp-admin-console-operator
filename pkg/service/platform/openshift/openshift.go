@@ -41,7 +41,7 @@ type OpenshiftService struct {
 	kubernetes.K8SService
 
 	authClient     authV1Client.AuthorizationV1Client
-	templateClient templateV1Client.TemplateV1Client 
+	templateClient templateV1Client.TemplateV1Client
 	projectClient  projectV1Client.ProjectV1Client
 	securityClient securityV1Client.SecurityV1Client
 	appClient      appsV1client.AppsV1Client
@@ -116,7 +116,7 @@ func (service OpenshiftService) CreateDeployConf(ac v1alpha1.AdminConsole, url s
 									Value: dbEnabled,
 								},
 								{
-									Name:  "EDP_VERSION",
+									Name: "EDP_VERSION",
 									ValueFrom: &coreV1Api.EnvVarSource{
 										ConfigMapKeyRef: &coreV1Api.ConfigMapKeySelector{
 											LocalObjectReference: coreV1Api.LocalObjectReference{
@@ -131,7 +131,7 @@ func (service OpenshiftService) CreateDeployConf(ac v1alpha1.AdminConsole, url s
 									Value: keycloakEnabled,
 								},
 								{
-									Name:  "DNS_WILDCARD",
+									Name: "DNS_WILDCARD",
 									ValueFrom: &coreV1Api.EnvVarSource{
 										ConfigMapKeyRef: &coreV1Api.ConfigMapKeySelector{
 											LocalObjectReference: coreV1Api.LocalObjectReference{
@@ -174,6 +174,10 @@ func (service OpenshiftService) CreateDeployConf(ac v1alpha1.AdminConsole, url s
 								{
 									Name:  "BUILD_TOOLS",
 									Value: "maven",
+								},
+								{
+									Name:  "TEST_REPORT_TOOLS",
+									Value: ac.Spec.EdpSpec.TestReportTools,
 								},
 								{
 									Name:  "DEPLOYMENT_SCRIPT",

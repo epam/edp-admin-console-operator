@@ -37,10 +37,13 @@ spec:
                   type: string
                 integrationStrategies:
                   type: string
+                testReportTools:
+                  type: string
               required:
               - version
               - dnsWildcard
               - integrationStrategies
+              - testReportTools
               type: object
             image:
               type: string

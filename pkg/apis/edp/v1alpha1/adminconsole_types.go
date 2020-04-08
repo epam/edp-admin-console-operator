@@ -12,12 +12,12 @@ import (
 // AdminConsoleSpec defines the desired state of AdminConsole
 // +k8s:openapi-gen=true
 type AdminConsoleSpec struct {
-	Image                 string                      `json:"image"`
-	Version               string                      `json:"version"`
-	KeycloakSpec          KeycloakSpec                `json:"keycloakSpec, omitempty"`
-	EdpSpec               EdpSpec                     `json:"edpSpec"`
-	DbSpec                AdminConsoleDbSettings      `json:"dbSpec, omitempty"`
-	ImagePullSecrets      []coreV1Api.LocalObjectReference `json:"imagePullSecrets,omitempty"`
+	Image            string                           `json:"image"`
+	Version          string                           `json:"version"`
+	KeycloakSpec     KeycloakSpec                     `json:"keycloakSpec, omitempty"`
+	EdpSpec          EdpSpec                          `json:"edpSpec"`
+	DbSpec           AdminConsoleDbSettings           `json:"dbSpec, omitempty"`
+	ImagePullSecrets []coreV1Api.LocalObjectReference `json:"imagePullSecrets,omitempty"`
 	// Add custom validation using kubebuilder tags: https://book.kubebuilder.io/beyond_basics/generating_crd.html
 }
 
@@ -26,6 +26,7 @@ type EdpSpec struct {
 	Name                  string `json:"name,omitempty"`
 	DnsWildcard           string `json:"dnsWildcard"`
 	IntegrationStrategies string `json:"integrationStrategies,omitempty"`
+	TestReportTools       string `json:"testReportTools,omitempty"`
 }
 
 type KeycloakSpec struct {
