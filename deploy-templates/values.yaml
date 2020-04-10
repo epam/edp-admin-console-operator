@@ -1,7 +1,6 @@
 name: admin-console-operator
 namespace: ""
 platform: "openshift"
-dnsWildcard: ""
 image:
   name: epamedp/admin-console-operator
   version: v2.3.0
