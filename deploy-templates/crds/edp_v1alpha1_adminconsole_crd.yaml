@@ -46,6 +46,8 @@ spec:
               type: string
             version:
               type: string
+            basePath:
+              type: string
           required:
           - image
           - version
