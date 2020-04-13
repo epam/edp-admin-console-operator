@@ -3,14 +3,16 @@ package openshift
 import (
 	"encoding/json"
 	"fmt"
+	"reflect"
+	"strconv"
+	"strings"
+
 	"github.com/epmd-edp/admin-console-operator/v2/pkg/apis/edp/v1alpha1"
 	adminConsoleSpec "github.com/epmd-edp/admin-console-operator/v2/pkg/service/admin_console/spec"
 	platformHelper "github.com/epmd-edp/admin-console-operator/v2/pkg/service/platform/helper"
 	"github.com/epmd-edp/admin-console-operator/v2/pkg/service/platform/kubernetes"
-	"reflect"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
-	"strconv"
 
 	appsV1Api "github.com/openshift/api/apps/v1"
 	authV1Api "github.com/openshift/api/authorization/v1"
@@ -65,6 +67,11 @@ func (service OpenshiftService) CreateDeployConf(ac v1alpha1.AdminConsole, url s
 	dbEnabled := "false"
 	keycloakEnabled := "false"
 
+	basePath := ""
+	if len(ac.Spec.BasePath) != 0 {
+		basePath = fmt.Sprintf("/%v", ac.Spec.BasePath)
+	}
+
 	labels := platformHelper.GenerateLabels(ac.Name)
 	consoleDcObject := &appsV1Api.DeploymentConfig{
 		ObjectMeta: metav1.ObjectMeta{
@@ -106,6 +113,10 @@ func (service OpenshiftService) CreateDeployConf(ac v1alpha1.AdminConsole, url s
 								{
 									Name:  "HOST",
 									Value: url,
+								},
+								{
+									Name:  "BASE_PATH",
+									Value: basePath,
 								},
 								{
 									Name:  "EDP_ADMIN_CONSOLE_VERSION",
@@ -276,6 +287,11 @@ func (service OpenshiftService) CreateExternalEndpoint(ac v1alpha1.AdminConsole)
 
 	labels := platformHelper.GenerateLabels(ac.Name)
 
+	basePath := "/"
+	if len(ac.Spec.BasePath) != 0 {
+		basePath = fmt.Sprintf("/%v", ac.Spec.BasePath)
+	}
+
 	consoleRouteObject := &routeV1Api.Route{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      ac.Name,
@@ -291,6 +307,7 @@ func (service OpenshiftService) CreateExternalEndpoint(ac v1alpha1.AdminConsole)
 				Name: ac.Name,
 				Kind: "Service",
 			},
+			Path: basePath,
 		},
 	}
 
@@ -665,13 +682,13 @@ func (service OpenshiftService) getClusterURL() (string, error) {
 }
 
 // GetExternalUrl returns Route object from Openshift
-func (service OpenshiftService) GetExternalUrl(namespace string, name string) (string, string, error) {
+func (service OpenshiftService) GetExternalUrl(namespace string, name string) (*string, error) {
 	route, err := service.routeClient.Routes(namespace).Get(name, metav1.GetOptions{})
 	if err != nil && k8serrors.IsNotFound(err) {
 		log.Info(fmt.Sprintf("Route %v in namespace %v not found", name, namespace))
-		return "", "", nil
+		return nil, err
 	} else if err != nil {
-		return "", "", err
+		return nil, err
 	}
 
 	var routeScheme = "http"
@@ -679,7 +696,8 @@ func (service OpenshiftService) GetExternalUrl(namespace string, name string) (s
 		routeScheme = "https"
 	}
 
-	return route.Spec.Host, routeScheme, nil
+	u := fmt.Sprintf("%s://%s%s", routeScheme, route.Spec.Host, strings.TrimRight(route.Spec.Path, "/"))
+	return &u, nil
 }
 
 // IsDeploymentReady gets Deployment Config from Openshift, based on data from Admin Console

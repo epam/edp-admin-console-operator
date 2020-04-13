@@ -1,9 +1,10 @@
 package v1alpha1
 
 import (
+	"time"
+
 	coreV1Api "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"time"
 )
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
@@ -18,6 +19,7 @@ type AdminConsoleSpec struct {
 	EdpSpec          EdpSpec                          `json:"edpSpec"`
 	DbSpec           AdminConsoleDbSettings           `json:"dbSpec, omitempty"`
 	ImagePullSecrets []coreV1Api.LocalObjectReference `json:"imagePullSecrets,omitempty"`
+	BasePath         string                           `json:"basePath, omitempty"`
 	// Add custom validation using kubebuilder tags: https://book.kubebuilder.io/beyond_basics/generating_crd.html
 }
 

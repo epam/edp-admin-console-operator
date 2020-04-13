@@ -4,6 +4,9 @@ import (
 	"bufio"
 	"encoding/base64"
 	"fmt"
+	"io/ioutil"
+	"os"
+
 	"github.com/dchest/uniuri"
 	"github.com/epmd-edp/admin-console-operator/v2/pkg/apis/edp/v1alpha1"
 	adminConsoleSpec "github.com/epmd-edp/admin-console-operator/v2/pkg/service/admin_console/spec"
@@ -12,8 +15,6 @@ import (
 	keycloakV1Api "github.com/epmd-edp/keycloak-operator/pkg/apis/v1/v1alpha1"
 	keycloakControllerHelper "github.com/epmd-edp/keycloak-operator/pkg/controller/helper"
 	"github.com/pkg/errors"
-	"io/ioutil"
-	"os"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -120,18 +121,17 @@ func (s AdminConsoleServiceImpl) ExposeConfiguration(instance v1alpha1.AdminCons
 
 		err = s.platformService.CreateSecret(instance, adminConsoleSpec.DefaultKeycloakSecretName, adminConsoleClientCredentials)
 
-		host, scheme, err := s.platformService.GetExternalUrl(instance.Namespace, instance.Name)
+		u, err := s.platformService.GetExternalUrl(instance.Namespace, instance.Name)
 		if err != nil {
 			return &instance, errors.Wrapf(err, "Failed to get Route %s!", instance.Name)
 		}
-		webUrl := fmt.Sprintf("%s://%s", scheme, host)
 
 		keycloakClient := keycloakV1Api.KeycloakClient{}
 		keycloakClient.Name = instance.Name
 		keycloakClient.Namespace = instance.Namespace
 		keycloakClient.Spec.ClientId = adminConsoleSpec.DefaultKeycloakSecretName
 		keycloakClient.Spec.DirectAccess = true
-		keycloakClient.Spec.WebUrl = webUrl
+		keycloakClient.Spec.WebUrl = *u
 		keycloakClient.Spec.Secret = adminConsoleSpec.DefaultKeycloakSecretName
 		keycloakClient.Spec.AudRequired = true
 
@@ -166,12 +166,11 @@ func (s AdminConsoleServiceImpl) createEDPComponent(ac v1alpha1.AdminConsole) er
 }
 
 func (s AdminConsoleServiceImpl) getUrl(ac v1alpha1.AdminConsole) (*string, error) {
-	host, scheme, err := s.platformService.GetExternalUrl(ac.Namespace, ac.Name)
+	u, err := s.platformService.GetExternalUrl(ac.Namespace, ac.Name)
 	if err != nil {
 		return nil, err
 	}
-	url := fmt.Sprintf("%v://%v", scheme, host)
-	return &url, nil
+	return u, nil
 }
 
 func (j AdminConsoleServiceImpl) getIcon() (*string, error) {
@@ -241,14 +240,12 @@ func (s AdminConsoleServiceImpl) Install(instance v1alpha1.AdminConsole) (*v1alp
 		return &instance, err
 	}
 
-	host, scheme, err := s.platformService.GetExternalUrl(instance.Namespace, instance.Name)
+	u, err := s.platformService.GetExternalUrl(instance.Namespace, instance.Name)
 	if err != nil {
 		return &instance, errors.Wrapf(err, "Failed to get Route %s!", instance.Name)
 	}
 
-	webUrl := fmt.Sprintf("%s://%s", scheme, host)
-
-	err = s.platformService.CreateDeployConf(instance, webUrl)
+	err = s.platformService.CreateDeployConf(instance, *u)
 	if err != nil {
 		return &instance, err
 	}
