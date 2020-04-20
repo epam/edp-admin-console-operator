@@ -696,7 +696,7 @@ func (service OpenshiftService) GetExternalUrl(namespace string, name string) (*
 		routeScheme = "https"
 	}
 
-	u := fmt.Sprintf("%s://%s%s", routeScheme, route.Spec.Host, strings.TrimRight(route.Spec.Path, "/"))
+	u := fmt.Sprintf("%s://%s%s", routeScheme, route.Spec.Host, strings.TrimRight(route.Spec.Path, platformHelper.UrlCutset))
 	return &u, nil
 }
 
