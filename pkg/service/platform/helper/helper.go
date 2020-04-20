@@ -11,8 +11,9 @@ import (
 )
 
 const (
-	defaultConfigsAbsolutePath        = "/usr/local/configs/"
-	localConfigsRelativePath          = "configs"
+	defaultConfigsAbsolutePath = "/usr/local/configs/"
+	localConfigsRelativePath   = "configs"
+	UrlCutset                  = "!\"#$%&'()*+,-./@:;<=>[\\]^_`{|}~"
 )
 
 func GenerateLabels(name string) map[string]string {
@@ -20,7 +21,6 @@ func GenerateLabels(name string) map[string]string {
 		"app": name,
 	}
 }
-
 
 // webConsoleConfiguration defines required properties of a data structure used by YAML-formatted payload
 // of the openshift-web-console/webconsole-config ConfigMap object

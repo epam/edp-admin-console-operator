@@ -566,7 +566,7 @@ func (service K8SService) GetExternalUrl(namespace string, name string) (*string
 	}
 
 	routeScheme := "https"
-	u := fmt.Sprintf("%s://%s%s", routeScheme, ingress.Spec.Rules[0].Host, strings.TrimRight(ingress.Spec.Rules[0].HTTP.Paths[0].Path, "/"))
+	u := fmt.Sprintf("%s://%s%s", routeScheme, ingress.Spec.Rules[0].Host, strings.TrimRight(ingress.Spec.Rules[0].HTTP.Paths[0].Path, platformHelper.UrlCutset))
 
 	return &u, nil
 }
