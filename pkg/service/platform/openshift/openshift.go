@@ -11,6 +11,7 @@ import (
 	adminConsoleSpec "github.com/epmd-edp/admin-console-operator/v2/pkg/service/admin_console/spec"
 	platformHelper "github.com/epmd-edp/admin-console-operator/v2/pkg/service/platform/helper"
 	"github.com/epmd-edp/admin-console-operator/v2/pkg/service/platform/kubernetes"
+	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 
@@ -26,6 +27,7 @@ import (
 	templateV1Client "github.com/openshift/client-go/template/clientset/versioned/typed/template/v1"
 	"github.com/pkg/errors"
 
+	"context"
 	coreV1Api "k8s.io/api/core/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -48,6 +50,7 @@ type OpenshiftService struct {
 	securityClient securityV1Client.SecurityV1Client
 	appClient      appsV1client.AppsV1Client
 	routeClient    routeV1Client.RouteV1Client
+	client         client.Client
 }
 
 func (service OpenshiftService) CreateClusterRole(instance v1alpha1.AdminConsole) error {
@@ -490,16 +493,15 @@ func (service OpenshiftService) CreateRoleBinding(ac v1alpha1.AdminConsole, name
 }
 
 func (service OpenshiftService) GetDisplayName(ac v1alpha1.AdminConsole) (string, error) {
-	project, err := service.projectClient.Projects().Get(ac.Namespace, metav1.GetOptions{})
-	if err != nil && k8serrors.IsNotFound(err) {
-		return "", errors.New(fmt.Sprintf("Unable to retrieve project %s", ac.Namespace))
+	cm := corev1.ConfigMap{}
+	err := service.client.Get(context.TODO(), types.NamespacedName{
+		Namespace: ac.Namespace,
+		Name:      "edp-config",
+	}, &cm)
+	if err != nil {
+		return "", err
 	}
-
-	displayName := project.GetObjectMeta().GetAnnotations()["openshift.io/display-name"]
-	if displayName == "" {
-		return "", errors.New(fmt.Sprintf("Project display name does not set"))
-	}
-	return displayName, nil
+	return cm.Data["edp_name"] + "-edp", nil
 }
 
 func (service OpenshiftService) GenerateDbSettings(ac v1alpha1.AdminConsole) ([]coreV1Api.EnvVar, error) {
@@ -657,6 +659,7 @@ func (service *OpenshiftService) Init(config *rest.Config, scheme *runtime.Schem
 		return err
 	}
 	service.authClient = *authClient
+	service.client = *k8sClient
 
 	return nil
 }
