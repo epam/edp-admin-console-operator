@@ -1,9 +1,11 @@
-FROM alpine:3.8
+FROM alpine:3.11.3
 
 ENV OPERATOR=/usr/local/bin/admin-console-operator \
     USER_UID=1001 \
     USER_NAME=admin-console-operator \
     HOME=/home/admin-console-operator
+
+RUN apk add --no-cache ca-certificates openssh-client
 
 # install operator binary
 COPY admin-console-operator ${OPERATOR}
