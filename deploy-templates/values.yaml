@@ -1,7 +1,19 @@
 name: admin-console-operator
 namespace: ""
 platform: "openshift"
-dnsWildcard: ""
+
 image:
   name: epamedp/admin-console-operator
   version: v2.3.0
+
+adminConsole:
+  image: "docker-registry.default.svc:5000/oc-green-edp-cicd/edp-admin-console-master"
+  version: "2.4.0-SNAPSHOT.122"
+  pullSecrets:
+  dnsWildCard: ""
+
+edp:
+  version: "2.4.0-SNAPSHOT.143"
+  db:
+    host:
+    port: 5432

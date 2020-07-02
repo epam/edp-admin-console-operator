@@ -1,0 +1,25 @@
+apiVersion: v2.edp.epam.com/v1alpha1
+kind: AdminConsole
+metadata:
+  name: edp-admin-console
+spec:
+  image: {{.Values.adminConsole.image}}
+  {{- if .Values.adminConsole.pullSecrets}}
+  imagePullSecrets:
+    {{- range .Values.adminConsole.pullSecrets }}
+    - {{. -}}
+    {{- end -}}
+  {{end}}
+  version: {{.Values.adminConsole.version}}
+  edpSpec:
+    name: {{ .Values.namespace }}
+    dnsWildcard: {{ .Values.adminConsole.dnsWildCard }}
+    version: {{.Values.edp.version}}
+    integrationStrategies: "Create,Clone,Import"
+  dbSpec:
+    enabled: true
+    name: edp-install-wizard-db
+    hostname: {{ if .Values.edp.db.host }}{{ .Values.edp.db.host }}{{else}}"edp-install-wizard-db.{{.Values.namespace}}"{{end}}
+    port: "{{ .Values.edp.db.port }}"
+  keycloakSpec:
+    enabled: true
