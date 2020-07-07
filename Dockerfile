@@ -5,6 +5,8 @@ ENV OPERATOR=/usr/local/bin/admin-console-operator \
     USER_NAME=admin-console-operator \
     HOME=/home/admin-console-operator
 
+RUN apk add --no-cache ca-certificates openssh-client
+
 # install operator binary
 COPY admin-console-operator ${OPERATOR}
 

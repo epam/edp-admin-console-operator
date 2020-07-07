@@ -186,7 +186,6 @@ func (r *ReconcileAdminConsole) Reconcile(request reconcile.Request) (reconcile.
 		}
 	}
 
-
 	if instance.Status.Status == StatusExposeFinish {
 		reqLogger.Info("Integration has started")
 		err = r.updateStatus(instance, StatusIntegrationStart)

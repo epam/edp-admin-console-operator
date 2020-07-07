@@ -67,7 +67,6 @@ func (service OpenshiftService) CreateDeployConf(ac v1alpha1.AdminConsole, url s
 		return errors.Wrap(err, "Unable to build an OpenshiftClusterURL value")
 	}
 
-	dbEnabled := "false"
 	keycloakEnabled := "false"
 
 	basePath := ""
@@ -124,10 +123,6 @@ func (service OpenshiftService) CreateDeployConf(ac v1alpha1.AdminConsole, url s
 								{
 									Name:  "EDP_ADMIN_CONSOLE_VERSION",
 									Value: ac.Spec.Version,
-								},
-								{
-									Name:  "DB_ENABLED",
-									Value: dbEnabled,
 								},
 								{
 									Name: "EDP_VERSION",
@@ -277,6 +272,11 @@ func (service OpenshiftService) CreateDeployConf(ac v1alpha1.AdminConsole, url s
 		if k8serrors.IsNotFound(err) {
 			msg := fmt.Sprintf("Creating DeploymentConfig %s/%s for Admin Console %s", consoleDcObject.Namespace, consoleDcObject.Name, ac.Name)
 			log.V(1).Info(msg)
+			dbEnvVars, err := service.GenerateDbSettings(ac)
+			if err != nil {
+				return errors.Wrap(err, "Failed to generate environment variables for shared database!")
+			}
+			consoleDcObject.Spec.Template.Spec.Containers[0].Env = append(consoleDcObject.Spec.Template.Spec.Containers[0].Env, dbEnvVars...)
 			consoleDc, err = service.appClient.DeploymentConfigs(consoleDcObject.Namespace).Create(consoleDcObject)
 			if err != nil {
 				return err
@@ -505,38 +505,41 @@ func (service OpenshiftService) GetDisplayName(ac v1alpha1.AdminConsole) (string
 }
 
 func (service OpenshiftService) GenerateDbSettings(ac v1alpha1.AdminConsole) ([]coreV1Api.EnvVar, error) {
-	var out []coreV1Api.EnvVar
+	if !ac.Spec.DbSpec.Enabled {
+		msg := fmt.Sprintf("DB_ENABLED flag in %s spec is false.", ac.Name)
+		log.V(1).Info(msg)
 
-	if ac.Spec.DbSpec.Enabled {
-		log.V(1).Info(fmt.Sprintf("Generating DB settings for Admin Console %s", ac.Name))
-		if platformHelper.ContainsEmptyString(ac.Spec.DbSpec.Name, ac.Spec.DbSpec.Hostname, ac.Spec.DbSpec.Port) {
-			return nil, errors.New("One or many DB settings field are empty!")
-		}
-
-		out = []coreV1Api.EnvVar{
-			{
-				Name:  "PG_HOST",
-				Value: ac.Spec.DbSpec.Hostname,
-			},
-			{
-				Name:  "PG_PORT",
-				Value: ac.Spec.DbSpec.Port,
-			},
-			{
-				Name:  "PG_DATABASE",
-				Value: ac.Spec.DbSpec.Name,
-			},
+		return []coreV1Api.EnvVar{
 			{
 				Name:  "DB_ENABLED",
-				Value: strconv.FormatBool(ac.Spec.DbSpec.Enabled),
+				Value: "false",
 			},
-		}
-
-		return out, nil
+		}, nil
 	}
-	msg := fmt.Sprintf("DB_ENABLED flag in %s spec is false. Settings will not be created.", ac.Name)
-	log.V(1).Info(msg)
-	return out, nil
+
+	log.V(1).Info(fmt.Sprintf("Generating DB settings for Admin Console %s", ac.Name))
+	if platformHelper.ContainsEmptyString(ac.Spec.DbSpec.Name, ac.Spec.DbSpec.Hostname, ac.Spec.DbSpec.Port) {
+		return nil, errors.New("One or many DB settings field are empty!")
+	}
+
+	return []coreV1Api.EnvVar{
+		{
+			Name:  "PG_HOST",
+			Value: ac.Spec.DbSpec.Hostname,
+		},
+		{
+			Name:  "PG_PORT",
+			Value: ac.Spec.DbSpec.Port,
+		},
+		{
+			Name:  "PG_DATABASE",
+			Value: ac.Spec.DbSpec.Name,
+		},
+		{
+			Name:  "DB_ENABLED",
+			Value: strconv.FormatBool(ac.Spec.DbSpec.Enabled),
+		},
+	}, nil
 }
 
 func (service OpenshiftService) GenerateKeycloakSettings(ac v1alpha1.AdminConsole, keycloakUrl string) ([]coreV1Api.EnvVar, error) {
