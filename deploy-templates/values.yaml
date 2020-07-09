@@ -1,7 +1,9 @@
-name: admin-console-operator
-namespace: ""
-platform: "openshift"
+global:
+  edpName: ""
+  platform: "openshift"
+  dnsWildCard:
 
+name: admin-console-operator
 image:
   name: epamedp/admin-console-operator
   version: v2.4.0
@@ -12,7 +14,6 @@ adminConsole:
   pullSecrets:
 
 edp:
-  dnsWildCard: ""
   version: "v2.4.0"
   db:
     host:

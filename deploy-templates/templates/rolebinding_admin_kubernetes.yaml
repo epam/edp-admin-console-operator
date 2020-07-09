@@ -1,8 +1,8 @@
-{{- if eq .Values.platform "kubernetes" -}}
+{{- if eq .Values.global.platform "kubernetes" -}}
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
-  name: {{ .Values.name }}-edp-admin-{{ .Values.namespace }}
+  name: {{ .Values.name }}-edp-admin-{{ .Values.global.edpName }}
 roleRef:
   kind: ClusterRole
   name: admin
@@ -10,6 +10,6 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: {{ .Values.name }}-edp
-    namespace: {{ .Values.namespace }}
+    namespace: {{ .Values.global.edpName }}
 
 {{- end -}}

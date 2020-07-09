@@ -12,14 +12,14 @@ spec:
   {{end}}
   version: {{.Values.adminConsole.version}}
   edpSpec:
-    name: {{ .Values.namespace }}
-    dnsWildcard: {{ .Values.edp.dnsWildCard }}
+    name: {{ .Values.global.edpName }}
+    dnsWildcard: {{ .Values.global.dnsWildCard }}
     version: {{.Values.edp.version}}
     integrationStrategies: "Create,Clone,Import"
   dbSpec:
     enabled: true
     name: edp-install-wizard-db
-    hostname: {{ if .Values.edp.db.host }}{{ .Values.edp.db.host }}{{else}}"edp-install-wizard-db.{{.Values.namespace}}"{{end}}
+    hostname: {{ if .Values.edp.db.host }}{{ .Values.edp.db.host }}{{else}}"edp-install-wizard-db.{{.Values.global.edpName}}"{{end}}
     port: "{{ .Values.edp.db.port }}"
   keycloakSpec:
     enabled: true
