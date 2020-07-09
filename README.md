@@ -29,6 +29,8 @@ Parameters:
     - global.edpName                                # a namespace or a project name (in case of OpenShift);
     - global.platform                               # openShift or kubernetes;
     - global.dnsWildCard                            # Developers of your tenant separated by comma (,) (eg --set 'global.developers={test@example.com}');
+    - global.database.host                          # Host to DB (<db-name>.<namespace>);
+    - global.database.port                          # Port of DB;
     - image.name                                    # EDP image. The released image can be found on [Dockerhub](https://hub.docker.com/repository/docker/epamedp/admin-console-operator);
     - image.version                                 # EDP tag. The released image can be found on [Dockerhub](https://hub.docker.com/repository/docker/epamedp/admin-console-operator/tags);
     - adminConsole.image                            # EDP image. The released image can be found on [Dockerhub](https://hub.docker.com/repository/docker/epamedp/edp-admin-console);

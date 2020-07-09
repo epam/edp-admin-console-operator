@@ -2,6 +2,10 @@ global:
   edpName: ""
   platform: "openshift"
   dnsWildCard:
+  version: "v2.4.0"
+  database:
+    host:
+    port: 5432
 
 name: admin-console-operator
 image:
@@ -12,9 +16,3 @@ adminConsole:
   image: "epamedp/edp-admin-console"
   version: "v2.4.0"
   pullSecrets:
-
-edp:
-  version: "v2.4.0"
-  db:
-    host:
-    port: 5432

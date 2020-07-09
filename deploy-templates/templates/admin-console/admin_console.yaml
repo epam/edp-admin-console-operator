@@ -14,12 +14,12 @@ spec:
   edpSpec:
     name: {{ .Values.global.edpName }}
     dnsWildcard: {{ .Values.global.dnsWildCard }}
-    version: {{.Values.edp.version}}
+    version: {{.Values.global.version}}
     integrationStrategies: "Create,Clone,Import"
   dbSpec:
     enabled: true
     name: edp-install-wizard-db
-    hostname: {{ if .Values.edp.db.host }}{{ .Values.edp.db.host }}{{else}}"edp-install-wizard-db.{{.Values.global.edpName}}"{{end}}
-    port: "{{ .Values.edp.db.port }}"
+    hostname: {{ if .Values.global.database.host }}{{ .Values.global.database.host }}{{else}}"edp-install-wizard-db.{{.Values.global.edpName}}"{{end}}
+    port: "{{ .Values.global.database.port }}"
   keycloakSpec:
     enabled: true
