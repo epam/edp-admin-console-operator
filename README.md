@@ -35,7 +35,8 @@ Parameters:
     - image.version                                 # EDP tag. The released image can be found on [Dockerhub](https://hub.docker.com/repository/docker/epamedp/admin-console-operator/tags);
     - adminConsole.image                            # EDP image. The released image can be found on [Dockerhub](https://hub.docker.com/repository/docker/epamedp/edp-admin-console);
     - adminConsole.version                          # EDP image. The released image can be found on [Dockerhub](https://hub.docker.com/repository/docker/epamedp/edp-admin-console/tags);
-    - adminConsole.pullSecrets                      # Secrets to pull from private Docker registry;
+    - adminConsole.imagePullSecrets                 # Secrets to pull from private Docker registry;
+    - adminConsole.basePath                         # Base path for Admin Console URL.
  ```
 
 _**NOTE:** Follow instruction to create namespace [edp-install-openshift](https://github.com/epmd-edp/edp-install/blob/master/documentation/openshift_install_edp.md#install-edp) or [edp-install-kubernetes](https://github.com/epmd-edp/edp-install/blob/master/documentation/kubernetes_install_edp.md#install-edp)._

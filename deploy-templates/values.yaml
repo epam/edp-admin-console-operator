@@ -15,4 +15,5 @@ image:
 adminConsole:
   image: "epamedp/edp-admin-console"
   version: "v2.4.0"
-  pullSecrets:
+  basePath: ""
+  imagePullSecrets:
