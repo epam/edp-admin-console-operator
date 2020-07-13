@@ -16,7 +16,11 @@ spec:
     name: {{ .Values.global.edpName }}
     dnsWildcard: {{ .Values.global.dnsWildCard }}
     version: {{.Values.global.version}}
+   {{- if eq .Values.global.platform "openshift" }}
     integrationStrategies: "Create,Clone,Import"
+   {{- else }}
+    integrationStrategies: "Import"
+   {{- end }}
   dbSpec:
     enabled: true
     name: edp-install-wizard-db
