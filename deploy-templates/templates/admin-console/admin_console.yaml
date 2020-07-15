@@ -3,7 +3,7 @@ kind: AdminConsole
 metadata:
   name: edp-admin-console
 spec:
-  basePath: {{.Values.adminConsole.basePath}}
+  basePath: "{{.Values.adminConsole.basePath}}"
   image: {{.Values.adminConsole.image}}
   {{- if .Values.adminConsole.imagePullSecrets}}
   imagePullSecrets:
