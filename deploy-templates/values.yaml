@@ -16,4 +16,5 @@ adminConsole:
   image: "epamedp/edp-admin-console"
   version: "v2.4.0"
   basePath: ""
+  testReportTools: "Allure"
   imagePullSecrets:

@@ -46,7 +46,8 @@ In order to install the Admin Console operator, follow the steps below:
     - adminConsole.image                            # EDP image. The released image can be found on [Dockerhub](https://hub.docker.com/repository/docker/epamedp/edp-admin-console);
     - adminConsole.version                          # EDP image. The released image can be found on [Dockerhub](https://hub.docker.com/repository/docker/epamedp/edp-admin-console/tags);
     - adminConsole.imagePullSecrets                 # Secrets to pull from private Docker registry;
-    - adminConsole.basePath                         # Base path for Admin Console URL.
+    - adminConsole.basePath                         # Base path for Admin Console URL;
+    - adminConsole.testReportTools                  # List of automation tests frameworks. Default in "Allure". 
    ```
 
 4. Install operator in the <edp_cicd_project> namespace with the helm command; find below the installation command example:

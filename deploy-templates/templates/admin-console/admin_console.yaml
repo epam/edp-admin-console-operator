@@ -16,6 +16,7 @@ spec:
     name: {{ .Values.global.edpName }}
     dnsWildcard: {{ .Values.global.dnsWildCard }}
     version: {{.Values.global.version}}
+    testReportTools: {{.Values.adminConsole.testReportTools}}
    {{- if eq .Values.global.platform "openshift" }}
     integrationStrategies: "Create,Clone,Import"
    {{- else }}
