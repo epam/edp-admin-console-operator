@@ -8,7 +8,7 @@ spec:
   ports:
     - port: 8080
       protocol: TCP
-      targetPort: edp-admin-console
+      targetPort: 8080
   selector:
     app: edp-admin-console
   sessionAffinity: None
