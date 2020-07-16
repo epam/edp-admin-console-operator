@@ -44,15 +44,15 @@ spec:
             - name: BASE_PATH
               value: "{{if .Values.adminConsole.basePath}}/{{.Values.adminConsole.basePath}}{{else}}{{end}}"
             - name: EDP_ADMIN_CONSOLE_VERSION
-              value: {{.Values.adminConsole.version}}
+              value: "{{.Values.adminConsole.version}}"
             - name: EDP_VERSION
-              value: {{.Values.global.version}}
+              value: "{{.Values.global.version}}"
             - name: AUTH_KEYCLOAK_ENABLED
-              value: false
+              value: "false"
             - name: DNS_WILDCARD
-              value: {{.Values.global.dnsWildCard}}
+              value: "{{.Values.global.dnsWildCard}}"
             - name: OPENSHIFT_CLUSTER_URL
-              value: {{.Values.global.webConsole.url}}
+              value: "{{.Values.global.webConsole.url}}"
             - name: PG_USER
               valueFrom:
                 secretKeyRef:
@@ -70,13 +70,13 @@ spec:
               value: "Import"
               {{- end }}
             - name: BUILD_TOOLS
-              value: maven
+              value: "maven"
             - name: DEPLOYMENT_SCRIPT
-              value: helm-chart,openshift-template
+              value: "helm-chart,openshift-template"
             - name: PLATFORM_TYPE
-              value: openshift
+              value: "openshift"
             - name: VERSIONING_TYPES
-              value: default,edp
+              value: "default,edp"
             - name: VCS_INTEGRATION_ENABLED
               valueFrom:
                 configMapKeyRef:
