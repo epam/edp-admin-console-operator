@@ -1,0 +1,14 @@
+{{ if eq .Values.global.platform "kubernetes" }}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: edp-admin-console-{{ .Values.global.edpName }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: admin-console-sc-access
+subjects:
+  - kind: ServiceAccount
+    name: edp-admin-console
+    namespace: {{ .Values.global.edpName }}
+{{ end }}

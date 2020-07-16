@@ -1,0 +1,20 @@
+{{ if eq .Values.global.platform "kubernetes" }}
+kind: Ingress
+apiVersion: extensions/v1beta1
+metadata:
+  name: edp-admin-console
+  labels:
+    app: edp-admin-console
+spec:
+  rules:
+    - host: {{if .Values.adminConsole.basePath}}{{ .Values.global.dnsWildCard }}{{else}}edp-admin-console-{{ .Values.global.edpName }}.{{ .Values.global.dnsWildCard }}{{end}}
+      http:
+        paths:
+          - path: {{if .Values.adminConsole.basePath}}/{{.Values.adminConsole.basePath}}(/|$)(.*){{else}}/{{end}}
+            backend:
+              serviceName: edp-admin-console
+              servicePort: 8080
+status:
+  loadBalancer:
+    ingress:
+{{ end }}

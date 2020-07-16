@@ -1,0 +1,17 @@
+{{ if eq .Values.global.platform "kubernetes" }}
+{{- if not (lookup "rbac.authorization.k8s.io/v1" "ClusterRole" ".Values.global.edpName" "admin-console-sc-access").metadata }}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+    name: admin-console-sc-access
+rules:
+- apiGroups:
+  - 'storage.k8s.io'
+  attributeRestrictions: null
+  resources:
+  - storageclasses
+  verbs:
+  - get
+  - list
+{{ end }}
+{{ end }}

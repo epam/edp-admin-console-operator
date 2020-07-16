@@ -22,9 +22,9 @@ spec:
     integrationStrategies: "Import"
    {{- end }}
   dbSpec:
-    enabled: true
-    name: edp-install-wizard-db
+    enabled: {{ .Values.global.database.deploy }}
+    name: {{ .Values.global.database.name }}
     hostname: {{ if .Values.global.database.host }}{{ .Values.global.database.host }}{{else}}"edp-install-wizard-db.{{.Values.global.edpName}}"{{end}}
     port: "{{ .Values.global.database.port }}"
   keycloakSpec:
-    enabled: true
+    enabled: {{ .Values.adminConsole.authKeycloakEnabled }}
