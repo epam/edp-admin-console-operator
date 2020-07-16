@@ -48,7 +48,7 @@ spec:
             - name: EDP_VERSION
               value: {{.Values.global.version}}
             - name: AUTH_KEYCLOAK_ENABLED
-              value: {{.Values.adminConsole.authKeycloakEnabled}}
+              value: "{{.Values.adminConsole.authKeycloakEnabled}}"
             - name: DNS_WILDCARD
               value: {{.Values.global.dnsWildCard}}
             - name: OPENSHIFT_CLUSTER_URL
@@ -88,13 +88,13 @@ spec:
                   key: edp_name
                   name: edp-config
             - name: PG_HOST
-              value: {{.Values.global.database.host}}
+              value: "{{.Values.global.database.host}}"
             - name: PG_PORT
-              value: {{.Values.global.database.port}}
+              value: "{{.Values.global.database.port}}"
             - name: PG_DATABASE
-              value: {{.Values.global.database.name}}
+              value: "{{.Values.global.database.name}}"
             - name: DB_ENABLED
-              value: {{.Values.global.database.deploy}}
+              value: "{{.Values.global.database.deploy}}"
             - name: KEYCLOAK_CLIENT_ID
               valueFrom:
                 secretKeyRef:
