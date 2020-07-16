@@ -4,8 +4,13 @@ global:
   dnsWildCard:
   version: "v2.4.0"
   database:
+    deploy: true
     host:
+    name: "edp-install-wizard-db"
     port: 5432
+  webConsole:
+    url:
+
 
 name: admin-console-operator
 image:
@@ -17,3 +22,5 @@ adminConsole:
   version: "v2.4.0"
   basePath: ""
   imagePullSecrets:
+  authKeycloakEnabled: true
+  keycloakUrl:

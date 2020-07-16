@@ -1,0 +1,140 @@
+{{if eq .Values.global.platform "kubernetes"}}
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  labels:
+    app: edp-admin-console
+  name: edp-admin-console
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: edp-admin-console
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: edp-admin-console
+    spec:
+      containers:
+        - env:
+            - name: NAMESPACE
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: metadata.namespace
+            - name: HOST
+              value: "https://{{if .Values.adminConsole.basePath}}{{ .Values.global.dnsWildCard }}{{else}}edp-admin-console-{{.Values.global.edpName}}.{{.Values.global.dnsWildCard}}{{end}}{{if .Values.adminConsole.basePath}}/{{.Values.adminConsole.basePath}}{{else}}/{{end}}"
+            - name: BASE_PATH
+              value: "{{if .Values.adminConsole.basePath}}/{{.Values.adminConsole.basePath}}{{else}}{{end}}"
+            - name: EDP_ADMIN_CONSOLE_VERSION
+              value: {{.Values.adminConsole.version}}
+            - name: EDP_VERSION
+              value: {{.Values.global.version}}
+            - name: AUTH_KEYCLOAK_ENABLED
+              value: {{.Values.adminConsole.authKeycloakEnabled}}
+            - name: DNS_WILDCARD
+              value: {{.Values.global.dnsWildCard}}
+            - name: PG_USER
+              valueFrom:
+                secretKeyRef:
+                  key: username
+                  name: db-admin-console
+            - name: PG_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: password
+                  name: db-admin-console
+            - name: INTEGRATION_STRATEGIES
+              {{- if eq .Values.global.platform "openshift" }}
+              value: "Create,Clone,Import"
+              {{- else }}
+              value: "Import"
+              {{- end }}
+            - name: BUILD_TOOLS
+              value: maven
+            - name: DEPLOYMENT_SCRIPT
+              value: helm-chart,openshift-template
+            - name: PLATFORM_TYPE
+              value: kubernetes
+            - name: VERSIONING_TYPES
+              value: default,edp
+            - name: VCS_INTEGRATION_ENABLED
+              valueFrom:
+                configMapKeyRef:
+                  key: vcs_integration_enabled
+                  name: edp-config
+            - name: EDP_NAME
+              valueFrom:
+                configMapKeyRef:
+                  key: edp_name
+                  name: edp-config
+            - name: PG_HOST
+              value: {{.Values.global.database.host}}
+            - name: PG_PORT
+              value: {{.Values.global.database.port}}
+            - name: PG_DATABASE
+              value: {{.Values.global.database.name}}
+            - name: DB_ENABLED
+              value: {{.Values.global.database.deploy}}
+            - name: KEYCLOAK_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  key: username
+                  name: admin-console-client
+            - name: KEYCLOAK_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  key: password
+                  name: admin-console-client
+            - name: KEYCLOAK_URL
+              value: "{{.Values.adminConsole.keycloakUrl}}/auth/realms/{{.Values.global.edpName}}-main"
+          image: "{{.Values.adminConsole.image}}:{{.Values.adminConsole.version}}"
+          imagePullPolicy: Always
+          livenessProbe:
+            failureThreshold: 5
+            initialDelaySeconds: 180
+            periodSeconds: 20
+            successThreshold: 1
+            tcpSocket:
+              port: 8080
+            timeoutSeconds: 1
+          name: edp-admin-console
+          ports:
+            - containerPort: 8080
+              protocol: TCP
+          readinessProbe:
+            failureThreshold: 5
+            initialDelaySeconds: 60
+            periodSeconds: 20
+            successThreshold: 1
+            tcpSocket:
+              port: 8080
+            timeoutSeconds: 1
+          resources:
+            requests:
+              memory: 500Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            privileged: false
+            readOnlyRootFilesystem: true
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext:
+        fsGroup: 1001
+        runAsGroup: 1001
+        runAsNonRoot: true
+        runAsUser: 1001
+      serviceAccount: edp-admin-console
+      serviceAccountName: edp-admin-console
+      terminationGracePeriodSeconds: 30
+{{end}}

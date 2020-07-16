@@ -1,0 +1,21 @@
+{{ if eq .Values.global.platform "openshift" }}
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  labels:
+    app: edp-admin-console
+  name: edp-admin-console
+spec:
+  host: {{if .Values.adminConsole.basePath}}{{ .Values.global.dnsWildCard }}{{else}}edp-admin-console-{{.Values.global.edpName}}.{{.Values.global.dnsWildCard}}{{end}}
+  path: {{if .Values.adminConsole.basePath}}/{{.Values.adminConsole.basePath}}{{else}}{{end}}
+  tls:
+    insecureEdgeTerminationPolicy: Redirect
+    termination: edge
+  to:
+    kind: Service
+    name: edp-admin-console
+    weight: 100
+  wildcardPolicy: None
+status:
+  ingress: []
+{{ end }}

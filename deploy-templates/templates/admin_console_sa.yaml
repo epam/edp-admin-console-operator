@@ -1,0 +1,6 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: edp-admin-console
+  labels:
+    app: edp-admin-console

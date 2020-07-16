@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: edp-admin-console
+  name: edp-admin-console
+spec:
+  ports:
+    - port: 8080
+      protocol: TCP
+      targetPort: edp-admin-console
+  selector:
+    app: edp-admin-console
+  sessionAffinity: None
+  type: ClusterIP

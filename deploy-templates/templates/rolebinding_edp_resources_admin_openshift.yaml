@@ -1,0 +1,12 @@
+{{- if eq .Values.global.platform "openshift" -}}
+apiVersion: authorization.openshift.io/v1
+kind: RoleBinding
+metadata:
+  name: edp-resources-admin
+roleRef:
+  name: edp-resources-admin
+subjects:
+  - kind: ServiceAccount
+    name: edp-admin-console
+groupNames: []
+{{- end -}}
