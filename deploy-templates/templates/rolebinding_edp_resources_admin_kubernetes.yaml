@@ -11,6 +11,4 @@ subjects:
   - kind: ServiceAccount
     name: edp-admin-console
     namespace: {{.Values.global.edpName}}
-userNames:
-  - system:serviceaccount:{{.Values.global.edpName}}:edp-admin-console
 {{- end -}}
