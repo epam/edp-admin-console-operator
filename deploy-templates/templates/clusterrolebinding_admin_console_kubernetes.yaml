@@ -10,4 +10,5 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: edp-admin-console
+    namespace: {{ .Values.global.edpName }}
 {{ end }}
