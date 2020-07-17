@@ -14,9 +14,11 @@ fsGroup:
 groups: []
 kind: SecurityContextConstraints
 metadata:
+  annotations:
+    "helm.sh/hook": "pre-install"
   labels:
     app: edp-admin-console
-  name: edp-admin-console-{{.Values.global.edpName}}
+  name: edp-admin-console-{{.Values.global.edpName}}-edp
 priority: 1
 readOnlyRootFilesystem: false
 requiredDropCapabilities: []

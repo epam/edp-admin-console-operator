@@ -40,7 +40,7 @@ spec:
                   apiVersion: v1
                   fieldPath: metadata.namespace
             - name: HOST
-              value: "https://{{if .Values.adminConsole.basePath}}{{ .Values.global.dnsWildCard }}{{else}}edp-admin-console-{{.Values.global.edpName}}.{{.Values.global.dnsWildCard}}{{end}}{{if .Values.adminConsole.basePath}}/{{.Values.adminConsole.basePath}}{{else}}/{{end}}"
+              value: "https://{{if .Values.adminConsole.basePath}}{{ .Values.global.dnsWildCard }}{{else}}edp-admin-console-{{.Values.global.edpName}}.{{.Values.global.dnsWildCard}}{{end}}{{if .Values.adminConsole.basePath}}/{{.Values.adminConsole.basePath}}{{end}}"
             - name: BASE_PATH
               value: "{{if .Values.adminConsole.basePath}}/{{.Values.adminConsole.basePath}}{{else}}{{end}}"
             - name: EDP_ADMIN_CONSOLE_VERSION
