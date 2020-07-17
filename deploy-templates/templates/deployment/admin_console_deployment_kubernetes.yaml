@@ -83,8 +83,6 @@ spec:
               value: "{{.Values.global.database.name}}"
             - name: DB_ENABLED
               value: "{{.Values.global.database.deploy}}"
-            - name: KEYCLOAK_URL
-              value: "{{.Values.adminConsole.keycloakUrl}}/auth/realms/{{.Values.global.edpName}}-main"
           image: "{{.Values.adminConsole.image}}:{{.Values.adminConsole.version}}"
           imagePullPolicy: Always
           livenessProbe:

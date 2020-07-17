@@ -51,7 +51,6 @@ In order to install the Admin Console operator, follow the steps below:
     - adminConsole.imagePullSecrets                 # Secrets to pull from private Docker registry;
     - adminConsole.basePath                         # Base path for Admin Console URL.
     - adminConsole.authKeycloakEnabled              # Authentication Keycloak enabled/disabled.
-    - adminConsole.keycloakUrl                      # URL to Keycloak;
    ```
 
 4. Install operator in the <edp_cicd_project> namespace with the helm command; find below the installation command example:
