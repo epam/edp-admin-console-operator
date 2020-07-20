@@ -44,10 +44,10 @@ In order to install the Admin Console operator, follow the steps below:
     - global.database.host                          # Host to DB (<db-name>.<namespace>);
     - global.database.port                          # Port of DB;
     - global.webConsole.url                         # URL to OpenShift/Kubernetes Web console;
-    - image.name                                    # EDP image. The released image can be found on [Dockerhub](https://hub.docker.com/repository/docker/epamedp/admin-console-operator);
-    - image.version                                 # EDP tag. The released image can be found on [Dockerhub](https://hub.docker.com/repository/docker/epamedp/admin-console-operator/tags);
-    - adminConsole.image                            # EDP image. The released image can be found on [Dockerhub](https://hub.docker.com/repository/docker/epamedp/edp-admin-console);
-    - adminConsole.version                          # EDP image. The released image can be found on [Dockerhub](https://hub.docker.com/repository/docker/epamedp/edp-admin-console/tags);
+    - image.name                                    # EDP image. The released image can be found on [Dockerhub](https://hub.docker.com/r/epamedp/admin-console-operator);
+    - image.version                                 # EDP tag. The released image can be found on [Dockerhub](https://hub.docker.com/r/epamedp/admin-console-operator/tags);
+    - adminConsole.image                            # EDP image. The released image can be found on [Dockerhub](https://hub.docker.com/r/epamedp/edp-admin-console);
+    - adminConsole.version                          # EDP image. The released image can be found on [Dockerhub](https://hub.docker.com/r/epamedp/edp-admin-console/tags);
     - adminConsole.imagePullSecrets                 # Secrets to pull from private Docker registry;
     - adminConsole.basePath                         # Base path for Admin Console URL.
     - adminConsole.authKeycloakEnabled              # Authentication Keycloak enabled/disabled.
