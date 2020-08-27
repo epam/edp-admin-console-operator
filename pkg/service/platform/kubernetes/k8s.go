@@ -942,9 +942,10 @@ func (service K8SService) createEDPComponent(ac v1alpha1.AdminConsole, url strin
 			Name: ac.Name,
 		},
 		Spec: edpCompApi.EDPComponentSpec{
-			Type: "admin-console",
-			Url:  url,
-			Icon: icon,
+			Type:    "admin-console",
+			Url:     url,
+			Icon:    icon,
+			Visible: true,
 		},
 	}
 	if err := controllerutil.SetControllerReference(&ac, obj, service.Scheme); err != nil {
