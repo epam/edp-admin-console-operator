@@ -678,7 +678,7 @@ func (service OpenshiftService) getClusterURL() (string, error) {
 	}
 	data, ok := cm.Data[filename]
 	if !ok {
-		return "", errors.Wrapf(err, "ConfigMap %s/%s has no required data, % is missing", namespace, name, filename)
+		return "", errors.Wrapf(err, "ConfigMap %s/%s has no required data, %v is missing", namespace, name, filename)
 	}
 	config, err := platformHelper.ParseWebConsoleConfig(data)
 	if err != nil {
