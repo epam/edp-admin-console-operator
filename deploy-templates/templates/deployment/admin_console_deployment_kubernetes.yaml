@@ -60,7 +60,7 @@ spec:
             - name: BUILD_TOOLS
               value: "maven"
             - name: DEPLOYMENT_SCRIPT
-              value: "helm-chart,openshift-template"
+              value: "helm-chart"
             - name: PLATFORM_TYPE
               value: "kubernetes"
             - name: VERSIONING_TYPES

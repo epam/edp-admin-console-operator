@@ -173,7 +173,7 @@ func (service K8SService) CreateDeployConf(ac v1alpha1.AdminConsole, url string)
 								},
 								{
 									Name:  "DEPLOYMENT_SCRIPT",
-									Value: "helm-chart,openshift-template",
+									Value: "helm-chart",
 								},
 								{
 									Name:  "PLATFORM_TYPE",
