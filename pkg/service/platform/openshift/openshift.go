@@ -201,6 +201,10 @@ func (service OpenshiftService) CreateDeployConf(ac v1alpha1.AdminConsole, url s
 									Value: "default,edp",
 								},
 								{
+									Name:  "CI_TOOLS",
+									Value: "Jenkins,GitlabCI",
+								},
+								{
 									Name: "VCS_INTEGRATION_ENABLED",
 									ValueFrom: &coreV1Api.EnvVarSource{
 										ConfigMapKeyRef: &coreV1Api.ConfigMapKeySelector{

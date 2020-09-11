@@ -73,6 +73,8 @@ spec:
               value: "openshift"
             - name: VERSIONING_TYPES
               value: "default,edp"
+            - name: CI_TOOLS
+              value: "Jenkins,GitlabCI"
             - name: VCS_INTEGRATION_ENABLED
               valueFrom:
                 configMapKeyRef:
