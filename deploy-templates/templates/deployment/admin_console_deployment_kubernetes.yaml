@@ -52,11 +52,7 @@ spec:
                   key: password
                   name: db-admin-console
             - name: INTEGRATION_STRATEGIES
-              {{- if eq .Values.global.platform "openshift" }}
               value: "Create,Clone,Import"
-              {{- else }}
-              value: "Import"
-              {{- end }}
             - name: BUILD_TOOLS
               value: "maven"
             - name: DEPLOYMENT_SCRIPT
