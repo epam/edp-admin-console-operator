@@ -202,7 +202,7 @@ func (service OpenshiftService) CreateDeployConf(ac v1alpha1.AdminConsole, url s
 								},
 								{
 									Name:  "CI_TOOLS",
-									Value: "Jenkins,GitlabCI",
+									Value: "Jenkins,GitLab CI",
 								},
 								{
 									Name: "VCS_INTEGRATION_ENABLED",

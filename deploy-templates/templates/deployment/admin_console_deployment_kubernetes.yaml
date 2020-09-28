@@ -62,7 +62,7 @@ spec:
             - name: VERSIONING_TYPES
               value: "default,edp"
             - name: CI_TOOLS
-              value: "Jenkins,GitlabCI"
+              value: "Jenkins,GitLab CI"
             - name: VCS_INTEGRATION_ENABLED
               valueFrom:
                 configMapKeyRef:

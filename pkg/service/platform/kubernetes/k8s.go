@@ -185,7 +185,7 @@ func (service K8SService) CreateDeployConf(ac v1alpha1.AdminConsole, url string)
 								},
 								{
 									Name:  "CI_TOOLS",
-									Value: "Jenkins,GitlabCI",
+									Value: "Jenkins,GitLab CI",
 								},
 								{
 									Name: "VCS_INTEGRATION_ENABLED",
