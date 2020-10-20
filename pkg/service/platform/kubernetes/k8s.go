@@ -188,6 +188,10 @@ func (service K8SService) CreateDeployConf(ac v1alpha1.AdminConsole, url string)
 									Value: "Jenkins,GitLab CI",
 								},
 								{
+									Name:  "PERF_DATA_SOURCES",
+									Value: "Sonar,Jenkins",
+								},
+								{
 									Name: "VCS_INTEGRATION_ENABLED",
 									ValueFrom: &coreV1Api.EnvVarSource{
 										ConfigMapKeyRef: &coreV1Api.ConfigMapKeySelector{
