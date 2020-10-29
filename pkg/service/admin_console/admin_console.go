@@ -24,8 +24,6 @@ const (
 )
 
 type AdminConsoleService interface {
-	// This is an entry point for service package. Invoked in err = r.service.Install(*instance) sonar_controller.go, Reconcile method.
-	Install(instance v1alpha1.AdminConsole) (*v1alpha1.AdminConsole, error)
 	ExposeConfiguration(instance v1alpha1.AdminConsole) (*v1alpha1.AdminConsole, error)
 	Integrate(instance v1alpha1.AdminConsole) (*v1alpha1.AdminConsole, error)
 	IsDeploymentReady(instance v1alpha1.AdminConsole) (bool, error)
@@ -191,66 +189,6 @@ func (j AdminConsoleServiceImpl) getIcon() (*string, error) {
 	}
 	encoded := base64.StdEncoding.EncodeToString(content)
 	return &encoded, nil
-}
-
-func (s AdminConsoleServiceImpl) Install(instance v1alpha1.AdminConsole) (*v1alpha1.AdminConsole, error) {
-
-	err := s.platformService.CreateServiceAccount(instance)
-	if err != nil {
-		return &instance, err
-	}
-
-	err = s.platformService.CreateSecurityContext(instance)
-	if err != nil {
-		return &instance, err
-	}
-
-	err = s.platformService.CreateRole(instance)
-	if err != nil {
-		return &instance, err
-	}
-
-	err = s.platformService.CreateRoleBinding(instance, "edp-resources-admin", "edp-resources-admin", "Role")
-	if err != nil {
-		return &instance, err
-	}
-
-	err = s.platformService.CreateRoleBinding(instance, "edp-admin", "admin", "ClusterRole")
-	if err != nil {
-		return &instance, err
-	}
-
-	err = s.platformService.CreateClusterRole(instance)
-	if err != nil {
-		return &instance, err
-	}
-
-	err = s.platformService.CreateClusterRoleBinding(instance, "admin-console-sc-access")
-	if err != nil {
-		return &instance, err
-	}
-
-	err = s.platformService.CreateService(instance)
-	if err != nil {
-		return &instance, err
-	}
-
-	err = s.platformService.CreateExternalEndpoint(instance)
-	if err != nil {
-		return &instance, err
-	}
-
-	u, err := s.platformService.GetExternalUrl(instance.Namespace, instance.Name)
-	if err != nil {
-		return &instance, errors.Wrapf(err, "Failed to get Route %s!", instance.Name)
-	}
-
-	err = s.platformService.CreateDeployConf(instance, *u)
-	if err != nil {
-		return &instance, err
-	}
-
-	return &instance, nil
 }
 
 func (s AdminConsoleServiceImpl) IsDeploymentReady(instance v1alpha1.AdminConsole) (bool, error) {

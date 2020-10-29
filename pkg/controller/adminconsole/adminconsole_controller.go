@@ -137,15 +137,6 @@ func (r *ReconcileAdminConsole) Reconcile(request reconcile.Request) (reconcile.
 		}
 	}
 
-	instance, err = r.service.Install(*instance)
-	if err != nil {
-		err = r.updateStatus(instance, StatusFailed)
-		if err != nil {
-			return reconcile.Result{RequeueAfter: DefaultRequeueTime * time.Second}, err
-		}
-		return reconcile.Result{RequeueAfter: DefaultRequeueTime * time.Second}, errorsf.Wrapf(err, "Installation has failed")
-	}
-
 	if instance.Status.Status == StatusInstall {
 		log.Info("Installation has finished")
 		err = r.updateStatus(instance, StatusCreated)
