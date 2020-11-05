@@ -83,6 +83,10 @@ spec:
               value: "{{.Values.global.database.name}}"
             - name: DB_ENABLED
               value: "{{.Values.global.database.deploy}}"
+            - name: PROJECT_MASK_URL
+              value: "{{.Values.adminConsole.projectUrlMask}}"
+            - name: IMAGE_STREAM_MASK_URL
+              value: "{{.Values.adminConsole.imageStreamUrlMask}}"
           image: "{{.Values.adminConsole.image}}:{{.Values.adminConsole.version}}"
           imagePullPolicy: Always
           livenessProbe:
