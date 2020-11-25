@@ -6,7 +6,7 @@ global:
   database:
     deploy: true
     host:
-    name: "edp-install-wizard-db"
+    name: "edp-db"
     port: 5432
   webConsole:
     url:
