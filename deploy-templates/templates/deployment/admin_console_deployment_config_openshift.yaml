@@ -76,7 +76,7 @@ spec:
             - name: CI_TOOLS
               value: "Jenkins,GitLab CI"
             - name: PERF_DATA_SOURCES
-              value: "Sonar,Jenkins"
+              value: "Sonar,Jenkins,GitLab"
             - name: VCS_INTEGRATION_ENABLED
               valueFrom:
                 configMapKeyRef:

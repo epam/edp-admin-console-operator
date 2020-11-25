@@ -189,7 +189,7 @@ func (service K8SService) CreateDeployConf(ac v1alpha1.AdminConsole, url string)
 								},
 								{
 									Name:  "PERF_DATA_SOURCES",
-									Value: "Sonar,Jenkins",
+									Value: "Sonar,Jenkins,GitLab",
 								},
 								{
 									Name: "VCS_INTEGRATION_ENABLED",
