@@ -10,11 +10,11 @@ global:
 name: admin-console-operator
 image:
   name: epamedp/admin-console-operator
-  version: v2.4.0
+  version: v2.4.1
 
 adminConsole:
   image: "epamedp/edp-admin-console"
-  version: "v2.4.0"
+  version: "v2.4.2"
   basePath: ""
   testReportTools: "Allure"
   imagePullSecrets:
