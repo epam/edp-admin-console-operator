@@ -31,6 +31,9 @@ adminConsole:
   basePath: ""
   imagePullSecrets:
   authKeycloakEnabled: true
+  projectUrlMask: "/console/project/{namespace}/overview"
+  imageStreamUrlMask: "/console/project/{namespace}/browse/images/{stream}"
+  buildTools: "maven"
 
   resources:
     limits:

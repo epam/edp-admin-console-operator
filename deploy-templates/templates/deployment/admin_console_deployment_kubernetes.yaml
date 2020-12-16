@@ -54,7 +54,7 @@ spec:
             - name: INTEGRATION_STRATEGIES
               value: "Create,Clone,Import"
             - name: BUILD_TOOLS
-              value: "maven"
+              value: "{{.Values.adminConsole.buildTools}}"
             - name: DEPLOYMENT_SCRIPT
               value: "helm-chart"
             - name: PLATFORM_TYPE
