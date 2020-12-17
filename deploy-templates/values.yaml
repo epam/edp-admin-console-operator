@@ -17,9 +17,25 @@ image:
   name: epamedp/admin-console-operator
   version: v2.4.0
 
+resources:
+  limits:
+    cpu: 200m
+    memory: 192Mi
+  requests:
+    cpu: 50m
+    memory: 64Mi
+
 adminConsole:
   image: "epamedp/edp-admin-console"
   version: "v2.4.0"
   basePath: ""
   imagePullSecrets:
   authKeycloakEnabled: true
+
+  resources:
+    limits:
+      cpu: 200m
+      memory: 256Mi
+    requests:
+      cpu: 50m
+      memory: 64Mi
