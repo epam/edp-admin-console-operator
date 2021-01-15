@@ -19,6 +19,8 @@ rules:
   - codebasebranches/finalizers
   - cdpipelines/finalizers
   - stages/finalizers
+  - jiraservers
+  - jiraservers/finalizers
   verbs:
   - get
   - create
