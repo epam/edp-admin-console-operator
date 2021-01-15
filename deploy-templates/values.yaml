@@ -19,7 +19,6 @@ image:
 
 resources:
   limits:
-    cpu: 200m
     memory: 192Mi
   requests:
     cpu: 50m
@@ -37,7 +36,6 @@ adminConsole:
 
   resources:
     limits:
-      cpu: 200m
       memory: 256Mi
     requests:
       cpu: 50m
