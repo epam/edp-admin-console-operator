@@ -11,5 +11,4 @@ subjects:
   - kind: ServiceAccount
     name: {{ .Values.name }}-edp
     namespace: {{ .Values.global.edpName }}
-
 {{- end -}}

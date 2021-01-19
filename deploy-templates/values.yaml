@@ -16,6 +16,7 @@ name: admin-console-operator
 image:
   name: epamedp/admin-console-operator
   version: v2.4.0
+annotations: {}
 
 resources:
   limits:

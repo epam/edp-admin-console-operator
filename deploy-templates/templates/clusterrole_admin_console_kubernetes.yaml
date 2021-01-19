@@ -1,9 +1,14 @@
 {{ if eq .Values.global.platform "kubernetes" }}
-{{- if not (lookup "rbac.authorization.k8s.io/v1" "ClusterRole" ".Values.global.edpName" "admin-console-sc-access").metadata }}
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-    name: admin-console-sc-access
+  name: edp-admin-console-{{ .Values.global.edpName }}
+  labels:
+    {{- include "admin-console-operator.labels" . | nindent 4 }}
+  {{- with .Values.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
 rules:
 - apiGroups:
   - 'storage.k8s.io'
@@ -13,5 +18,4 @@ rules:
   verbs:
   - get
   - list
-{{ end }}
 {{ end }}
