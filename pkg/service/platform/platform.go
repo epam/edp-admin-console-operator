@@ -16,19 +16,8 @@ import (
 )
 
 type PlatformService interface {
-	CreateDeployConf(ac v1alpha1.AdminConsole, url string) error
+	CreateDeployConf(ac v1alpha1.AdminConsole) error
 	CreateSecret(ac v1alpha1.AdminConsole, name string, data map[string][]byte) error
-	CreateExternalEndpoint(ac v1alpha1.AdminConsole) error
-	CreateService(ac v1alpha1.AdminConsole) error
-	CreateServiceAccount(ac v1alpha1.AdminConsole) error
-	CreateSecurityContext(ac v1alpha1.AdminConsole) error
-	CreateRole(ac v1alpha1.AdminConsole) error
-	CreateRoleBinding(ac v1alpha1.AdminConsole, name string, binding string, kind string) error
-	CreateClusterRoleBinding(ac v1alpha1.AdminConsole, binding string) error
-	GetConfigmapData(namespace string, name string) (map[string]string, error)
-	GetDisplayName(ac v1alpha1.AdminConsole) (string, error)
-	GetSecret(namespace string, name string) (map[string][]byte, error)
-	GetAdminConsole(ac v1alpha1.AdminConsole) (*v1alpha1.AdminConsole, error)
 	GenerateDbSettings(ac v1alpha1.AdminConsole) ([]coreV1Api.EnvVar, error)
 	GenerateKeycloakSettings(ac v1alpha1.AdminConsole, keycloakUrl string) ([]coreV1Api.EnvVar, error)
 	PatchDeploymentEnv(ac v1alpha1.AdminConsole, env []coreV1Api.EnvVar) error
@@ -38,7 +27,6 @@ type PlatformService interface {
 	GetExternalUrl(namespace string, name string) (*string, error)
 	IsDeploymentReady(instance v1alpha1.AdminConsole) (bool, error)
 	CreateEDPComponentIfNotExist(instance v1alpha1.AdminConsole, url string, icon string) error
-	CreateClusterRole(instance v1alpha1.AdminConsole) error
 }
 
 const (
