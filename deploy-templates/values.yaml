@@ -15,7 +15,8 @@ global:
 name: admin-console-operator
 image:
   name: epamedp/admin-console-operator
-  version: v2.4.0
+  # if not defined then .Chart.AppVersion is used
+  version:
 annotations: {}
 
 resources:
