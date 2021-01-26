@@ -6,6 +6,8 @@ apiVersion: authorization.openshift.io/v1
 kind: Role
 metadata:
   name: edp-resources-admin
+  labels:
+    {{- include "admin-console-operator.labels" . | nindent 4 }}
 rules:
 - apiGroups:
   - '*'

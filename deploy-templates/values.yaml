@@ -18,6 +18,9 @@ image:
   # if not defined then .Chart.AppVersion is used
   version:
 annotations: {}
+nodeSelector: {}
+tolerations: []
+affinity: {}
 
 resources:
   limits:
@@ -28,13 +31,19 @@ resources:
 
 adminConsole:
   image: "epamedp/edp-admin-console"
-  version: "v2.4.0"
+  version: "2.6.0"
   basePath: ""
   imagePullSecrets:
   authKeycloakEnabled: true
   projectUrlMask: "/console/project/{namespace}/overview"
   imageStreamUrlMask: "/console/project/{namespace}/browse/images/{stream}"
   buildTools: "maven"
+  annotations: {}
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+  ingress:
+    annotations: {}
 
   resources:
     limits:

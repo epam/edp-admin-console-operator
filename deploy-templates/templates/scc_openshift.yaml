@@ -14,10 +14,11 @@ fsGroup:
 groups: []
 kind: SecurityContextConstraints
 metadata:
-  annotations:
-    "helm.sh/hook": "pre-install"
   labels:
     app: edp-admin-console
+    {{- include "admin-console-operator.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": "pre-install"
   name: edp-admin-console-{{.Values.global.edpName}}-edp
 priority: 1
 readOnlyRootFilesystem: false

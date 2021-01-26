@@ -4,6 +4,11 @@ kind: Deployment
 metadata:
   labels:
     app: edp-admin-console
+    {{- include "admin-console-operator.labels" . | nindent 4 }}
+  {{- with .Values.adminConsole.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
   name: edp-admin-console
 spec:
   progressDeadlineSeconds: 600
@@ -117,6 +122,18 @@ spec:
             readOnlyRootFilesystem: true
           terminationMessagePath: /dev/termination-log
           terminationMessagePolicy: File
+      {{- with .Values.adminConsole.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+       {{- end }}
+       {{- with .Values.adminConsole.affinity }}
+       affinity:
+         {{- toYaml . | nindent 8 }}
+       {{- end }}
+       {{- with .Values.adminConsole.tolerations }}
+       tolerations:
+         {{- toYaml . | nindent 8 }}
+       {{- end }}
       dnsPolicy: ClusterFirst
       restartPolicy: Always
       schedulerName: default-scheduler

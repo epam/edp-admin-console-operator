@@ -4,6 +4,11 @@ kind: DeploymentConfig
 metadata:
   labels:
     app: edp-admin-console
+    {{- include "admin-console-operator.labels" . | nindent 4 }}
+  {{- with .Values.adminConsole.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
   name: edp-admin-console
 spec:
   replicas: 1
@@ -133,6 +138,18 @@ spec:
       serviceAccount: edp-admin-console
       serviceAccountName: edp-admin-console
       terminationGracePeriodSeconds: 30
+      {{- with .Values.adminConsole.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.adminConsole.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.adminConsole.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
   test: false
   triggers:
     - type: ConfigChange

@@ -5,6 +5,11 @@ metadata:
   name: edp-admin-console
   labels:
     app: edp-admin-console
+    {{- include "admin-console-operator.labels" . | nindent 4 }}
+  {{- with .Values.adminConsole.ingress.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
 spec:
   rules:
     - host: {{if .Values.adminConsole.basePath}}{{ .Values.global.dnsWildCard }}{{else}}edp-admin-console-{{ .Values.global.edpName }}.{{ .Values.global.dnsWildCard }}{{end}}

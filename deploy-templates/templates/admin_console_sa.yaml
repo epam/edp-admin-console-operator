@@ -4,3 +4,4 @@ metadata:
   name: edp-admin-console
   labels:
     app: edp-admin-console
+    {{- include "admin-console-operator.labels" . | nindent 4 }}

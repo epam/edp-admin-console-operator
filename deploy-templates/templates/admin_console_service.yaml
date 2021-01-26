@@ -3,6 +3,7 @@ kind: Service
 metadata:
   labels:
     app: edp-admin-console
+    {{- include "admin-console-operator.labels" . | nindent 4 }}
   name: edp-admin-console
 spec:
   ports:
