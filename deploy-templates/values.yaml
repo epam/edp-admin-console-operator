@@ -15,11 +15,11 @@ global:
 name: admin-console-operator
 image:
   name: epamedp/admin-console-operator
-  version: v2.5.3
+  version: v2.5.4
 
 adminConsole:
   image: "epamedp/edp-admin-console"
-  version: "v2.5.4"
+  version: "2.5.5"
   basePath: ""
   imagePullSecrets:
   authKeycloakEnabled: true
