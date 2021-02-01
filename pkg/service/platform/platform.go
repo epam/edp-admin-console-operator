@@ -16,7 +16,6 @@ import (
 )
 
 type PlatformService interface {
-	CreateDeployConf(ac v1alpha1.AdminConsole) error
 	CreateSecret(ac v1alpha1.AdminConsole, name string, data map[string][]byte) error
 	GenerateDbSettings(ac v1alpha1.AdminConsole) ([]coreV1Api.EnvVar, error)
 	GenerateKeycloakSettings(ac v1alpha1.AdminConsole, keycloakUrl string) ([]coreV1Api.EnvVar, error)
