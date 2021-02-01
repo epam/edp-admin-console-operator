@@ -42,8 +42,6 @@ spec:
               value: "{{.Values.adminConsole.version}}"
             - name: EDP_VERSION
               value: "{{.Values.global.version}}"
-            - name: AUTH_KEYCLOAK_ENABLED
-              value: "false"
             - name: DNS_WILDCARD
               value: "{{.Values.global.dnsWildCard}}"
             - name: PG_USER
