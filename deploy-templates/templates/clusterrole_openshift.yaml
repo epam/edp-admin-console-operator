@@ -8,14 +8,12 @@ metadata:
 rules:
 - apiGroups:
   - '*'
-  attributeRestrictions: null
   resources:
   - configmaps
   verbs:
   - get
 - apiGroups:
   - '*'
-  attributeRestrictions: null
   resources:
   - securitycontextconstraints
   verbs:
@@ -26,7 +24,6 @@ rules:
   - update
 - apiGroups:
     - '*'
-  attributeRestrictions: null
   resources:
     - adminconsoles
     - adminconsoles/finalizers

@@ -8,14 +8,12 @@ metadata:
 rules:
 - apiGroups:
   - '*'
-  attributeRestrictions: null
   resources:
   - configmaps
   verbs:
   - get
 - apiGroups:
     - '*'
-  attributeRestrictions: null
   resources:
     - adminconsoles
     - adminconsoles/finalizers
@@ -32,7 +30,6 @@ rules:
     - '*'
 - apiGroups:
   - 'storage.k8s.io'
-  attributeRestrictions: null
   resources:
   - storageclasses
   verbs:
@@ -40,7 +37,6 @@ rules:
   - list
 - apiGroups:
     - '*'
-  attributeRestrictions: null
   resources:
     - clusterrolebindings
     - clusterroles

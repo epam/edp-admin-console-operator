@@ -11,7 +11,6 @@ metadata:
 rules:
 - apiGroups:
   - '*'
-  attributeRestrictions: null
   resources:
   - codebases
   - codebasebranches

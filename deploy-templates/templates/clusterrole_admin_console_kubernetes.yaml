@@ -12,7 +12,6 @@ metadata:
 rules:
 - apiGroups:
   - 'storage.k8s.io'
-  attributeRestrictions: null
   resources:
   - storageclasses
   verbs:
