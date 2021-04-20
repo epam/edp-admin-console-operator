@@ -8,13 +8,14 @@ import (
 	"os"
 
 	"github.com/dchest/uniuri"
+	keycloakV1Api "github.com/epam/edp-keycloak-operator/pkg/apis/v1/v1alpha1"
+	"github.com/epam/edp-keycloak-operator/pkg/controller/helper"
 	"github.com/epmd-edp/admin-console-operator/v2/pkg/apis/edp/v1alpha1"
 	adminConsoleSpec "github.com/epmd-edp/admin-console-operator/v2/pkg/service/admin_console/spec"
 	"github.com/epmd-edp/admin-console-operator/v2/pkg/service/platform"
 	platformHelper "github.com/epmd-edp/admin-console-operator/v2/pkg/service/platform/helper"
-	keycloakV1Api "github.com/epmd-edp/keycloak-operator/pkg/apis/v1/v1alpha1"
-	keycloakControllerHelper "github.com/epmd-edp/keycloak-operator/pkg/controller/helper"
 	"github.com/pkg/errors"
+	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -29,14 +30,17 @@ type AdminConsoleService interface {
 	IsDeploymentReady(instance v1alpha1.AdminConsole) (bool, error)
 }
 
-func NewAdminConsoleService(platformService platform.PlatformService, k8sClient client.Client) AdminConsoleService {
-	return AdminConsoleServiceImpl{platformService: platformService, k8sClient: k8sClient}
+func NewAdminConsoleService(platformService platform.PlatformService, k8sClient client.Client,
+	scheme *runtime.Scheme) AdminConsoleService {
+	return AdminConsoleServiceImpl{platformService: platformService, k8sClient: k8sClient,
+		keycloakHelper: helper.MakeHelper(k8sClient, scheme)}
 }
 
 type AdminConsoleServiceImpl struct {
 	// Providing sonar service implementation through the interface (platform abstract)
 	platformService platform.PlatformService
 	k8sClient       client.Client
+	keycloakHelper  *helper.Helper
 }
 
 func (s AdminConsoleServiceImpl) Integrate(instance v1alpha1.AdminConsole) (*v1alpha1.AdminConsole, error) {
@@ -48,7 +52,7 @@ func (s AdminConsoleServiceImpl) Integrate(instance v1alpha1.AdminConsole) (*v1a
 			return &instance, errors.Wrap(err, "Failed to get Keycloak client data!")
 		}
 
-		keycloakRealm, err := keycloakControllerHelper.GetOwnerKeycloakRealm(s.k8sClient, keycloakClient.ObjectMeta)
+		keycloakRealm, err := s.keycloakHelper.GetOwnerKeycloakRealm(keycloakClient.ObjectMeta)
 		if err != nil {
 			return &instance, nil
 		}
@@ -57,7 +61,7 @@ func (s AdminConsoleServiceImpl) Integrate(instance v1alpha1.AdminConsole) (*v1a
 			return &instance, errors.New("Keycloak CR is not created yet!")
 		}
 
-		keycloak, err := keycloakControllerHelper.GetOwnerKeycloak(s.k8sClient, keycloakRealm.ObjectMeta)
+		keycloak, err := s.keycloakHelper.GetOwnerKeycloak(keycloakRealm.ObjectMeta)
 		if err != nil {
 			errMsg := fmt.Sprintf("Failed to get owner for %s/%s", keycloakClient.Namespace, keycloakClient.Name)
 			return &instance, errors.Wrap(err, errMsg)
@@ -96,7 +100,6 @@ func (s AdminConsoleServiceImpl) Integrate(instance v1alpha1.AdminConsole) (*v1a
 }
 
 func (s AdminConsoleServiceImpl) ExposeConfiguration(instance v1alpha1.AdminConsole) (*v1alpha1.AdminConsole, error) {
-
 	adminConsoleReaderPassword := uniuri.New()
 	adminConsoleReaderCredentials := map[string][]byte{
 		"username": []byte("admin-console-reader"),
@@ -132,6 +135,8 @@ func (s AdminConsoleServiceImpl) ExposeConfiguration(instance v1alpha1.AdminCons
 		keycloakClient.Spec.WebUrl = *u
 		keycloakClient.Spec.Secret = adminConsoleSpec.DefaultKeycloakSecretName
 		keycloakClient.Spec.AudRequired = true
+		keycloakClient.Spec.ServiceAccount = &keycloakV1Api.ServiceAccount{Enabled: true,
+			RealmRoles: []string{"developer"}}
 
 		err = s.platformService.CreateKeycloakClient(&keycloakClient)
 		if err != nil {

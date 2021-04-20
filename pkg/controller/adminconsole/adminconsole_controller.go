@@ -3,11 +3,12 @@ package adminconsole
 import (
 	"context"
 	"fmt"
+	"os"
+	"time"
+
 	"github.com/epmd-edp/admin-console-operator/v2/pkg/controller/helper"
 	"github.com/epmd-edp/admin-console-operator/v2/pkg/service/admin_console"
 	"github.com/epmd-edp/admin-console-operator/v2/pkg/service/platform"
-	"os"
-	"time"
 
 	edpv1alpha1 "github.com/epmd-edp/admin-console-operator/v2/pkg/apis/edp/v1alpha1"
 
@@ -51,18 +52,18 @@ func Add(mgr manager.Manager) error {
 // newReconciler returns a new reconcile.Reconciler
 func newReconciler(mgr manager.Manager) reconcile.Reconciler {
 	scheme := mgr.GetScheme()
-	client := mgr.GetClient()
+	k8sClient := mgr.GetClient()
 	platformType := helper.GetPlatformTypeEnv()
-	platformService, err := platform.NewPlatformService(platformType, scheme, &client)
+	platformService, err := platform.NewPlatformService(platformType, scheme, &k8sClient)
 	if err != nil {
 		log.Error(err, "")
 		os.Exit(1)
 	}
 
-	adminConsoleService := admin_console.NewAdminConsoleService(platformService, client)
+	adminConsoleService := admin_console.NewAdminConsoleService(platformService, k8sClient, scheme)
 
 	return &ReconcileAdminConsole{
-		client:  client,
+		client:  k8sClient,
 		scheme:  scheme,
 		service: adminConsoleService,
 	}
