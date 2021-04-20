@@ -8,14 +8,15 @@ replace github.com/openshift/api => github.com/openshift/api v0.0.0-201808011710
 
 require (
 	github.com/dchest/uniuri v0.0.0-20160212164326-8902c56451e9
+	github.com/epam/edp-keycloak-operator v1.3.0-alpha-81.0.20210419161606-79af7cb6aa0b
 	github.com/epmd-edp/edp-component-operator v0.1.1-0.20200827122548-e87429a916e0
-	github.com/epmd-edp/keycloak-operator v1.3.0-alpha-81.0.20200325101343-c04e7ce7d0d3
+	github.com/epmd-edp/keycloak-operator v1.0.31-alpha-56
 	github.com/go-openapi/spec v0.19.3
 	github.com/lib/pq v1.2.0
 	github.com/openshift/api v3.9.0+incompatible
 	github.com/openshift/client-go v3.9.0+incompatible
 	github.com/operator-framework/operator-sdk v0.0.0-20190530173525-d6f9cdf2f52e
-	github.com/pkg/errors v0.8.1
+	github.com/pkg/errors v0.9.1
 	github.com/spf13/pflag v1.0.3
 	github.com/totherme/unstructured v0.0.0-20170821094912-3faf2d56d8b8
 	github.com/xeipuuv/gojsonpointer v0.0.0-20190905194746-02993c407bfb // indirect
