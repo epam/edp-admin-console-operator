@@ -31,7 +31,7 @@ resources:
 
 adminConsole:
   image: "epamedp/edp-admin-console"
-  version: "2.7.0"
+  version: "2.7.2"
   basePath: ""
   imagePullSecrets:
   authKeycloakEnabled: true
