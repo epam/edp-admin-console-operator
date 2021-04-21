@@ -10,7 +10,6 @@ require (
 	github.com/dchest/uniuri v0.0.0-20160212164326-8902c56451e9
 	github.com/epam/edp-keycloak-operator v1.3.0-alpha-81.0.20210419161606-79af7cb6aa0b
 	github.com/epmd-edp/edp-component-operator v0.1.1-0.20200827122548-e87429a916e0
-	github.com/epmd-edp/keycloak-operator v1.0.31-alpha-56
 	github.com/go-openapi/spec v0.19.3
 	github.com/lib/pq v1.2.0
 	github.com/openshift/api v3.9.0+incompatible
