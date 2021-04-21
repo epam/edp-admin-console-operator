@@ -2,8 +2,8 @@ package helper
 
 import (
 	"fmt"
-	"github.com/epmd-edp/admin-console-operator/v2/pkg/helper"
-	"github.com/operator-framework/operator-sdk/pkg/k8sutil"
+	util "github.com/epam/edp-admin-console-operator/v2/pkg/controller/helper"
+	"github.com/epam/edp-admin-console-operator/v2/pkg/helper"
 	"github.com/pkg/errors"
 	"github.com/totherme/unstructured"
 	coreV1Api "k8s.io/api/core/v1"
@@ -128,10 +128,7 @@ func CreatePathToTemplateDirectory(directory string) (string, error) {
 }
 
 func checkIfRunningLocally() bool {
-	if _, err := k8sutil.GetOperatorNamespace(); err != nil && err == k8sutil.ErrNoNamespace {
-		return true
-	}
-	return false
+	return !util.RunningInCluster()
 }
 
 func createPath(directory string, localRun bool) (string, error) {

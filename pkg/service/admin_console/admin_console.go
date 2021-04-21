@@ -5,17 +5,17 @@ import (
 	"encoding/base64"
 	"fmt"
 	"io/ioutil"
+	"k8s.io/apimachinery/pkg/runtime"
 	"os"
 
 	"github.com/dchest/uniuri"
+	"github.com/epam/edp-admin-console-operator/v2/pkg/apis/edp/v1alpha1"
+	adminConsoleSpec "github.com/epam/edp-admin-console-operator/v2/pkg/service/admin_console/spec"
+	"github.com/epam/edp-admin-console-operator/v2/pkg/service/platform"
+	platformHelper "github.com/epam/edp-admin-console-operator/v2/pkg/service/platform/helper"
 	keycloakV1Api "github.com/epam/edp-keycloak-operator/pkg/apis/v1/v1alpha1"
-	"github.com/epam/edp-keycloak-operator/pkg/controller/helper"
-	"github.com/epmd-edp/admin-console-operator/v2/pkg/apis/edp/v1alpha1"
-	adminConsoleSpec "github.com/epmd-edp/admin-console-operator/v2/pkg/service/admin_console/spec"
-	"github.com/epmd-edp/admin-console-operator/v2/pkg/service/platform"
-	platformHelper "github.com/epmd-edp/admin-console-operator/v2/pkg/service/platform/helper"
+	keycloakHelper "github.com/epam/edp-keycloak-operator/pkg/controller/helper"
 	"github.com/pkg/errors"
-	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -30,17 +30,17 @@ type AdminConsoleService interface {
 	IsDeploymentReady(instance v1alpha1.AdminConsole) (bool, error)
 }
 
-func NewAdminConsoleService(platformService platform.PlatformService, k8sClient client.Client,
-	scheme *runtime.Scheme) AdminConsoleService {
-	return AdminConsoleServiceImpl{platformService: platformService, k8sClient: k8sClient,
-		keycloakHelper: helper.MakeHelper(k8sClient, scheme)}
+func NewAdminConsoleService(ps platform.PlatformService, client client.Client, scheme *runtime.Scheme) AdminConsoleService {
+	return AdminConsoleServiceImpl{
+		platformService: ps,
+		keycloakHelper:  keycloakHelper.MakeHelper(client, scheme),
+	}
 }
 
 type AdminConsoleServiceImpl struct {
 	// Providing sonar service implementation through the interface (platform abstract)
 	platformService platform.PlatformService
-	k8sClient       client.Client
-	keycloakHelper  *helper.Helper
+	keycloakHelper  *keycloakHelper.Helper
 }
 
 func (s AdminConsoleServiceImpl) Integrate(instance v1alpha1.AdminConsole) (*v1alpha1.AdminConsole, error) {

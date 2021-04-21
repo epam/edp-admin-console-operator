@@ -4,15 +4,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	ctrl "sigs.k8s.io/controller-runtime"
 	"strconv"
 	"strings"
 
+	"github.com/epam/edp-admin-console-operator/v2/pkg/apis/edp/v1alpha1"
+	platformHelper "github.com/epam/edp-admin-console-operator/v2/pkg/service/platform/helper"
+	edpCompApi "github.com/epam/edp-component-operator/pkg/apis/v1/v1alpha1"
 	keycloakV1Api "github.com/epam/edp-keycloak-operator/pkg/apis/v1/v1alpha1"
-	"github.com/epmd-edp/admin-console-operator/v2/pkg/apis/edp/v1alpha1"
-	"github.com/epmd-edp/admin-console-operator/v2/pkg/client/admin_console"
-	platformHelper "github.com/epmd-edp/admin-console-operator/v2/pkg/service/platform/helper"
-	edpCompApi "github.com/epmd-edp/edp-component-operator/pkg/apis/v1/v1alpha1"
-	edpCompClient "github.com/epmd-edp/edp-component-operator/pkg/client"
 	"github.com/pkg/errors"
 	coreV1Api "k8s.io/api/core/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
@@ -26,20 +25,17 @@ import (
 	"k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
-	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 )
 
-var log = logf.Log.WithName("platform")
+var log = ctrl.Log.WithName("platform")
 
 type K8SService struct {
-	Scheme                *runtime.Scheme
-	CoreClient            coreV1Client.CoreV1Client
-	ExtensionsV1Client    extensionsV1Client.ExtensionsV1beta1Client
-	EdpClient             admin_console.EdpV1Client
-	k8sUnstructuredClient client.Client
-	AppsClient            appsV1Client.AppsV1Client
-	AuthClient            authV1Client.RbacV1Client
-	edpCompClient         edpCompClient.EDPComponentV1Client
+	Scheme             *runtime.Scheme
+	CoreClient         coreV1Client.CoreV1Client
+	ExtensionsV1Client extensionsV1Client.ExtensionsV1beta1Client
+	client             client.Client
+	AppsClient         appsV1Client.AppsV1Client
+	AuthClient         authV1Client.RbacV1Client
 }
 
 func (service K8SService) GenerateDbSettings(ac v1alpha1.AdminConsole) ([]coreV1Api.EnvVar, error) {
@@ -127,7 +123,7 @@ func (service K8SService) PatchDeploymentEnv(ac v1alpha1.AdminConsole, env []cor
 		return nil
 	}
 
-	dc, err := service.AppsClient.Deployments(ac.Namespace).Get(ac.Name, metav1.GetOptions{})
+	dc, err := service.AppsClient.Deployments(ac.Namespace).Get(context.TODO(), ac.Name, metav1.GetOptions{})
 	if err != nil {
 		if k8serrors.IsNotFound(err) {
 			log.Info("Deployment not found!", "Namespace", ac.Namespace, "Name", ac.Name)
@@ -150,7 +146,7 @@ func (service K8SService) PatchDeploymentEnv(ac v1alpha1.AdminConsole, env []cor
 		return err
 	}
 
-	_, err = service.AppsClient.Deployments(dc.Namespace).Patch(dc.Name, types.StrategicMergePatchType, jsonDc)
+	_, err = service.AppsClient.Deployments(dc.Namespace).Patch(context.TODO(), dc.Name, types.StrategicMergePatchType, jsonDc, metav1.PatchOptions{})
 	if err != nil {
 		return err
 	}
@@ -159,7 +155,7 @@ func (service K8SService) PatchDeploymentEnv(ac v1alpha1.AdminConsole, env []cor
 }
 
 func (service K8SService) GetExternalUrl(namespace string, name string) (*string, error) {
-	ingress, err := service.ExtensionsV1Client.Ingresses(namespace).Get(name, metav1.GetOptions{})
+	ingress, err := service.ExtensionsV1Client.Ingresses(namespace).Get(context.TODO(), name, metav1.GetOptions{})
 	if err != nil {
 		if k8serrors.IsNotFound(err) {
 			log.Info("Ingress not found", "Namespace", namespace, "Name", name)
@@ -175,7 +171,7 @@ func (service K8SService) GetExternalUrl(namespace string, name string) (*string
 }
 
 func (service K8SService) IsDeploymentReady(instance v1alpha1.AdminConsole) (bool, error) {
-	deploymentConfig, err := service.AppsClient.Deployments(instance.Namespace).Get(instance.Name, metav1.GetOptions{})
+	deploymentConfig, err := service.AppsClient.Deployments(instance.Namespace).Get(context.TODO(), instance.Name, metav1.GetOptions{})
 	if err != nil {
 		return false, err
 	}
@@ -204,13 +200,13 @@ func (service K8SService) CreateSecret(ac v1alpha1.AdminConsole, name string, da
 		return err
 	}
 
-	consoleSecret, err := service.CoreClient.Secrets(consoleSecretObject.Namespace).Get(consoleSecretObject.Name, metav1.GetOptions{})
+	consoleSecret, err := service.CoreClient.Secrets(consoleSecretObject.Namespace).Get(context.TODO(), consoleSecretObject.Name, metav1.GetOptions{})
 
 	if err != nil {
 		if k8serrors.IsNotFound(err) {
 			msg := fmt.Sprintf("Creating a new Secret %s/%s for Admin Console", consoleSecretObject.Namespace, consoleSecretObject.Name)
 			log.V(1).Info(msg)
-			consoleSecret, err = service.CoreClient.Secrets(consoleSecretObject.Namespace).Create(consoleSecretObject)
+			consoleSecret, err = service.CoreClient.Secrets(consoleSecretObject.Namespace).Create(context.TODO(), consoleSecretObject, metav1.CreateOptions{})
 			if err != nil {
 				return err
 			}
@@ -225,24 +221,17 @@ func (service K8SService) CreateSecret(ac v1alpha1.AdminConsole, name string, da
 	return nil
 }
 
-func (service K8SService) UpdateAdminConsole(ac v1alpha1.AdminConsole) (*v1alpha1.AdminConsole, error) {
-	instance, err := service.EdpClient.Update(&ac)
-	if err != nil {
+func (s K8SService) UpdateAdminConsole(ac v1alpha1.AdminConsole) (*v1alpha1.AdminConsole, error) {
+	if err := s.client.Update(context.TODO(), &ac); err != nil {
 		return nil, err
 	}
-
-	return instance, nil
+	return &ac, nil
 }
 
 func (service *K8SService) Init(config *rest.Config, scheme *runtime.Scheme, k8sClient *client.Client) error {
 	coreClient, err := coreV1Client.NewForConfig(config)
 	if err != nil {
 		return errors.Wrap(err, "Core Client initialization failed!")
-	}
-
-	edpClient, err := admin_console.NewForConfig(config)
-	if err != nil {
-		return errors.Wrap(err, "EDP Client initialization failed!")
 	}
 
 	appsClient, err := appsV1Client.NewForConfig(config)
@@ -260,19 +249,12 @@ func (service *K8SService) Init(config *rest.Config, scheme *runtime.Scheme, k8s
 		return errors.New("extensionsV1 client initialization failed!")
 	}
 
-	compCl, err := edpCompClient.NewForConfig(config)
-	if err != nil {
-		return errors.Wrap(err, "failed to init edp component client")
-	}
-
-	service.EdpClient = *edpClient
 	service.CoreClient = *coreClient
 	service.Scheme = scheme
-	service.k8sUnstructuredClient = *k8sClient
+	service.client = *k8sClient
 	service.AppsClient = *appsClient
 	service.ExtensionsV1Client = *extensionsClient
 	service.AuthClient = *rbacClient
-	service.edpCompClient = *compCl
 	return nil
 }
 
@@ -282,10 +264,10 @@ func (service K8SService) CreateKeycloakClient(kc *keycloakV1Api.KeycloakClient)
 		Name:      kc.Name,
 	}
 
-	err := service.k8sUnstructuredClient.Get(context.TODO(), nsn, kc)
+	err := service.client.Get(context.TODO(), nsn, kc)
 	if err != nil {
 		if k8serrors.IsNotFound(err) {
-			err := service.k8sUnstructuredClient.Create(context.TODO(), kc)
+			err := service.client.Create(context.TODO(), kc)
 			if err != nil {
 				return errors.Wrapf(err, "Failed to create Keycloak client %s/%s", kc.Namespace, kc.Name)
 			}
@@ -308,7 +290,7 @@ func (service K8SService) GetKeycloakClient(name string, namespace string) (keyc
 		Name:      name,
 	}
 
-	err := service.k8sUnstructuredClient.Get(context.TODO(), nsn, &out)
+	err := service.client.Get(context.TODO(), nsn, &out)
 	if err != nil {
 		return out, err
 	}
@@ -317,24 +299,34 @@ func (service K8SService) GetKeycloakClient(name string, namespace string) (keyc
 	return out, nil
 }
 
-func (service K8SService) CreateEDPComponentIfNotExist(ac v1alpha1.AdminConsole, url string, icon string) error {
-	comp, err := service.edpCompClient.
-		EDPComponents(ac.Namespace).
-		Get(ac.Name, metav1.GetOptions{})
-	if err == nil {
-		log.Info("edp component already exists", "name", comp.Name)
-		return nil
+func (s K8SService) CreateEDPComponentIfNotExist(ac v1alpha1.AdminConsole, url string, icon string) error {
+	if _, err := s.getEDPComponent(ac.Name, ac.Namespace); err != nil {
+		if k8serrors.IsNotFound(err) {
+			return s.createEDPComponent(ac, url, icon)
+		}
+		return errors.Wrapf(err, "failed to get edp component: %v", ac.Name)
 	}
-	if k8serrors.IsNotFound(err) {
-		return service.createEDPComponent(ac, url, icon)
-	}
-	return errors.Wrapf(err, "failed to get edp component: %v", ac.Name)
+	log.Info("edp component already exists", "name", ac.Name)
+	return nil
 }
 
-func (service K8SService) createEDPComponent(ac v1alpha1.AdminConsole, url string, icon string) error {
+func (s K8SService) getEDPComponent(name, namespace string) (*edpCompApi.EDPComponent, error) {
+	c := &edpCompApi.EDPComponent{}
+	err := s.client.Get(context.TODO(), types.NamespacedName{
+		Namespace: namespace,
+		Name:      name,
+	}, c)
+	if err != nil {
+		return nil, err
+	}
+	return c, nil
+}
+
+func (s K8SService) createEDPComponent(ac v1alpha1.AdminConsole, url string, icon string) error {
 	obj := &edpCompApi.EDPComponent{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: ac.Name,
+			Name:      ac.Name,
+			Namespace: ac.Namespace,
 		},
 		Spec: edpCompApi.EDPComponentSpec{
 			Type:    "admin-console",
@@ -343,11 +335,9 @@ func (service K8SService) createEDPComponent(ac v1alpha1.AdminConsole, url strin
 			Visible: true,
 		},
 	}
-	if err := controllerutil.SetControllerReference(&ac, obj, service.Scheme); err != nil {
+	if err := controllerutil.SetControllerReference(&ac, obj, s.Scheme); err != nil {
 		return err
 	}
-	_, err := service.edpCompClient.
-		EDPComponents(ac.Namespace).
-		Create(obj)
-	return err
+
+	return s.client.Create(context.TODO(), obj)
 }
