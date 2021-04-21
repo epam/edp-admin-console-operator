@@ -1,7 +1,8 @@
 package admin_console
 
 import (
-	"github.com/epmd-edp/admin-console-operator/v2/pkg/apis/edp/v1alpha1"
+	"context"
+	"github.com/epam/edp-admin-console-operator/v2/pkg/apis/edp/v1alpha1"
 	_ "github.com/lib/pq"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -36,7 +37,7 @@ func (c *EdpV1Client) Get(name string, namespace string, options metav1.GetOptio
 		Resource("adminconsoles").
 		Name(name).
 		VersionedParams(&options, scheme.ParameterCodec).
-		Do().
+		Do(context.TODO()).
 		Into(result)
 	return
 }
@@ -48,7 +49,7 @@ func (c *EdpV1Client) Update(ac *v1alpha1.AdminConsole) (result *v1alpha1.AdminC
 		Resource("adminconsoles").
 		Name(ac.Name).
 		Body(ac).
-		Do().
+		Do(context.TODO()).
 		Into(result)
 	return
 }
@@ -63,7 +64,7 @@ func createCrdClient(cfg *rest.Config) error {
 	config.GroupVersion = &SchemeGroupVersion
 	config.APIPath = "/apis"
 	config.ContentType = runtime.ContentTypeJSON
-	config.NegotiatedSerializer = serializer.DirectCodecFactory{CodecFactory: serializer.NewCodecFactory(scheme)}
+	config.NegotiatedSerializer = serializer.NewCodecFactory(scheme)
 
 	return nil
 }

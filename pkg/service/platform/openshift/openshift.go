@@ -1,18 +1,17 @@
 package openshift
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
+	ctrl "sigs.k8s.io/controller-runtime"
 	"strconv"
 	"strings"
 
-	"github.com/epmd-edp/admin-console-operator/v2/pkg/apis/edp/v1alpha1"
-	adminConsoleSpec "github.com/epmd-edp/admin-console-operator/v2/pkg/service/admin_console/spec"
-	platformHelper "github.com/epmd-edp/admin-console-operator/v2/pkg/service/platform/helper"
-	"github.com/epmd-edp/admin-console-operator/v2/pkg/service/platform/kubernetes"
-	"sigs.k8s.io/controller-runtime/pkg/client"
-	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
-
+	"github.com/epam/edp-admin-console-operator/v2/pkg/apis/edp/v1alpha1"
+	adminConsoleSpec "github.com/epam/edp-admin-console-operator/v2/pkg/service/admin_console/spec"
+	platformHelper "github.com/epam/edp-admin-console-operator/v2/pkg/service/platform/helper"
+	"github.com/epam/edp-admin-console-operator/v2/pkg/service/platform/kubernetes"
 	appsV1Api "github.com/openshift/api/apps/v1"
 	authV1Api "github.com/openshift/api/authorization/v1"
 	appsV1client "github.com/openshift/client-go/apps/clientset/versioned/typed/apps/v1"
@@ -22,6 +21,7 @@ import (
 	securityV1Client "github.com/openshift/client-go/security/clientset/versioned/typed/security/v1"
 	templateV1Client "github.com/openshift/client-go/template/clientset/versioned/typed/template/v1"
 	"github.com/pkg/errors"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	coreV1Api "k8s.io/api/core/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
@@ -34,7 +34,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
-var log = logf.Log.WithName("platform")
+var log = ctrl.Log.WithName("platform")
 
 type OpenshiftService struct {
 	kubernetes.K8SService
@@ -122,7 +122,7 @@ func (service OpenshiftService) CreateDeployConf(ac v1alpha1.AdminConsole) error
 		return err
 	}
 
-	consoleDc, err := service.appClient.DeploymentConfigs(consoleDcObject.Namespace).Get(consoleDcObject.Name, metav1.GetOptions{})
+	consoleDc, err := service.appClient.DeploymentConfigs(consoleDcObject.Namespace).Get(context.TODO(), consoleDcObject.Name, metav1.GetOptions{})
 	if err != nil {
 		if k8serrors.IsNotFound(err) {
 			msg := fmt.Sprintf("Creating DeploymentConfig %s/%s for Admin Console %s", consoleDcObject.Namespace, consoleDcObject.Name, ac.Name)
@@ -132,7 +132,7 @@ func (service OpenshiftService) CreateDeployConf(ac v1alpha1.AdminConsole) error
 				return errors.Wrap(err, "Failed to generate environment variables for shared database!")
 			}
 			consoleDcObject.Spec.Template.Spec.Containers[0].Env = append(consoleDcObject.Spec.Template.Spec.Containers[0].Env, dbEnvVars...)
-			consoleDc, err = service.appClient.DeploymentConfigs(consoleDcObject.Namespace).Create(consoleDcObject)
+			consoleDc, err = service.appClient.DeploymentConfigs(consoleDcObject.Namespace).Create(context.TODO(), consoleDcObject, metav1.CreateOptions{})
 			if err != nil {
 				return err
 			}
@@ -230,7 +230,7 @@ func (service OpenshiftService) PatchDeploymentEnv(ac v1alpha1.AdminConsole, env
 		return nil
 	}
 
-	dc, err := service.appClient.DeploymentConfigs(ac.Namespace).Get(ac.Name, metav1.GetOptions{})
+	dc, err := service.appClient.DeploymentConfigs(ac.Namespace).Get(context.TODO(), ac.Name, metav1.GetOptions{})
 	if err != nil {
 		if k8serrors.IsNotFound(err) {
 			log.Info(fmt.Sprintf("Deployment %s not found!", ac.Name))
@@ -253,7 +253,7 @@ func (service OpenshiftService) PatchDeploymentEnv(ac v1alpha1.AdminConsole, env
 		return err
 	}
 
-	_, err = service.appClient.DeploymentConfigs(dc.Namespace).Patch(dc.Name, types.StrategicMergePatchType, jsonDc)
+	_, err = service.appClient.DeploymentConfigs(dc.Namespace).Patch(context.TODO(), dc.Name, types.StrategicMergePatchType, jsonDc, metav1.PatchOptions{})
 	if err != nil {
 		return err
 	}
@@ -310,7 +310,7 @@ func (service *OpenshiftService) Init(config *rest.Config, scheme *runtime.Schem
 
 // GetExternalUrl returns Route object from Openshift
 func (service OpenshiftService) GetExternalUrl(namespace string, name string) (*string, error) {
-	route, err := service.routeClient.Routes(namespace).Get(name, metav1.GetOptions{})
+	route, err := service.routeClient.Routes(namespace).Get(context.TODO(), name, metav1.GetOptions{})
 	if err != nil && k8serrors.IsNotFound(err) {
 		log.Info(fmt.Sprintf("Route %v in namespace %v not found", name, namespace))
 		return nil, err
@@ -330,7 +330,7 @@ func (service OpenshiftService) GetExternalUrl(namespace string, name string) (*
 // IsDeploymentReady gets Deployment Config from Openshift, based on data from Admin Console
 func (service OpenshiftService) IsDeploymentReady(instance v1alpha1.AdminConsole) (bool, error) {
 
-	deploymentConfig, err := service.appClient.DeploymentConfigs(instance.Namespace).Get(instance.Name, metav1.GetOptions{})
+	deploymentConfig, err := service.appClient.DeploymentConfigs(instance.Namespace).Get(context.TODO(), instance.Name, metav1.GetOptions{})
 	if err != nil {
 		return false, err
 	}

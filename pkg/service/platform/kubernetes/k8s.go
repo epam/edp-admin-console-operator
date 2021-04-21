@@ -4,15 +4,16 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	ctrl "sigs.k8s.io/controller-runtime"
 	"strconv"
 	"strings"
 
+	"github.com/epam/edp-admin-console-operator/v2/pkg/apis/edp/v1alpha1"
+	"github.com/epam/edp-admin-console-operator/v2/pkg/client/admin_console"
+	platformHelper "github.com/epam/edp-admin-console-operator/v2/pkg/service/platform/helper"
+	edpCompApi "github.com/epam/edp-component-operator/pkg/apis/v1/v1alpha1"
+	edpCompClient "github.com/epam/edp-component-operator/pkg/client"
 	keycloakV1Api "github.com/epam/edp-keycloak-operator/pkg/apis/v1/v1alpha1"
-	"github.com/epmd-edp/admin-console-operator/v2/pkg/apis/edp/v1alpha1"
-	"github.com/epmd-edp/admin-console-operator/v2/pkg/client/admin_console"
-	platformHelper "github.com/epmd-edp/admin-console-operator/v2/pkg/service/platform/helper"
-	edpCompApi "github.com/epmd-edp/edp-component-operator/pkg/apis/v1/v1alpha1"
-	edpCompClient "github.com/epmd-edp/edp-component-operator/pkg/client"
 	"github.com/pkg/errors"
 	coreV1Api "k8s.io/api/core/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
@@ -26,10 +27,9 @@ import (
 	"k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
-	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 )
 
-var log = logf.Log.WithName("platform")
+var log = ctrl.Log.WithName("platform")
 
 type K8SService struct {
 	Scheme                *runtime.Scheme
@@ -127,7 +127,7 @@ func (service K8SService) PatchDeploymentEnv(ac v1alpha1.AdminConsole, env []cor
 		return nil
 	}
 
-	dc, err := service.AppsClient.Deployments(ac.Namespace).Get(ac.Name, metav1.GetOptions{})
+	dc, err := service.AppsClient.Deployments(ac.Namespace).Get(context.TODO(), ac.Name, metav1.GetOptions{})
 	if err != nil {
 		if k8serrors.IsNotFound(err) {
 			log.Info("Deployment not found!", "Namespace", ac.Namespace, "Name", ac.Name)
@@ -150,7 +150,7 @@ func (service K8SService) PatchDeploymentEnv(ac v1alpha1.AdminConsole, env []cor
 		return err
 	}
 
-	_, err = service.AppsClient.Deployments(dc.Namespace).Patch(dc.Name, types.StrategicMergePatchType, jsonDc)
+	_, err = service.AppsClient.Deployments(dc.Namespace).Patch(context.TODO(), dc.Name, types.StrategicMergePatchType, jsonDc, metav1.PatchOptions{})
 	if err != nil {
 		return err
 	}
@@ -159,7 +159,7 @@ func (service K8SService) PatchDeploymentEnv(ac v1alpha1.AdminConsole, env []cor
 }
 
 func (service K8SService) GetExternalUrl(namespace string, name string) (*string, error) {
-	ingress, err := service.ExtensionsV1Client.Ingresses(namespace).Get(name, metav1.GetOptions{})
+	ingress, err := service.ExtensionsV1Client.Ingresses(namespace).Get(context.TODO(), name, metav1.GetOptions{})
 	if err != nil {
 		if k8serrors.IsNotFound(err) {
 			log.Info("Ingress not found", "Namespace", namespace, "Name", name)
@@ -175,7 +175,7 @@ func (service K8SService) GetExternalUrl(namespace string, name string) (*string
 }
 
 func (service K8SService) IsDeploymentReady(instance v1alpha1.AdminConsole) (bool, error) {
-	deploymentConfig, err := service.AppsClient.Deployments(instance.Namespace).Get(instance.Name, metav1.GetOptions{})
+	deploymentConfig, err := service.AppsClient.Deployments(instance.Namespace).Get(context.TODO(), instance.Name, metav1.GetOptions{})
 	if err != nil {
 		return false, err
 	}
@@ -204,13 +204,13 @@ func (service K8SService) CreateSecret(ac v1alpha1.AdminConsole, name string, da
 		return err
 	}
 
-	consoleSecret, err := service.CoreClient.Secrets(consoleSecretObject.Namespace).Get(consoleSecretObject.Name, metav1.GetOptions{})
+	consoleSecret, err := service.CoreClient.Secrets(consoleSecretObject.Namespace).Get(context.TODO(), consoleSecretObject.Name, metav1.GetOptions{})
 
 	if err != nil {
 		if k8serrors.IsNotFound(err) {
 			msg := fmt.Sprintf("Creating a new Secret %s/%s for Admin Console", consoleSecretObject.Namespace, consoleSecretObject.Name)
 			log.V(1).Info(msg)
-			consoleSecret, err = service.CoreClient.Secrets(consoleSecretObject.Namespace).Create(consoleSecretObject)
+			consoleSecret, err = service.CoreClient.Secrets(consoleSecretObject.Namespace).Create(context.TODO(), consoleSecretObject, metav1.CreateOptions{})
 			if err != nil {
 				return err
 			}
