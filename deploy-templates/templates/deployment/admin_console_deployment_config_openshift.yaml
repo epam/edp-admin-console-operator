@@ -87,11 +87,6 @@ spec:
                 configMapKeyRef:
                   key: vcs_integration_enabled
                   name: edp-config
-            - name: EDP_NAME
-              valueFrom:
-                configMapKeyRef:
-                  key: edp_name
-                  name: edp-config
             - name: PG_HOST
               value: "{{.Values.global.database.host}}"
             - name: PG_PORT
