@@ -10,7 +10,8 @@ global:
     port: 5432
   webConsole:
     url:
-
+  openshift:
+    deploymentType: "deploymentConfigs"
 
 name: admin-console-operator
 image:

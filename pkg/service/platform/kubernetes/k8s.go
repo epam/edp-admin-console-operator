@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/epam/edp-admin-console-operator/v2/pkg/helper"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"strconv"
 	"strings"
@@ -171,16 +172,7 @@ func (service K8SService) GetExternalUrl(namespace string, name string) (*string
 }
 
 func (service K8SService) IsDeploymentReady(instance v1alpha1.AdminConsole) (bool, error) {
-	deploymentConfig, err := service.AppsClient.Deployments(instance.Namespace).Get(context.TODO(), instance.Name, metav1.GetOptions{})
-	if err != nil {
-		return false, err
-	}
-
-	if deploymentConfig.Status.UpdatedReplicas == 1 && deploymentConfig.Status.AvailableReplicas == 1 {
-		return true, nil
-	}
-
-	return false, nil
+	return helper.IsDeploymentReady(service.AppsClient, instance.Name, instance.Namespace)
 }
 
 func (service K8SService) CreateSecret(ac v1alpha1.AdminConsole, name string, data map[string][]byte) error {

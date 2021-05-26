@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/epam/edp-admin-console-operator/v2/pkg/helper"
+	"os"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"strconv"
 	"strings"
@@ -13,7 +15,6 @@ import (
 	platformHelper "github.com/epam/edp-admin-console-operator/v2/pkg/service/platform/helper"
 	"github.com/epam/edp-admin-console-operator/v2/pkg/service/platform/kubernetes"
 	appsV1Api "github.com/openshift/api/apps/v1"
-	authV1Api "github.com/openshift/api/authorization/v1"
 	appsV1client "github.com/openshift/client-go/apps/clientset/versioned/typed/apps/v1"
 	authV1Client "github.com/openshift/client-go/authorization/clientset/versioned/typed/authorization/v1"
 	projectV1Client "github.com/openshift/client-go/project/clientset/versioned/typed/project/v1"
@@ -47,6 +48,11 @@ type OpenshiftService struct {
 	routeClient    routeV1Client.RouteV1Client
 	client         client.Client
 }
+
+const (
+	deploymentTypeEnvName           = "DEPLOYMENT_TYPE"
+	deploymentConfigsDeploymentType = "deploymentConfigs"
+)
 
 func (service OpenshiftService) CreateDeployConf(ac v1alpha1.AdminConsole) error {
 	labels := platformHelper.GenerateLabels(ac.Name)
@@ -225,40 +231,43 @@ func (service OpenshiftService) GenerateKeycloakSettings(ac v1alpha1.AdminConsol
 }
 
 func (service OpenshiftService) PatchDeploymentEnv(ac v1alpha1.AdminConsole, env []coreV1Api.EnvVar) error {
-
 	if len(env) == 0 {
 		return nil
 	}
 
-	dc, err := service.appClient.DeploymentConfigs(ac.Namespace).Get(context.TODO(), ac.Name, metav1.GetOptions{})
-	if err != nil {
-		if k8serrors.IsNotFound(err) {
-			log.Info(fmt.Sprintf("Deployment %s not found!", ac.Name))
-			return nil
+	if os.Getenv(deploymentTypeEnvName) == deploymentConfigsDeploymentType {
+		dc, err := helper.GetDeploymentConfig(service.appClient, ac.Name, ac.Namespace)
+		if err != nil {
+			if k8serrors.IsNotFound(err) {
+				log.Info(fmt.Sprintf("Deployment %s not found!", ac.Name))
+				return nil
+			}
+			return err
 		}
-		return err
+
+		container, err := platformHelper.SelectContainer(dc.Spec.Template.Spec.Containers, ac.Name)
+		if err != nil {
+			return err
+		}
+
+		container.Env = platformHelper.UpdateEnv(container.Env, env)
+
+		dc.Spec.Template.Spec.Containers = append(dc.Spec.Template.Spec.Containers, container)
+
+		jsonDc, err := json.Marshal(dc)
+		if err != nil {
+			return err
+		}
+
+		_, err = service.appClient.DeploymentConfigs(dc.Namespace).Patch(context.TODO(), dc.Name, types.StrategicMergePatchType, jsonDc, metav1.PatchOptions{})
+		if err != nil {
+			return err
+		}
+
+		return nil
 	}
 
-	container, err := platformHelper.SelectContainer(dc.Spec.Template.Spec.Containers, ac.Name)
-	if err != nil {
-		return err
-	}
-
-	container.Env = platformHelper.UpdateEnv(container.Env, env)
-
-	dc.Spec.Template.Spec.Containers = append(dc.Spec.Template.Spec.Containers, container)
-
-	jsonDc, err := json.Marshal(dc)
-	if err != nil {
-		return err
-	}
-
-	_, err = service.appClient.DeploymentConfigs(dc.Namespace).Patch(context.TODO(), dc.Name, types.StrategicMergePatchType, jsonDc, metav1.PatchOptions{})
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return service.K8SService.PatchDeploymentEnv(ac, env)
 }
 
 func (service *OpenshiftService) Init(config *rest.Config, scheme *runtime.Scheme, k8sClient *client.Client) error {
@@ -329,59 +338,8 @@ func (service OpenshiftService) GetExternalUrl(namespace string, name string) (*
 
 // IsDeploymentReady gets Deployment Config from Openshift, based on data from Admin Console
 func (service OpenshiftService) IsDeploymentReady(instance v1alpha1.AdminConsole) (bool, error) {
-
-	deploymentConfig, err := service.appClient.DeploymentConfigs(instance.Namespace).Get(context.TODO(), instance.Name, metav1.GetOptions{})
-	if err != nil {
-		return false, err
+	if os.Getenv(deploymentTypeEnvName) == deploymentConfigsDeploymentType {
+		return helper.IsDeploymentConfigReady(service.appClient, instance.Name, instance.Namespace)
 	}
-
-	if deploymentConfig.Status.UpdatedReplicas == 1 && deploymentConfig.Status.AvailableReplicas == 1 {
-		return true, nil
-	}
-
-	return false, nil
-}
-
-func getRoleBindingObjectByKind(ac v1alpha1.AdminConsole, name string, binding string, kind string) *authV1Api.RoleBinding {
-	switch kind {
-	case "ClusterRole":
-		return &authV1Api.RoleBinding{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      name,
-				Namespace: ac.Namespace,
-			},
-			RoleRef: coreV1Api.ObjectReference{
-				APIVersion: "rbac.authorization.k8s.io",
-				Kind:       kind,
-				Name:       binding,
-			},
-			Subjects: []coreV1Api.ObjectReference{
-				{
-					Kind: "ServiceAccount",
-					Name: ac.Name,
-				},
-			},
-		}
-	case "Role":
-		return &authV1Api.RoleBinding{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      name,
-				Namespace: ac.Namespace,
-			},
-			RoleRef: coreV1Api.ObjectReference{
-				APIVersion: "rbac.authorization.k8s.io",
-				Kind:       kind,
-				Name:       binding,
-				Namespace:  ac.Namespace,
-			},
-			Subjects: []coreV1Api.ObjectReference{
-				{
-					Kind: "ServiceAccount",
-					Name: ac.Name,
-				},
-			},
-		}
-	}
-
-	return &authV1Api.RoleBinding{}
+	return service.K8SService.IsDeploymentReady(instance)
 }
