@@ -59,6 +59,7 @@ func (s AdminConsoleServiceImpl) Integrate(instance v1alpha1.AdminConsole) (*v1a
 
 		keycloakRealm, err := s.keycloakHelper.GetOwnerKeycloakRealm(keycloakClient.ObjectMeta)
 		if err != nil {
+			s.log.Info("ERRRRROR")
 			return &instance, nil
 		}
 		s.log.Info("keycloak realm owner is gotten", "val", keycloakRealm.Name)
