@@ -149,11 +149,11 @@ func (r *ReconcileAdminConsole) Reconcile(ctx context.Context, request reconcile
 
 	instance, err = r.service.Integrate(*instance)
 	if err != nil {
-		err = r.updateStatus(ctx, instance, StatusFailed)
-		if err != nil {
-			return reconcile.Result{RequeueAfter: DefaultRequeueTime * time.Second}, err
+		log.Error(err, "couldn't finish integrating")
+		if err = r.updateStatus(ctx, instance, StatusFailed); err != nil {
+			return reconcile.Result{RequeueAfter: DefaultRequeueTime * time.Second}, nil
 		}
-		return reconcile.Result{RequeueAfter: DefaultRequeueTime * time.Second}, errors.Wrapf(err, "Integration failed")
+		return reconcile.Result{RequeueAfter: DefaultRequeueTime * time.Second}, nil
 	}
 
 	if instance.Status.Status == StatusIntegrationStart {
