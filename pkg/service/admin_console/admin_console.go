@@ -54,7 +54,7 @@ func (s AdminConsoleServiceImpl) Integrate(instance v1alpha1.AdminConsole) (*v1a
 
 		keycloakRealm, err := s.keycloakHelper.GetOwnerKeycloakRealm(keycloakClient.ObjectMeta)
 		if err != nil {
-			return &instance, nil
+			return &instance, errors.Wrap(err, "unable to get keycloak realm cr")
 		}
 
 		if keycloakRealm == nil {

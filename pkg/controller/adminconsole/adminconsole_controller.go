@@ -7,7 +7,11 @@ import (
 	"github.com/epam/edp-admin-console-operator/v2/pkg/service/admin_console"
 	"github.com/epam/edp-admin-console-operator/v2/pkg/service/platform"
 	"github.com/go-logr/logr"
+	corev1 "k8s.io/api/core/v1"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/controller"
+	"sigs.k8s.io/controller-runtime/pkg/handler"
+	"sigs.k8s.io/controller-runtime/pkg/source"
 	"time"
 
 	adminConsoleApi "github.com/epam/edp-admin-console-operator/v2/pkg/apis/edp/v1alpha1"
@@ -52,9 +56,28 @@ type ReconcileAdminConsole struct {
 }
 
 func (r *ReconcileAdminConsole) SetupWithManager(mgr ctrl.Manager) error {
-	return ctrl.NewControllerManagedBy(mgr).
-		For(&adminConsoleApi.AdminConsole{}).
-		Complete(r)
+	c, err := controller.New("adminconsole-controller", mgr, controller.Options{Reconciler: r})
+	if err != nil {
+		return err
+	}
+
+	// Watch for changes to primary resource AdminConsole
+	err = c.Watch(&source.Kind{Type: &adminConsoleApi.AdminConsole{}}, &handler.EnqueueRequestForObject{})
+	if err != nil {
+		return err
+	}
+
+	// TODO(user): Modify this to be the types you create that are owned by the primary resource
+	// Watch for changes to secondary resource Pods and requeue the owner AdminConsole
+	err = c.Watch(&source.Kind{Type: &corev1.Pod{}}, &handler.EnqueueRequestForOwner{
+		IsController: true,
+		OwnerType:    &adminConsoleApi.AdminConsole{},
+	})
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (r *ReconcileAdminConsole) Reconcile(ctx context.Context, request reconcile.Request) (reconcile.Result, error) {
@@ -126,11 +149,11 @@ func (r *ReconcileAdminConsole) Reconcile(ctx context.Context, request reconcile
 
 	instance, err = r.service.Integrate(*instance)
 	if err != nil {
-		err = r.updateStatus(ctx, instance, StatusFailed)
-		if err != nil {
-			return reconcile.Result{RequeueAfter: DefaultRequeueTime * time.Second}, err
+		log.Error(err, "couldn't finish integrating")
+		if err = r.updateStatus(ctx, instance, StatusFailed); err != nil {
+			return reconcile.Result{RequeueAfter: DefaultRequeueTime * time.Second}, nil
 		}
-		return reconcile.Result{RequeueAfter: DefaultRequeueTime * time.Second}, errors.Wrapf(err, "Integration failed")
+		return reconcile.Result{RequeueAfter: DefaultRequeueTime * time.Second}, nil
 	}
 
 	if instance.Status.Status == StatusIntegrationStart {
