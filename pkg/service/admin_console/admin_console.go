@@ -4,10 +4,6 @@ import (
 	"bufio"
 	"encoding/base64"
 	"fmt"
-	"io/ioutil"
-	"k8s.io/apimachinery/pkg/runtime"
-	"os"
-
 	"github.com/dchest/uniuri"
 	"github.com/epam/edp-admin-console-operator/v2/pkg/apis/edp/v1alpha1"
 	adminConsoleSpec "github.com/epam/edp-admin-console-operator/v2/pkg/service/admin_console/spec"
@@ -15,7 +11,12 @@ import (
 	platformHelper "github.com/epam/edp-admin-console-operator/v2/pkg/service/platform/helper"
 	keycloakV1Api "github.com/epam/edp-keycloak-operator/pkg/apis/v1/v1alpha1"
 	keycloakHelper "github.com/epam/edp-keycloak-operator/pkg/controller/helper"
+	"github.com/go-logr/logr"
 	"github.com/pkg/errors"
+	"io/ioutil"
+	"k8s.io/apimachinery/pkg/runtime"
+	"os"
+	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -34,6 +35,7 @@ func NewAdminConsoleService(ps platform.PlatformService, client client.Client, s
 	return AdminConsoleServiceImpl{
 		platformService: ps,
 		keycloakHelper:  keycloakHelper.MakeHelper(client, scheme),
+		log:             ctrl.Log.WithName("sso-integration"),
 	}
 }
 
@@ -41,9 +43,11 @@ type AdminConsoleServiceImpl struct {
 	// Providing sonar service implementation through the interface (platform abstract)
 	platformService platform.PlatformService
 	keycloakHelper  *keycloakHelper.Helper
+	log             logr.Logger
 }
 
 func (s AdminConsoleServiceImpl) Integrate(instance v1alpha1.AdminConsole) (*v1alpha1.AdminConsole, error) {
+	s.log.Info("Integration method is invoked", "keycloak enabled", instance.Spec.KeycloakSpec.Enabled)
 
 	if instance.Spec.KeycloakSpec.Enabled {
 
@@ -51,11 +55,13 @@ func (s AdminConsoleServiceImpl) Integrate(instance v1alpha1.AdminConsole) (*v1a
 		if err != nil {
 			return &instance, errors.Wrap(err, "Failed to get Keycloak client data!")
 		}
+		s.log.Info("keycloak client is gotten", "val", keycloakClient.Name)
 
 		keycloakRealm, err := s.keycloakHelper.GetOwnerKeycloakRealm(keycloakClient.ObjectMeta)
 		if err != nil {
 			return &instance, nil
 		}
+		s.log.Info("keycloak realm owner is gotten", "val", keycloakRealm.Name)
 
 		if keycloakRealm == nil {
 			return &instance, errors.New("Keycloak CR is not created yet!")
@@ -66,6 +72,7 @@ func (s AdminConsoleServiceImpl) Integrate(instance v1alpha1.AdminConsole) (*v1a
 			errMsg := fmt.Sprintf("Failed to get owner for %s/%s", keycloakClient.Namespace, keycloakClient.Name)
 			return &instance, errors.Wrap(err, errMsg)
 		}
+		s.log.Info("keycloak owner is gotten", "val", keycloak.Name)
 
 		if keycloak == nil {
 			return &instance, errors.New("Keycloak CR is not created yet!")
@@ -75,14 +82,17 @@ func (s AdminConsoleServiceImpl) Integrate(instance v1alpha1.AdminConsole) (*v1a
 		if err != nil {
 			return &instance, errors.Wrap(err, "Failed to generate environment variables for shared database!")
 		}
+		s.log.Info("db envs", "vals", dbEnvironmentValue)
 
 		discoveryUrl := fmt.Sprintf("%s/auth/realms/%s", keycloak.Spec.Url, keycloakRealm.Spec.RealmName)
 		keycloakEnvironmentValue, err := s.platformService.GenerateKeycloakSettings(instance, discoveryUrl)
 		if err != nil {
 			return &instance, errors.Wrap(err, "Failed to generate environment variables for Keycloack!")
 		}
+		s.log.Info("keycloak envs", "vals", keycloakEnvironmentValue)
 
 		adminConsoleEnvironment := append(dbEnvironmentValue, keycloakEnvironmentValue...)
+		s.log.Info("ac envs", "vals", adminConsoleEnvironment)
 
 		err = s.platformService.PatchDeploymentEnv(instance, adminConsoleEnvironment)
 		if err != nil {

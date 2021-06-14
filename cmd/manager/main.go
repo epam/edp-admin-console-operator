@@ -7,6 +7,7 @@ import (
 	"github.com/epam/edp-admin-console-operator/v2/pkg/controller/helper"
 	edpCompApi "github.com/epam/edp-component-operator/pkg/apis/v1/v1alpha1"
 	keycloakV1Api "github.com/epam/edp-keycloak-operator/pkg/apis/v1/v1alpha1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/client-go/rest"
@@ -93,7 +94,16 @@ func main() {
 		os.Exit(1)
 	}
 
-	acCtrl, err := adminconsole.NewReconcileAdminConsole(mgr.GetClient(), mgr.GetScheme(), ctrl.Log.WithName("controllers"))
+	cl, err := client.New(mgr.GetConfig(), client.Options{
+		Scheme: mgr.GetScheme(),
+		Mapper: mgr.GetRESTMapper(),
+	})
+	if err != nil {
+		setupLog.Error(err, "unable to create uncached client")
+		os.Exit(1)
+	}
+
+	acCtrl, err := adminconsole.NewReconcileAdminConsole(cl, mgr.GetScheme(), ctrl.Log.WithName("controllers"))
 	if err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "admin-console")
 		os.Exit(1)

@@ -123,7 +123,7 @@ func (service K8SService) PatchDeploymentEnv(ac v1alpha1.AdminConsole, env []cor
 	if len(env) == 0 {
 		return nil
 	}
-
+	log.Info("patch method")
 	dc, err := service.AppsClient.Deployments(ac.Namespace).Get(context.TODO(), ac.Name, metav1.GetOptions{})
 	if err != nil {
 		if k8serrors.IsNotFound(err) {
@@ -132,11 +132,13 @@ func (service K8SService) PatchDeploymentEnv(ac v1alpha1.AdminConsole, env []cor
 		}
 		return err
 	}
+	log.Info("deployments", "val", dc)
 
 	container, err := platformHelper.SelectContainer(dc.Spec.Template.Spec.Containers, ac.Name)
 	if err != nil {
 		return err
 	}
+	log.Info("container", "val", container)
 
 	container.Env = platformHelper.UpdateEnv(container.Env, env)
 
@@ -151,6 +153,7 @@ func (service K8SService) PatchDeploymentEnv(ac v1alpha1.AdminConsole, env []cor
 	if err != nil {
 		return err
 	}
+	log.Info("patched")
 
 	return err
 }
