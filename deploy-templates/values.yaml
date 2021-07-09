@@ -2,7 +2,7 @@ global:
   edpName: ""
   platform: "openshift"
   dnsWildCard:
-  version: "v2.4.0"
+  version: "2.8.0"
   database:
     deploy: true
     host:
