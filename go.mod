@@ -11,8 +11,8 @@ replace (
 
 require (
 	github.com/dchest/uniuri v0.0.0-20160212164326-8902c56451e9
-	github.com/epam/edp-component-operator v0.1.1-0.20210427065236-c7dce7f4ea2b
-	github.com/epam/edp-keycloak-operator v1.3.0-alpha-81.0.20210427070516-9b6232f72684
+	github.com/epam/edp-component-operator v0.1.1-0.20210712140516-09b8bb3a4cff
+	github.com/epam/edp-keycloak-operator v1.3.0-alpha-81.0.20210719103751-659797a2dead
 	github.com/go-logr/logr v0.4.0
 	github.com/go-openapi/spec v0.19.5
 	github.com/lib/pq v1.8.0

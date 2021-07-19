@@ -115,8 +115,12 @@ github.com/envoyproxy/go-control-plane v0.9.1-0.20191026205805-5f8ba28d4473/go.m
 github.com/envoyproxy/protoc-gen-validate v0.1.0/go.mod h1:iSmxcyjqTsJpI2R4NaDN7+kN2VEUnK/pcBlmesArF7c=
 github.com/epam/edp-component-operator v0.1.1-0.20210427065236-c7dce7f4ea2b h1:wFz1XBg83O7C5WrvwPsQJh37gG8yP2jzozM1ntG4Fhw=
 github.com/epam/edp-component-operator v0.1.1-0.20210427065236-c7dce7f4ea2b/go.mod h1:fxiH4grhavez0q1vBcDleIcQ5mXiIrtSK34TRtgQ4Ec=
+github.com/epam/edp-component-operator v0.1.1-0.20210712140516-09b8bb3a4cff h1:+jj6bPiWhAoq8YIRBY1QM16L4jkefEzX7qY3KrxtZo4=
+github.com/epam/edp-component-operator v0.1.1-0.20210712140516-09b8bb3a4cff/go.mod h1:fxiH4grhavez0q1vBcDleIcQ5mXiIrtSK34TRtgQ4Ec=
 github.com/epam/edp-keycloak-operator v1.3.0-alpha-81.0.20210427070516-9b6232f72684 h1:RVeE9XHtFxrSpMMEuDu61e2E+Jw3HhsV26XBbEUFPCg=
 github.com/epam/edp-keycloak-operator v1.3.0-alpha-81.0.20210427070516-9b6232f72684/go.mod h1:DdqP20bkxXiS1c8NTgc4qbrI1alCH1Kzy/2ie4JmenU=
+github.com/epam/edp-keycloak-operator v1.3.0-alpha-81.0.20210719103751-659797a2dead h1:KtxivX4RjAxyRVrC0qMuH0hjR8nXEEQtFg96egvXIHk=
+github.com/epam/edp-keycloak-operator v1.3.0-alpha-81.0.20210719103751-659797a2dead/go.mod h1:ABWPK8jFcHQsATghgtMLUFvS08ycnMyxkCUcp+sT7H0=
 github.com/evanphx/json-patch v4.0.0+incompatible/go.mod h1:50XU6AFN0ol/bzJsmQLiYLvXMP4fmwYFNcr97nuDLSk=
 github.com/evanphx/json-patch v4.5.0+incompatible h1:ouOWdg56aJriqS0huScTkVXPC5IcNrDCXZ6OoTAWu7M=
 github.com/evanphx/json-patch v4.5.0+incompatible/go.mod h1:50XU6AFN0ol/bzJsmQLiYLvXMP4fmwYFNcr97nuDLSk=
