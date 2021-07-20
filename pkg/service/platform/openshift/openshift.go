@@ -11,10 +11,8 @@ import (
 	"strings"
 
 	"github.com/epam/edp-admin-console-operator/v2/pkg/apis/edp/v1alpha1"
-	adminConsoleSpec "github.com/epam/edp-admin-console-operator/v2/pkg/service/admin_console/spec"
 	platformHelper "github.com/epam/edp-admin-console-operator/v2/pkg/service/platform/helper"
 	"github.com/epam/edp-admin-console-operator/v2/pkg/service/platform/kubernetes"
-	appsV1Api "github.com/openshift/api/apps/v1"
 	appsV1client "github.com/openshift/client-go/apps/clientset/versioned/typed/apps/v1"
 	authV1Client "github.com/openshift/client-go/authorization/clientset/versioned/typed/authorization/v1"
 	projectV1Client "github.com/openshift/client-go/project/clientset/versioned/typed/project/v1"
@@ -26,13 +24,10 @@ import (
 
 	coreV1Api "k8s.io/api/core/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/client-go/rest"
-	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
 var log = ctrl.Log.WithName("platform")
@@ -53,103 +48,6 @@ const (
 	deploymentTypeEnvName           = "DEPLOYMENT_TYPE"
 	deploymentConfigsDeploymentType = "deploymentConfigs"
 )
-
-func (service OpenshiftService) CreateDeployConf(ac v1alpha1.AdminConsole) error {
-	labels := platformHelper.GenerateLabels(ac.Name)
-	consoleDcObject := &appsV1Api.DeploymentConfig{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      ac.Name,
-			Namespace: ac.Namespace,
-			Labels:    labels,
-		},
-		Spec: appsV1Api.DeploymentConfigSpec{
-			Replicas: 1,
-			Triggers: []appsV1Api.DeploymentTriggerPolicy{
-				{
-					Type: appsV1Api.DeploymentTriggerOnConfigChange,
-				},
-			},
-			Strategy: appsV1Api.DeploymentStrategy{
-				Type: appsV1Api.DeploymentStrategyTypeRolling,
-			},
-			Selector: labels,
-			Template: &coreV1Api.PodTemplateSpec{
-				ObjectMeta: metav1.ObjectMeta{
-					Labels: labels,
-				},
-				Spec: coreV1Api.PodSpec{
-					ImagePullSecrets: ac.Spec.ImagePullSecrets,
-					Containers: []coreV1Api.Container{
-						{
-							Name:            ac.Name,
-							Image:           ac.Spec.Image + ":" + ac.Spec.Version,
-							ImagePullPolicy: coreV1Api.PullAlways,
-							Ports: []coreV1Api.ContainerPort{
-								{
-									ContainerPort: adminConsoleSpec.AdminConsolePort,
-								},
-							},
-							LivenessProbe: &coreV1Api.Probe{
-								FailureThreshold:    5,
-								InitialDelaySeconds: 180,
-								PeriodSeconds:       20,
-								SuccessThreshold:    1,
-								Handler: coreV1Api.Handler{
-									TCPSocket: &coreV1Api.TCPSocketAction{
-										Port: intstr.FromInt(adminConsoleSpec.AdminConsolePort),
-									},
-								},
-							},
-							ReadinessProbe: &coreV1Api.Probe{
-								FailureThreshold:    5,
-								InitialDelaySeconds: 60,
-								PeriodSeconds:       20,
-								SuccessThreshold:    1,
-								Handler: coreV1Api.Handler{
-									TCPSocket: &coreV1Api.TCPSocketAction{
-										Port: intstr.FromInt(adminConsoleSpec.AdminConsolePort),
-									},
-								},
-							},
-							TerminationMessagePath: "/dev/termination-log",
-							Resources: coreV1Api.ResourceRequirements{
-								Requests: map[coreV1Api.ResourceName]resource.Quantity{
-									coreV1Api.ResourceMemory: resource.MustParse(adminConsoleSpec.MemoryRequest),
-								},
-							},
-						},
-					},
-					ServiceAccountName: ac.Name,
-				},
-			},
-		},
-	}
-	if err := controllerutil.SetControllerReference(&ac, consoleDcObject, service.Scheme); err != nil {
-		return err
-	}
-
-	consoleDc, err := service.appClient.DeploymentConfigs(consoleDcObject.Namespace).Get(context.TODO(), consoleDcObject.Name, metav1.GetOptions{})
-	if err != nil {
-		if k8serrors.IsNotFound(err) {
-			msg := fmt.Sprintf("Creating DeploymentConfig %s/%s for Admin Console %s", consoleDcObject.Namespace, consoleDcObject.Name, ac.Name)
-			log.V(1).Info(msg)
-			dbEnvVars, err := service.GenerateDbSettings(ac)
-			if err != nil {
-				return errors.Wrap(err, "Failed to generate environment variables for shared database!")
-			}
-			consoleDcObject.Spec.Template.Spec.Containers[0].Env = append(consoleDcObject.Spec.Template.Spec.Containers[0].Env, dbEnvVars...)
-			consoleDc, err = service.appClient.DeploymentConfigs(consoleDcObject.Namespace).Create(context.TODO(), consoleDcObject, metav1.CreateOptions{})
-			if err != nil {
-				return err
-			}
-			log.Info(fmt.Sprintf("DeploymentConfig %s/%s has been created", consoleDc.Namespace, consoleDc.Name))
-			return nil
-		}
-		return err
-	}
-
-	return nil
-}
 
 func (service OpenshiftService) GenerateDbSettings(ac v1alpha1.AdminConsole) ([]coreV1Api.EnvVar, error) {
 	if !ac.Spec.DbSpec.Enabled {

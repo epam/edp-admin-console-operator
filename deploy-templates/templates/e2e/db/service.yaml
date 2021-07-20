@@ -1,0 +1,15 @@
+{{- if .Values.global.e2e.testing.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{.Values.global.database.name}}
+spec:
+  ports:
+    - name: db
+      port: {{.Values.global.database.port}}
+      protocol: TCP
+      targetPort: {{.Values.global.database.port}}
+  selector:
+    app: {{.Values.global.database.name}}
+  type: ClusterIP
+{{end}}

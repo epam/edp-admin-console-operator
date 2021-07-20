@@ -12,6 +12,9 @@ global:
     url:
   openshift:
     deploymentType: "deploymentConfigs"
+  e2e:
+    testing:
+      enabled: false
 
 name: admin-console-operator
 image:
