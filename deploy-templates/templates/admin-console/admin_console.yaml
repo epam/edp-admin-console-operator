@@ -1,4 +1,3 @@
-{{ if not .Values.global.e2e.testing.enabled }}
 apiVersion: v2.edp.epam.com/v1alpha1
 kind: AdminConsole
 metadata:
@@ -26,4 +25,3 @@ spec:
     port: "{{ .Values.global.database.port }}"
   keycloakSpec:
     enabled: {{ .Values.adminConsole.authKeycloakEnabled }}
-{{end}}
