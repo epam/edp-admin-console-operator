@@ -2,7 +2,7 @@ global:
   edpName: ""
   platform: "openshift"
   dnsWildCard:
-  version: "2.8.0"
+  version: "2.8.1"
   database:
     deploy: true
     host:
@@ -32,7 +32,7 @@ resources:
 
 adminConsole:
   image: "epamedp/edp-admin-console"
-  version: "2.8.0"
+  version: "2.8.1"
   basePath: ""
   imagePullSecrets:
   authKeycloakEnabled: true
