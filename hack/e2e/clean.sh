@@ -5,7 +5,7 @@ clean() {
 		return 0
 	fi
 	
-	kubectl delete ns $1
+	kubectl delete ns $1 --ignore-not-found=true
 }
 
 clean "$1"
