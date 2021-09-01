@@ -56,20 +56,8 @@ spec:
                 secretKeyRef:
                   key: password
                   name: db-admin-console
-            - name: INTEGRATION_STRATEGIES
-              value: "Create,Clone,Import"
-            - name: BUILD_TOOLS
-              value: "{{.Values.adminConsole.buildTools}}"
-            - name: DEPLOYMENT_SCRIPT
-              value: "helm-chart"
             - name: PLATFORM_TYPE
               value: "kubernetes"
-            - name: VERSIONING_TYPES
-              value: "default,edp"
-            - name: CI_TOOLS
-              value: "Jenkins,GitLab CI"
-            - name: PERF_DATA_SOURCES
-              value: "Sonar,Jenkins,GitLab"
             - name: VCS_INTEGRATION_ENABLED
               valueFrom:
                 configMapKeyRef:
@@ -87,6 +75,7 @@ spec:
               value: "{{.Values.adminConsole.projectUrlMask}}"
             - name: IMAGE_STREAM_MASK_URL
               value: "{{.Values.adminConsole.imageStreamUrlMask}}"
+{{ toYaml .Values.adminConsole.envs | indent 12 }}
           image: "{{.Values.adminConsole.image}}:{{.Values.adminConsole.version}}"
           imagePullPolicy: Always
           livenessProbe:
