@@ -18,6 +18,7 @@ image:
   name: epamedp/admin-console-operator
   # if not defined then .Chart.AppVersion is used
   version:
+imagePullPolicy: "IfNotPresent"
 annotations: {}
 nodeSelector: {}
 tolerations: []
@@ -33,6 +34,7 @@ resources:
 adminConsole:
   image: "epamedp/edp-admin-console"
   version: "2.9.0-SNAPSHOT"
+  imagePullPolicy: "IfNotPresent"
   envs:
     - name: INTEGRATION_STRATEGIES
       value: "Create,Clone,Import"

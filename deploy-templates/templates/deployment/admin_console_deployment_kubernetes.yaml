@@ -77,7 +77,7 @@ spec:
               value: "{{.Values.adminConsole.imageStreamUrlMask}}"
 {{ toYaml .Values.adminConsole.envs | indent 12 }}
           image: "{{.Values.adminConsole.image}}:{{.Values.adminConsole.version}}"
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: "{{ .Values.adminConsole.imagePullPolicy }}"
           livenessProbe:
             failureThreshold: 5
             initialDelaySeconds: 120
