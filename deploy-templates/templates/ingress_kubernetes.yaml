@@ -1,6 +1,10 @@
 {{ if eq .Values.global.platform "kubernetes" }}
+{{- $ingressApiIsStable := eq (include "adminConsole.ingress.isStable" .) "true" -}}
+{{- $ingressSupportsIngressClassName := eq (include "adminConsole.ingress.supportsIngressClassName" .) "true" -}}
+{{- $ingressSupportsPathType := eq (include "adminConsole.ingress.supportsPathType" .) "true" -}}
+{{- $ingressPathType := .Values.adminConsole.ingress.pathType -}}
 kind: Ingress
-apiVersion: extensions/v1beta1
+apiVersion: {{ include "adminConsole.ingress.apiVersion" . }}
 metadata:
   name: edp-admin-console
   labels:
@@ -11,12 +15,25 @@ metadata:
     {{- toYaml . | nindent 4 }}
   {{- end }}
 spec:
+  {{- if and $ingressSupportsIngressClassName .Values.adminConsole.ingress.ingressClassName }}
+  ingressClassName: {{ .Values.adminConsole.ingress.ingressClassName }}
+  {{- end }}
   rules:
     - host: {{if .Values.adminConsole.basePath}}{{ .Values.global.dnsWildCard }}{{else}}edp-admin-console-{{ .Values.global.edpName }}.{{ .Values.global.dnsWildCard }}{{end}}
       http:
         paths:
           - path: {{if .Values.adminConsole.basePath}}/{{.Values.adminConsole.basePath}}(/|$)(.*){{else}}/{{end}}
+            {{- if $ingressSupportsPathType }}
+            pathType: {{ $ingressPathType }}
+            {{- end }}
             backend:
+              {{- if $ingressApiIsStable }}
+              service:
+                name: edp-admin-console
+                port:
+                  number: 8080
+              {{- else }}
               serviceName: edp-admin-console
               servicePort: 8080
+              {{- end }}
 {{ end }}
