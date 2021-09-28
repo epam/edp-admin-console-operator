@@ -2,7 +2,7 @@ global:
   edpName: ""
   platform: "openshift"
   dnsWildCard:
-  version: "2.9.0-SNAPSHOT"
+  version: "2.9.0"
   database:
     deploy: true
     host:
@@ -33,7 +33,7 @@ resources:
 
 adminConsole:
   image: "epamedp/edp-admin-console"
-  version: "2.9.0-SNAPSHOT"
+  version: "2.9.0"
   imagePullPolicy: "IfNotPresent"
   envs:
     - name: INTEGRATION_STRATEGIES
