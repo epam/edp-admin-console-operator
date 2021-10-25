@@ -1,6 +1,6 @@
 {{ if eq .Values.global.platform "kubernetes" }}
 apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
+kind: Role
 metadata:
   name: edp-admin-console-{{ .Values.global.edpName }}
   labels:
@@ -9,12 +9,12 @@ metadata:
   annotations:
     {{- toYaml . | nindent 4 }}
   {{- end }}
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: edp-admin-console-{{ .Values.global.edpName }}
-subjects:
-  - kind: ServiceAccount
-    name: edp-admin-console
-    namespace: {{ .Values.global.edpName }}
+rules:
+- apiGroups:
+  - 'storage.k8s.io'
+  resources:
+  - storageclasses
+  verbs:
+  - get
+  - list
 {{ end }}
