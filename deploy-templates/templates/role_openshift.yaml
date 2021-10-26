@@ -9,18 +9,51 @@ rules:
 - apiGroups:
   - '*'
   resources:
-  - codebases
-  - codebasebranches
-  - cdpipelines
-  - stages
-  - codebases/finalizers
-  - codebasebranches/finalizers
-  - cdpipelines/finalizers
-  - stages/finalizers
+  - configmaps
+  verbs:
+  - get
+- apiGroups:
+  - '*'
+  resources:
+  - securitycontextconstraints
   verbs:
   - create
   - get
+  - list
   - delete
   - update
-  - patch
+- apiGroups:
+    - '*'
+  resources:
+    - adminconsoles
+    - adminconsoles/finalizers
+    - adminconsoles/status
+    - keycloaks
+    - keycloaks/status
+    - keycloakclients
+    - keycloakclients/finalizers
+    - keycloakclients/status
+    - keycloakrealms
+    - keycloakrealms/status
+    - edpcomponents
+    - codebases
+    - codebasebranches
+    - cdpipelines
+    - stages
+    - codebases/finalizers
+    - codebasebranches/finalizers
+    - cdpipelines/finalizers
+    - stages/finalizers
+    - events
+  verbs:
+    - '*'
+- apiGroups:
+    - coordination.k8s.io
+  resources:
+    - leases
+  verbs:
+    - create
+    - get
+    - list
+    - update
 {{ end}}
