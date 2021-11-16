@@ -1,19 +1,21 @@
 # Admin Console Operator
 
-Get acquainted with the Admin Console Operator and the installation process as well as the local development, 
-and architecture scheme.
+| :heavy_exclamation_mark: Please refer to [EDP documentation](https://epam.github.io/edp-install/) to get the notion of the main concepts and guidelines. |
+| --- |
+
+Get acquainted with the Admin Console Operator and the installation process as well as the local development, and architecture scheme.
 
 ## Overview
 
-Admin Console operator is an EDP operator that is responsible for installing and configuring EDP Admin Console. 
-Operator installation can be applied on two container orchestration platforms: OpenShift and Kubernetes.
+Admin Console operator is an EDP operator that is responsible for installing and configuring EDP Admin Console. Operator installation can be applied on two container orchestration platforms: OpenShift and Kubernetes.
 
 _**NOTE:** Operator is platform-independent, that is why there is a unified instruction for deploying._
 
 ## Prerequisites
+
 1. Linux machine or Windows Subsystem for Linux instance with [Helm 3](https://helm.sh/docs/intro/install/) installed;
 2. Cluster admin access to the cluster;
-3. EDP project/namespace is deployed by following one of the instructions: [edp-install-openshift](https://github.com/epam/edp-install/blob/master/documentation/openshift_install_edp.md#edp-project) or [edp-install-kubernetes](https://github.com/epam/edp-install/blob/master/documentation/kubernetes_install_edp.md#edp-namespace).
+3. EDP project/namespace is deployed by following the [Install EDP](https://epam.github.io/edp-install/operator-guide/install-edp/) instruction.
 
 ## Installation
 In order to install the Admin Console operator, follow the steps below:
@@ -28,7 +30,7 @@ In order to install the Admin Console operator, follow the steps below:
      NAME                               CHART VERSION   APP VERSION     DESCRIPTION
      epamedp/admin-console-operator      v2.4.0                          Helm chart for Golang application/service deplo...
      ```
-  
+
     _**NOTE:** It is highly recommended to use the latest released version._
 
 3. Deploy operator:
@@ -61,8 +63,12 @@ In order to install the Admin Console operator, follow the steps below:
 5. Check the <edp_cicd_project> namespace that should contain operator deployment with your operator in a running status.
 
 ## Local Development
+
 In order to develop the operator, first set up a local environment. For details, please refer to the [Local Development](documentation/local_development.md) page.
 
 ### Related Articles
 
 - [Architecture Scheme of Admin Console Operator](documentation/arch.md)
+- [Install EDP](https://epam.github.io/edp-install/operator-guide/install-edp/)
+- [Set Up Kubernetes](https://epam.github.io/edp-install/operator-guide/kubernetes-cluster-settings/)
+- [Set Up OpenShift](https://epam.github.io/edp-install/operator-guide/openshift-cluster-settings/)
