@@ -1,3 +1,5 @@
+[![codecov](https://codecov.io/gh/epam/edp-admin-console-operator/branch/master/graph/badge.svg?token=5EDGDQXLLA)](https://codecov.io/gh/epam/edp-admin-console-operator)
+
 # Admin Console Operator
 
 | :heavy_exclamation_mark: Please refer to [EDP documentation](https://epam.github.io/edp-install/) to get the notion of the main concepts and guidelines. |
