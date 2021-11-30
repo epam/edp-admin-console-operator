@@ -5,7 +5,6 @@ import (
 	"encoding/base64"
 	"fmt"
 	"io/ioutil"
-	"k8s.io/apimachinery/pkg/runtime"
 	"os"
 
 	"github.com/dchest/uniuri"
@@ -16,6 +15,8 @@ import (
 	keycloakV1Api "github.com/epam/edp-keycloak-operator/pkg/apis/v1/v1alpha1"
 	keycloakHelper "github.com/epam/edp-keycloak-operator/pkg/controller/helper"
 	"github.com/pkg/errors"
+	"k8s.io/apimachinery/pkg/runtime"
+	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -33,7 +34,7 @@ type AdminConsoleService interface {
 func NewAdminConsoleService(ps platform.PlatformService, client client.Client, scheme *runtime.Scheme) AdminConsoleService {
 	return AdminConsoleServiceImpl{
 		platformService: ps,
-		keycloakHelper:  keycloakHelper.MakeHelper(client, scheme),
+		keycloakHelper:  keycloakHelper.MakeHelper(client, scheme, ctrl.Log.WithName("admin_console_service")),
 	}
 }
 
