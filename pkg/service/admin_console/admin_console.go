@@ -122,6 +122,9 @@ func (s AdminConsoleServiceImpl) ExposeConfiguration(instance v1alpha1.AdminCons
 		}
 
 		err = s.platformService.CreateSecret(instance, adminConsoleSpec.DefaultKeycloakSecretName, adminConsoleClientCredentials)
+		if err != nil {
+			return &instance, errors.Wrap(err, "Failed to create secret")
+		}
 
 		u, err := s.platformService.GetExternalUrl(instance.Namespace, instance.Name)
 		if err != nil {

@@ -189,13 +189,6 @@ func (r *ReconcileAdminConsole) updateStatus(ctx context.Context, instance *admi
 	return nil
 }
 
-func (r *ReconcileAdminConsole) resourceActionFailed(ctx context.Context, instance *adminConsoleApi.AdminConsole, err error) error {
-	if r.updateStatus(ctx, instance, StatusFailed) != nil {
-		return err
-	}
-	return err
-}
-
 func (r ReconcileAdminConsole) updateAvailableStatus(ctx context.Context, instance *adminConsoleApi.AdminConsole, value bool) error {
 	if instance.Status.Available != value {
 		instance.Status.Available = value

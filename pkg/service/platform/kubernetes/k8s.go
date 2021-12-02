@@ -192,13 +192,13 @@ func (service K8SService) CreateSecret(ac v1alpha1.AdminConsole, name string, da
 		return err
 	}
 
-	consoleSecret, err := service.CoreClient.Secrets(consoleSecretObject.Namespace).Get(context.TODO(), consoleSecretObject.Name, metav1.GetOptions{})
+	_, err := service.CoreClient.Secrets(consoleSecretObject.Namespace).Get(context.TODO(), consoleSecretObject.Name, metav1.GetOptions{})
 
 	if err != nil {
 		if k8serrors.IsNotFound(err) {
 			msg := fmt.Sprintf("Creating a new Secret %s/%s for Admin Console", consoleSecretObject.Namespace, consoleSecretObject.Name)
 			log.V(1).Info(msg)
-			consoleSecret, err = service.CoreClient.Secrets(consoleSecretObject.Namespace).Create(context.TODO(), consoleSecretObject, metav1.CreateOptions{})
+			consoleSecret, err := service.CoreClient.Secrets(consoleSecretObject.Namespace).Create(context.TODO(), consoleSecretObject, metav1.CreateOptions{})
 			if err != nil {
 				return err
 			}
