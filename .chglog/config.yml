@@ -21,11 +21,12 @@ options:
 
   commit_groups:
     group_by: Type
-    sort_by: Title
+    sort_by: Custom
     title_order:
       - feat
       - fix
       - refactor
+      - style
       - test
       - chore
       - docs
@@ -35,6 +36,7 @@ options:
       feat: Features
       fix: Bug Fixes
       refactor: Code Refactoring
+      style: Formatting
       test: Testing
 
   header:
