@@ -18,15 +18,38 @@ spec:
     matchLabels:
       app: edp-admin-console
   strategy:
-    rollingUpdate:
-      maxSurge: 25%
-      maxUnavailable: 25%
-    type: RollingUpdate
+    type: Recreate
   template:
     metadata:
       labels:
         app: edp-admin-console
     spec:
+    {{- if .Values.global.database.deploy }}
+      initContainers:
+        - image: {{.Values.global.database.image}}
+          imagePullPolicy: {{ .Values.global.database.imagePullPolicy }}
+          name: db-wait
+          command:
+            - /bin/bash
+            - -c
+            - while ! pg_isready -d $(POSTGRES_DB) -h $(PGHOST) -U $(POSTGRES_USER)  </dev/null; do echo waiting for db;
+              sleep 10; done;
+          env:
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: db-admin-console
+                  key: username
+            - name: PGPASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: db-admin-console
+                  key: password
+            - name: POSTGRES_DB
+              value: {{.Values.global.database.name}}
+            - name: PGHOST
+              value: {{.Values.global.database.host}}
+    {{- end }}
       containers:
         - env:
             - name: NAMESPACE
@@ -46,6 +69,9 @@ spec:
               value: "false"
             - name: DNS_WILDCARD
               value: "{{.Values.global.dnsWildCard}}"
+            - name: DB_ENABLED
+              value: "{{.Values.global.database.deploy}}"
+    {{- if .Values.global.database.deploy }}
             - name: PG_USER
               valueFrom:
                 secretKeyRef:
@@ -56,6 +82,13 @@ spec:
                 secretKeyRef:
                   key: password
                   name: db-admin-console
+            - name: PG_HOST
+              value: "{{.Values.global.database.host}}"
+            - name: PG_PORT
+              value: "{{.Values.global.database.port}}"
+            - name: PG_DATABASE
+              value: "{{.Values.global.database.name}}"
+    {{- end }}
             - name: PLATFORM_TYPE
               value: "kubernetes"
             - name: VCS_INTEGRATION_ENABLED
@@ -63,14 +96,6 @@ spec:
                 configMapKeyRef:
                   key: vcs_integration_enabled
                   name: edp-config
-            - name: PG_HOST
-              value: "{{.Values.global.database.host}}"
-            - name: PG_PORT
-              value: "{{.Values.global.database.port}}"
-            - name: PG_DATABASE
-              value: "{{.Values.global.database.name}}"
-            - name: DB_ENABLED
-              value: "{{.Values.global.database.deploy}}"
             - name: PROJECT_MASK_URL
               value: "{{.Values.adminConsole.projectUrlMask}}"
             - name: IMAGE_STREAM_MASK_URL

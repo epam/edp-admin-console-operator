@@ -5,9 +5,11 @@ global:
   version: "2.11.0-SNAPSHOT"
   database:
     deploy: true
-    host:
+    host: "edp-db"
     name: "edp-db"
     port: 5432
+    image: "postgres:9.6"
+    imagePullPolicy: "IfNotPresent"
   webConsole:
     url:
   openshift:
