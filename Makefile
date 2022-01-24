@@ -81,3 +81,8 @@ run_tests:
 
 # main target to run all targets needed for correct E2E testing
 execute: e2e-clean setup_prerequisite deploy run_tests e2e-clean
+
+# use https://github.com/git-chglog/git-chglog/
+.PHONY: changelog
+changelog: ## generate changelog
+	@git-chglog -o CHANGELOG.md v2.7.0..

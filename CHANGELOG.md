@@ -1,6 +1,15 @@
 <a name="unreleased"></a>
 ## [Unreleased]
 
+### Code Refactoring
+
+- Introduce wait-for-db for AC deployment [EPMDEDP-8005](https://jiraeu.epam.com/browse/EPMDEDP-8005)
+- Define namespace for Service Account in Role Binding [EPMDEDP-8084](https://jiraeu.epam.com/browse/EPMDEDP-8084)
+
+### Routine
+
+- Update release CI pipelines [EPMDEDP-7847](https://jiraeu.epam.com/browse/EPMDEDP-7847)
+
 
 <a name="v2.10.0"></a>
 ## [v2.10.0] - 2021-12-07
