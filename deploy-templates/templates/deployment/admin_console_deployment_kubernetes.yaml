@@ -57,10 +57,15 @@ spec:
                 fieldRef:
                   apiVersion: v1
                   fieldPath: metadata.namespace
+    {{- if .Values.adminConsole.basePath }}
             - name: HOST
-              value: "https://{{if .Values.adminConsole.basePath}}{{ .Values.global.dnsWildCard }}{{else}}edp-admin-console-{{.Values.global.edpName}}.{{.Values.global.dnsWildCard}}{{end}}{{if .Values.adminConsole.basePath}}/{{.Values.adminConsole.basePath}}{{end}}"
+              value: "https://{{ .Values.global.dnsWildCard }}/{{ .Values.adminConsole.basePath }}"
             - name: BASE_PATH
-              value: "{{if .Values.adminConsole.basePath}}/{{.Values.adminConsole.basePath}}{{else}}{{end}}"
+              value: "/{{.Values.adminConsole.basePath}}"
+    {{- else }}
+            - name: HOST
+              value: "https://edp-admin-console-{{ .Values.global.edpName}}.{{.Values.global.dnsWildCard }}"
+    {{- end }}
             - name: EDP_ADMIN_CONSOLE_VERSION
               value: "{{.Values.adminConsole.version}}"
             - name: EDP_VERSION

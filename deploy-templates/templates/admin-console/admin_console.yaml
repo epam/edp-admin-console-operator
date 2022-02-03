@@ -3,15 +3,17 @@ kind: AdminConsole
 metadata:
   name: edp-admin-console
 spec:
-  basePath: "{{.Values.adminConsole.basePath}}"
-  image: {{.Values.adminConsole.image}}
+  {{- if .Values.adminConsole.basePath }}
+  basePath: "{{ .Values.adminConsole.basePath }}"
+  {{- end }}
+  image: {{ .Values.adminConsole.image }}
   {{- if .Values.adminConsole.imagePullSecrets}}
   imagePullSecrets:
     {{- range .Values.adminConsole.imagePullSecrets }}
     - {{. -}}
     {{- end -}}
-  {{end}}
-  version: {{.Values.adminConsole.version}}
+  {{ end }}
+  version: {{ .Values.adminConsole.version }}
   edpSpec:
     name: {{ .Values.global.edpName }}
     dnsWildcard: {{ .Values.global.dnsWildCard }}
