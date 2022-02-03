@@ -70,7 +70,7 @@ spec:
             - name: EDP_VERSION
               value: "{{.Values.global.version}}"
             - name: AUTH_KEYCLOAK_ENABLED
-              value: "false"
+              value: "{{ .Values.adminConsole.authKeycloakEnabled }}"
             - name: DNS_WILDCARD
               value: "{{.Values.global.dnsWildCard}}"
             - name: OPENSHIFT_CLUSTER_URL
