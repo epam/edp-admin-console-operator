@@ -71,7 +71,7 @@ spec:
             - name: EDP_VERSION
               value: "{{.Values.global.version}}"
             - name: AUTH_KEYCLOAK_ENABLED
-              value: "{{ .Values.adminConsole.authKeycloakEnabled }}"
+              value: "false"
             - name: DNS_WILDCARD
               value: "{{.Values.global.dnsWildCard}}"
             - name: DB_ENABLED
