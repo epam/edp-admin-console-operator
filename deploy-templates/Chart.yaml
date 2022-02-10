@@ -1,11 +1,67 @@
 apiVersion: v2
 description: A Helm chart for EDP Admin Console Operator
-home: https://solutionshub.epam.com/solution/epam-delivery-platform
+home: https://epam.github.io/edp-install/
 name: admin-console-operator
 type: application
 version: 2.11.0-SNAPSHOT
 appVersion: 2.11.0-SNAPSHOT
+icon: https://epam.github.io/edp-install/assets/logo.png
+keywords:
+  - edp
+  - admin
+  - console
+  - pipelines
 maintainers:
-  - name: EPAM EDP Team
+  - name: epmd-edp
+    email: SupportEPMD-EDP@epam.com
+    url: https://solutionshub.epam.com/solution/epam-delivery-platform
+  - name: sergk
+    url: https://github.com/SergK
 sources:
-  - https://github.com/epam/edp-admin-console-operator
+  - https://github.com/epam/edp-admin-console
+annotations:
+  artifacthub.io/license: Apache-2.0
+  artifacthub.io/operator: "true"
+  artifacthub.io/images: |
+    - name: admin-console-operator:2.10.0
+      image: epamedp/admin-console-operator:2.10.0
+    - name: admin-console-operator:2.9.0
+      image: epamedp/admin-console-operator:2.9.0
+    - name: admin-console:2.9.0
+      image: epamedp/admin-console:2.9.0
+    - name: postgres:9.6
+      image: postgres:9.6
+  artifacthub.io/operatorCapabilities: Full Lifecycle
+  artifacthub.io/crds: |
+    - kind: AdminConsole
+      version: v2.edp.epam.com/v1alpha1
+      name: adminconsole
+      displayName: AdminConsole
+      description: AdminConsole configuration for Epam Delivery Platform
+  artifacthub.io/crdsExamples: |
+     - apiVersion: v2.edp.epam.com/v1alpha1
+       kind: AdminConsole
+       metadata:
+         name: edp-admin-console
+      spec:
+        dbSpec:
+          enabled: true
+          hostname: edp-db
+          name: edp-db
+          port: '5432'
+        edpSpec:
+          dnsWildcard: aws.cluster.com
+          integrationStrategies: Create,Clone,Import
+          name: edp-dev
+          testReportTools: Allure
+          version: 2.11.0-SNAPSHOT
+        image: >-
+          epamedp/edp-admin-console
+        keycloakSpec:
+          enabled: true
+        version: 2.11.0-SNAPSHOT
+  artifacthub.io/links: |
+    - name: EDP Documentation
+      url: https://epam.github.io/edp-install/
+    - name: EPAM SolutionHub
+      url: https://solutionshub.epam.com/solution/epam-delivery-platform
