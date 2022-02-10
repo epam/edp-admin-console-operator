@@ -85,4 +85,8 @@ execute: e2e-clean setup_prerequisite deploy run_tests e2e-clean
 # use https://github.com/git-chglog/git-chglog/
 .PHONY: changelog
 changelog: ## generate changelog
+ifneq (${NEXT_RELEASE_TAG},)
+	@git-chglog --next-tag v${NEXT_RELEASE_TAG} -o CHANGELOG.md v2.7.0..
+else
 	@git-chglog -o CHANGELOG.md v2.7.0..
+endif
