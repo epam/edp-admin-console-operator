@@ -29,3 +29,9 @@ rules:
   - delete
   - patch
   - list
+- apiGroups:
+  - '*'
+  verbs:
+  - get
+  resources:
+  - codebaseimagestreams
