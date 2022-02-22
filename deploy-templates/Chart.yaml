@@ -50,16 +50,15 @@ annotations:
           name: edp-db
           port: '5432'
         edpSpec:
-          dnsWildcard: aws.cluster.com
+          dnsWildcard: example.com
           integrationStrategies: Create,Clone,Import
           name: edp-dev
           testReportTools: Allure
-          version: 2.11.0-SNAPSHOT
-        image: >-
-          epamedp/edp-admin-console
+          version: 2.10.2
+        image: epamedp/edp-admin-console
         keycloakSpec:
           enabled: true
-        version: 2.11.0-SNAPSHOT
+        version: 2.11.2
   artifacthub.io/links: |
     - name: EDP Documentation
       url: https://epam.github.io/edp-install/
