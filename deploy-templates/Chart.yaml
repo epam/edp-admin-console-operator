@@ -39,10 +39,10 @@ annotations:
       displayName: AdminConsole
       description: AdminConsole configuration for Epam Delivery Platform
   artifacthub.io/crdsExamples: |
-     - apiVersion: v2.edp.epam.com/v1alpha1
-       kind: AdminConsole
-       metadata:
-         name: edp-admin-console
+    - apiVersion: v2.edp.epam.com/v1alpha1
+      kind: AdminConsole
+      metadata:
+        name: edp-admin-console
       spec:
         dbSpec:
           enabled: true
