@@ -25,10 +25,12 @@ annotations:
   artifacthub.io/images: |
     - name: admin-console-operator:2.10.0
       image: epamedp/admin-console-operator:2.10.0
+    - name: admin-console:2.10.0
+      image: epamedp/edp-admin-console:2.10.0
     - name: admin-console-operator:2.9.0
       image: epamedp/admin-console-operator:2.9.0
     - name: admin-console:2.9.0
-      image: epamedp/admin-console:2.9.0
+      image: epamedp/edp-admin-console:2.9.0
     - name: postgres:9.6
       image: postgres:9.6
   artifacthub.io/operatorCapabilities: Full Lifecycle
