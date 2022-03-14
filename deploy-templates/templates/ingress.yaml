@@ -18,6 +18,10 @@ spec:
   {{- if and $ingressSupportsIngressClassName .Values.adminConsole.ingress.ingressClassName }}
   ingressClassName: {{ .Values.adminConsole.ingress.ingressClassName }}
   {{- end }}
+{{- if .Values.adminConsole.ingress.tls }}
+  tls:
+{{ tpl (toYaml .Values.adminConsole.ingress.tls) $ | indent 4 }}
+{{- end }}
   rules:
     - host: {{if .Values.adminConsole.basePath}}{{ .Values.global.dnsWildCard }}{{else}}edp-admin-console-{{ .Values.global.edpName }}.{{ .Values.global.dnsWildCard }}{{end}}
       http:
