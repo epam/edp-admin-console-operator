@@ -35,3 +35,10 @@ rules:
   - get
   resources:
   - codebaseimagestreams
+- apiGroups:
+  - '*'
+  verbs:
+  - get
+  - list
+  resources:
+  - edpcomponents
