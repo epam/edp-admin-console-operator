@@ -42,3 +42,11 @@ rules:
   - list
   resources:
   - edpcomponents
+  - jenkins
+- apiGroups:
+  - '*'
+  verbs:
+  - list
+  resources:
+  - perfservers
+  - gitservers
