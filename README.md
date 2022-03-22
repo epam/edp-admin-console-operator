@@ -24,13 +24,13 @@ In order to install the Admin Console operator, follow the steps below:
 
 1. To add the Helm EPAMEDP Charts for local client, run "helm repo add":
      ```bash
-     helm repo add epamedp https://chartmuseum.demo.edp-epam.com/
+     helm repo add epamedp https://epam.github.io/edp-helm-charts/stable
      ```
 2. Choose available Helm chart version:
      ```bash
      helm search repo epamedp/admin-console-operator
      NAME                               CHART VERSION   APP VERSION     DESCRIPTION
-     epamedp/admin-console-operator      v2.4.0                          Helm chart for Golang application/service deplo...
+     epamedp/admin-console-operator      2.10.0                          Helm chart for Golang application/service deplo...
      ```
 
     _**NOTE:** It is highly recommended to use the latest released version._
