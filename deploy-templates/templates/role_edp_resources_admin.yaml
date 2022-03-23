@@ -33,16 +33,11 @@ rules:
   - '*'
   verbs:
   - get
-  resources:
-  - codebaseimagestreams
-- apiGroups:
-  - '*'
-  verbs:
-  - get
   - list
   resources:
   - edpcomponents
   - jenkins
+  - codebaseimagestreams
 - apiGroups:
   - '*'
   verbs:
