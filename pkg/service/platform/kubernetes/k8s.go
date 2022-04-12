@@ -21,7 +21,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	appsV1Client "k8s.io/client-go/kubernetes/typed/apps/v1"
 	coreV1Client "k8s.io/client-go/kubernetes/typed/core/v1"
-	extensionsV1Client "k8s.io/client-go/kubernetes/typed/extensions/v1beta1"
+	networkingV1Client "k8s.io/client-go/kubernetes/typed/networking/v1"
 	authV1Client "k8s.io/client-go/kubernetes/typed/rbac/v1"
 	"k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -33,7 +33,7 @@ var log = ctrl.Log.WithName("platform")
 type K8SService struct {
 	Scheme             *runtime.Scheme
 	CoreClient         coreV1Client.CoreV1Client
-	ExtensionsV1Client extensionsV1Client.ExtensionsV1beta1Client
+	NetworkingV1Client networkingV1Client.NetworkingV1Interface
 	client             client.Client
 	AppsClient         appsV1Client.AppsV1Client
 	AuthClient         authV1Client.RbacV1Client
@@ -156,7 +156,7 @@ func (service K8SService) PatchDeploymentEnv(ac v1alpha1.AdminConsole, env []cor
 }
 
 func (service K8SService) GetExternalUrl(namespace string, name string) (*string, error) {
-	ingress, err := service.ExtensionsV1Client.Ingresses(namespace).Get(context.TODO(), name, metav1.GetOptions{})
+	ingress, err := service.NetworkingV1Client.Ingresses(namespace).Get(context.TODO(), name, metav1.GetOptions{})
 	if err != nil {
 		if k8serrors.IsNotFound(err) {
 			log.Info("Ingress not found", "Namespace", namespace, "Name", name)
@@ -231,9 +231,9 @@ func (service *K8SService) Init(config *rest.Config, scheme *runtime.Scheme, k8s
 		return errors.New("appsV1 client initialization failed!")
 	}
 
-	extensionsClient, err := extensionsV1Client.NewForConfig(config)
+	networkingClient, err := networkingV1Client.NewForConfig(config)
 	if err != nil {
-		return errors.New("extensionsV1 client initialization failed!")
+		return errors.New("networkingV1 client initialization failed!")
 	}
 
 	rbacClient, err := authV1Client.NewForConfig(config)
@@ -245,7 +245,7 @@ func (service *K8SService) Init(config *rest.Config, scheme *runtime.Scheme, k8s
 	service.Scheme = scheme
 	service.client = *k8sClient
 	service.AppsClient = *appsClient
-	service.ExtensionsV1Client = *extensionsClient
+	service.NetworkingV1Client = networkingClient
 	service.AuthClient = *rbacClient
 	return nil
 }

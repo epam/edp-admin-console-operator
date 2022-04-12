@@ -43,6 +43,7 @@ A Helm chart for EDP Admin Console Operator
 | adminConsole.imageStreamUrlMask | string | `"/console/project/{namespace}/browse/images/{stream}"` |  |
 | adminConsole.ingress.annotations | object | `{}` |  |
 | adminConsole.ingress.pathType | string | `"Prefix"` |  |
+| adminConsole.ingress.tls | list | `[]` |  |
 | adminConsole.nodeSelector | object | `{}` |  |
 | adminConsole.projectUrlMask | string | `"/console/project/{namespace}/overview"` |  |
 | adminConsole.resources.limits.memory | string | `"256Mi"` |  |
