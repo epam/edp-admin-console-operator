@@ -1,14 +1,41 @@
 <a name="unreleased"></a>
 ## [Unreleased]
 
+### Features
+
+- Update Makefile changelog target [EPMDEDP-8218](https://jiraeu.epam.com/browse/EPMDEDP-8218)
+- Add get cbis permission for admin-console service account [EPMDEDP-8262](https://jiraeu.epam.com/browse/EPMDEDP-8262)
+- Add ingress tls certificate option when using ingress controller [EPMDEDP-8377](https://jiraeu.epam.com/browse/EPMDEDP-8377)
+- Add get and list edpcomponents permission for edp-resources-admin role [EPMDEDP-8382](https://jiraeu.epam.com/browse/EPMDEDP-8382)
+- Generate CRDs and helm docs automatically [EPMDEDP-8385](https://jiraeu.epam.com/browse/EPMDEDP-8385)
+- Add permission for edp-resources-admin role [EPMDEDP-8798](https://jiraeu.epam.com/browse/EPMDEDP-8798)
+- Add CIS list permission for edp-resources-admin role [EPMDEDP-8812](https://jiraeu.epam.com/browse/EPMDEDP-8812)
+
+### Bug Fixes
+
+- Change ca-certificates in dockerfile [EPMDEDP-8238](https://jiraeu.epam.com/browse/EPMDEDP-8238)
+- Fix changelog generation in GH Release Action [EPMDEDP-8468](https://jiraeu.epam.com/browse/EPMDEDP-8468)
+- Correct image version [EPMDEDP-8471](https://jiraeu.epam.com/browse/EPMDEDP-8471)
+- Switch e2e stage to new helm chart repository [EPMDEDP-8800](https://jiraeu.epam.com/browse/EPMDEDP-8800)
+
 ### Code Refactoring
 
+- Always start admin-console with SSO disabled [EPMDEDP-7105](https://jiraeu.epam.com/browse/EPMDEDP-7105)
+- Refactor basePath definition [EPMDEDP-7105](https://jiraeu.epam.com/browse/EPMDEDP-7105)
+- Ensure we are aligned with SSO enabled flag [EPMDEDP-7105](https://jiraeu.epam.com/browse/EPMDEDP-7105)
 - Introduce wait-for-db for AC deployment [EPMDEDP-8005](https://jiraeu.epam.com/browse/EPMDEDP-8005)
 - Define namespace for Service Account in Role Binding [EPMDEDP-8084](https://jiraeu.epam.com/browse/EPMDEDP-8084)
 
 ### Routine
 
+- Update Ingress resources to the newest API version [EPMDEDP-7476](https://jiraeu.epam.com/browse/EPMDEDP-7476)
 - Update release CI pipelines [EPMDEDP-7847](https://jiraeu.epam.com/browse/EPMDEDP-7847)
+- Populate chart with Artifacthub annotations [EPMDEDP-8049](https://jiraeu.epam.com/browse/EPMDEDP-8049)
+- Update changelog [EPMDEDP-8227](https://jiraeu.epam.com/browse/EPMDEDP-8227)
+- Update artifacthub.io images metadata [EPMDEDP-8386](https://jiraeu.epam.com/browse/EPMDEDP-8386)
+- Fix artifacthub.io crdsExamples metadata [EPMDEDP-8386](https://jiraeu.epam.com/browse/EPMDEDP-8386)
+- Update artifacthub.io chart metadata [EPMDEDP-8386](https://jiraeu.epam.com/browse/EPMDEDP-8386)
+- Update base docker image to alpine 3.15.4 [EPMDEDP-8853](https://jiraeu.epam.com/browse/EPMDEDP-8853)
 
 
 <a name="v2.10.0"></a>
