@@ -36,6 +36,7 @@
 - Fix artifacthub.io crdsExamples metadata [EPMDEDP-8386](https://jiraeu.epam.com/browse/EPMDEDP-8386)
 - Update artifacthub.io chart metadata [EPMDEDP-8386](https://jiraeu.epam.com/browse/EPMDEDP-8386)
 - Update base docker image to alpine 3.15.4 [EPMDEDP-8853](https://jiraeu.epam.com/browse/EPMDEDP-8853)
+- Update changelog [EPMDEDP-9185](https://jiraeu.epam.com/browse/EPMDEDP-9185)
 
 
 <a name="v2.10.0"></a>
