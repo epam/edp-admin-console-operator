@@ -114,6 +114,8 @@ github.com/epam/edp-component-operator v0.1.1-0.20211129100139-b5b7659f98f6 h1:k
 github.com/epam/edp-component-operator v0.1.1-0.20211129100139-b5b7659f98f6/go.mod h1:gWBTiTRwjIU2Mg/XeN1pXXnZmseaF2C9Bj9Y5+rbKxU=
 github.com/epam/edp-keycloak-operator v1.3.0-alpha-81.0.20211129095541-12e9e800993e h1:jPR4jusAK4IakTLXylvJDU7sXvEJknjEKdTYi+BVIOo=
 github.com/epam/edp-keycloak-operator v1.3.0-alpha-81.0.20211129095541-12e9e800993e/go.mod h1:IePPMFCC3Fi9jOqIka9S4rX/CbGCVDymtRd7ncbdJM4=
+github.com/epam/edp-keycloak-operator v1.3.0-alpha-81.0.20220525093654-3cbb2d919d39 h1:SyDYs4fXaeKab5teNU3pWIu6HYd3T/J7PX8Q3sPGqoM=
+github.com/epam/edp-keycloak-operator v1.3.0-alpha-81.0.20220525093654-3cbb2d919d39/go.mod h1:IePPMFCC3Fi9jOqIka9S4rX/CbGCVDymtRd7ncbdJM4=
 github.com/evanphx/json-patch v4.0.0+incompatible/go.mod h1:50XU6AFN0ol/bzJsmQLiYLvXMP4fmwYFNcr97nuDLSk=
 github.com/evanphx/json-patch v4.5.0+incompatible/go.mod h1:50XU6AFN0ol/bzJsmQLiYLvXMP4fmwYFNcr97nuDLSk=
 github.com/evanphx/json-patch v4.9.0+incompatible h1:kLcOMZeuLAJvL2BPWLMIj5oaZQobrkAqrL+WFZwQses=

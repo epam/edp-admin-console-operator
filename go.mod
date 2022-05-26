@@ -13,7 +13,7 @@ require (
 	github.com/dchest/uniuri v0.0.0-20160212164326-8902c56451e9
 	github.com/epam/edp-common v0.0.0-20211124100535-e54dcdf42879
 	github.com/epam/edp-component-operator v0.1.1-0.20211129100139-b5b7659f98f6
-	github.com/epam/edp-keycloak-operator v1.3.0-alpha-81.0.20211129095541-12e9e800993e
+	github.com/epam/edp-keycloak-operator v1.3.0-alpha-81.0.20220525093654-3cbb2d919d39
 	github.com/go-logr/logr v0.4.0
 	github.com/go-openapi/spec v0.19.5
 	github.com/lib/pq v1.8.0

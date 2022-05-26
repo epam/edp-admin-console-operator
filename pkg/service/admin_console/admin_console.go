@@ -141,6 +141,7 @@ func (s AdminConsoleServiceImpl) ExposeConfiguration(instance v1alpha1.AdminCons
 		keycloakClient.Spec.AudRequired = true
 		keycloakClient.Spec.ServiceAccount = &keycloakV1Api.ServiceAccount{Enabled: true,
 			RealmRoles: []string{"developer"}}
+		keycloakClient.Spec.DefaultClientScopes = []string{"edp"}
 
 		err = s.platformService.CreateKeycloakClient(&keycloakClient)
 		if err != nil {
