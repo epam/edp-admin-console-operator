@@ -8,16 +8,17 @@ import (
 	"os"
 
 	"github.com/dchest/uniuri"
-	"github.com/epam/edp-admin-console-operator/v2/pkg/apis/edp/v1alpha1"
-	adminConsoleSpec "github.com/epam/edp-admin-console-operator/v2/pkg/service/admin_console/spec"
-	"github.com/epam/edp-admin-console-operator/v2/pkg/service/platform"
-	platformHelper "github.com/epam/edp-admin-console-operator/v2/pkg/service/platform/helper"
 	keycloakV1Api "github.com/epam/edp-keycloak-operator/pkg/apis/v1/v1alpha1"
 	keycloakHelper "github.com/epam/edp-keycloak-operator/pkg/controller/helper"
 	"github.com/pkg/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	adminConsoleApi "github.com/epam/edp-admin-console-operator/v2/pkg/apis/edp/v1"
+	adminConsoleSpec "github.com/epam/edp-admin-console-operator/v2/pkg/service/admin_console/spec"
+	"github.com/epam/edp-admin-console-operator/v2/pkg/service/platform"
+	platformHelper "github.com/epam/edp-admin-console-operator/v2/pkg/service/platform/helper"
 )
 
 const (
@@ -26,9 +27,9 @@ const (
 )
 
 type AdminConsoleService interface {
-	ExposeConfiguration(instance v1alpha1.AdminConsole) (*v1alpha1.AdminConsole, error)
-	Integrate(instance v1alpha1.AdminConsole) (*v1alpha1.AdminConsole, error)
-	IsDeploymentReady(instance v1alpha1.AdminConsole) (bool, error)
+	ExposeConfiguration(instance adminConsoleApi.AdminConsole) (*adminConsoleApi.AdminConsole, error)
+	Integrate(instance adminConsoleApi.AdminConsole) (*adminConsoleApi.AdminConsole, error)
+	IsDeploymentReady(instance adminConsoleApi.AdminConsole) (bool, error)
 }
 
 func NewAdminConsoleService(ps platform.PlatformService, client client.Client, scheme *runtime.Scheme) AdminConsoleService {
@@ -44,7 +45,7 @@ type AdminConsoleServiceImpl struct {
 	keycloakHelper  *keycloakHelper.Helper
 }
 
-func (s AdminConsoleServiceImpl) Integrate(instance v1alpha1.AdminConsole) (*v1alpha1.AdminConsole, error) {
+func (s AdminConsoleServiceImpl) Integrate(instance adminConsoleApi.AdminConsole) (*adminConsoleApi.AdminConsole, error) {
 
 	if instance.Spec.KeycloakSpec.Enabled {
 
@@ -100,7 +101,7 @@ func (s AdminConsoleServiceImpl) Integrate(instance v1alpha1.AdminConsole) (*v1a
 	return &instance, nil
 }
 
-func (s AdminConsoleServiceImpl) ExposeConfiguration(instance v1alpha1.AdminConsole) (*v1alpha1.AdminConsole, error) {
+func (s AdminConsoleServiceImpl) ExposeConfiguration(instance adminConsoleApi.AdminConsole) (*adminConsoleApi.AdminConsole, error) {
 	adminConsoleReaderPassword := uniuri.New()
 	adminConsoleReaderCredentials := map[string][]byte{
 		"username": []byte("admin-console-reader"),
@@ -159,7 +160,7 @@ func (s AdminConsoleServiceImpl) ExposeConfiguration(instance v1alpha1.AdminCons
 	return result, err
 }
 
-func (s AdminConsoleServiceImpl) createEDPComponent(ac v1alpha1.AdminConsole) error {
+func (s AdminConsoleServiceImpl) createEDPComponent(ac adminConsoleApi.AdminConsole) error {
 	url, err := s.getUrl(ac)
 	if err != nil {
 		return err
@@ -173,7 +174,7 @@ func (s AdminConsoleServiceImpl) createEDPComponent(ac v1alpha1.AdminConsole) er
 	return s.platformService.CreateEDPComponentIfNotExist(ac, *url, *icon)
 }
 
-func (s AdminConsoleServiceImpl) getUrl(ac v1alpha1.AdminConsole) (*string, error) {
+func (s AdminConsoleServiceImpl) getUrl(ac adminConsoleApi.AdminConsole) (*string, error) {
 	u, err := s.platformService.GetExternalUrl(ac.Namespace, ac.Name)
 	if err != nil {
 		return nil, err
@@ -201,6 +202,6 @@ func (j AdminConsoleServiceImpl) getIcon() (*string, error) {
 	return &encoded, nil
 }
 
-func (s AdminConsoleServiceImpl) IsDeploymentReady(instance v1alpha1.AdminConsole) (bool, error) {
+func (s AdminConsoleServiceImpl) IsDeploymentReady(instance adminConsoleApi.AdminConsole) (bool, error) {
 	return s.platformService.IsDeploymentReady(instance)
 }

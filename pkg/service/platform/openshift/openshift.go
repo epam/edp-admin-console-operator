@@ -4,15 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/epam/edp-admin-console-operator/v2/pkg/helper"
 	"os"
-	ctrl "sigs.k8s.io/controller-runtime"
 	"strconv"
 	"strings"
 
-	"github.com/epam/edp-admin-console-operator/v2/pkg/apis/edp/v1alpha1"
-	platformHelper "github.com/epam/edp-admin-console-operator/v2/pkg/service/platform/helper"
-	"github.com/epam/edp-admin-console-operator/v2/pkg/service/platform/kubernetes"
 	appsV1client "github.com/openshift/client-go/apps/clientset/versioned/typed/apps/v1"
 	authV1Client "github.com/openshift/client-go/authorization/clientset/versioned/typed/authorization/v1"
 	projectV1Client "github.com/openshift/client-go/project/clientset/versioned/typed/project/v1"
@@ -20,14 +15,19 @@ import (
 	securityV1Client "github.com/openshift/client-go/security/clientset/versioned/typed/security/v1"
 	templateV1Client "github.com/openshift/client-go/template/clientset/versioned/typed/template/v1"
 	"github.com/pkg/errors"
-	"sigs.k8s.io/controller-runtime/pkg/client"
-
 	coreV1Api "k8s.io/api/core/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/rest"
+	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	adminConsoleApi "github.com/epam/edp-admin-console-operator/v2/pkg/apis/edp/v1"
+	"github.com/epam/edp-admin-console-operator/v2/pkg/helper"
+	platformHelper "github.com/epam/edp-admin-console-operator/v2/pkg/service/platform/helper"
+	"github.com/epam/edp-admin-console-operator/v2/pkg/service/platform/kubernetes"
 )
 
 var log = ctrl.Log.WithName("platform")
@@ -49,7 +49,7 @@ const (
 	deploymentConfigsDeploymentType = "deploymentConfigs"
 )
 
-func (service OpenshiftService) GenerateDbSettings(ac v1alpha1.AdminConsole) ([]coreV1Api.EnvVar, error) {
+func (service OpenshiftService) GenerateDbSettings(ac adminConsoleApi.AdminConsole) ([]coreV1Api.EnvVar, error) {
 	if !ac.Spec.DbSpec.Enabled {
 		msg := fmt.Sprintf("DB_ENABLED flag in %s spec is false.", ac.Name)
 		log.V(1).Info(msg)
@@ -87,7 +87,7 @@ func (service OpenshiftService) GenerateDbSettings(ac v1alpha1.AdminConsole) ([]
 	}, nil
 }
 
-func (service OpenshiftService) GenerateKeycloakSettings(ac v1alpha1.AdminConsole, keycloakUrl string) ([]coreV1Api.EnvVar, error) {
+func (service OpenshiftService) GenerateKeycloakSettings(ac adminConsoleApi.AdminConsole, keycloakUrl string) ([]coreV1Api.EnvVar, error) {
 	var out []coreV1Api.EnvVar
 
 	log.V(1).Info(fmt.Sprintf("Generating Keycloak settings for Admin Console %s", ac.Name))
@@ -128,7 +128,7 @@ func (service OpenshiftService) GenerateKeycloakSettings(ac v1alpha1.AdminConsol
 	return out, nil
 }
 
-func (service OpenshiftService) PatchDeploymentEnv(ac v1alpha1.AdminConsole, env []coreV1Api.EnvVar) error {
+func (service OpenshiftService) PatchDeploymentEnv(ac adminConsoleApi.AdminConsole, env []coreV1Api.EnvVar) error {
 	if len(env) == 0 {
 		return nil
 	}
@@ -235,7 +235,7 @@ func (service OpenshiftService) GetExternalUrl(namespace string, name string) (*
 }
 
 // IsDeploymentReady gets Deployment Config from Openshift, based on data from Admin Console
-func (service OpenshiftService) IsDeploymentReady(instance v1alpha1.AdminConsole) (bool, error) {
+func (service OpenshiftService) IsDeploymentReady(instance adminConsoleApi.AdminConsole) (bool, error) {
 	if os.Getenv(deploymentTypeEnvName) == deploymentConfigsDeploymentType {
 		return helper.IsDeploymentConfigReady(service.appClient, instance.Name, instance.Namespace)
 	}

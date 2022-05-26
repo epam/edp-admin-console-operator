@@ -3,24 +3,25 @@ package adminconsole
 import (
 	"context"
 	"fmt"
+	"time"
+
+	"github.com/go-logr/logr"
+	"github.com/pkg/errors"
+	corev1 "k8s.io/api/core/v1"
+	k8sErrors "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
+	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller"
+	"sigs.k8s.io/controller-runtime/pkg/handler"
+	"sigs.k8s.io/controller-runtime/pkg/reconcile"
+	"sigs.k8s.io/controller-runtime/pkg/source"
+
+	adminConsoleApi "github.com/epam/edp-admin-console-operator/v2/pkg/apis/edp/v1"
 	"github.com/epam/edp-admin-console-operator/v2/pkg/controller/helper"
 	"github.com/epam/edp-admin-console-operator/v2/pkg/service/admin_console"
 	"github.com/epam/edp-admin-console-operator/v2/pkg/service/platform"
-	"github.com/go-logr/logr"
-	corev1 "k8s.io/api/core/v1"
-	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/controller"
-	"sigs.k8s.io/controller-runtime/pkg/handler"
-	"sigs.k8s.io/controller-runtime/pkg/source"
-	"time"
-
-	adminConsoleApi "github.com/epam/edp-admin-console-operator/v2/pkg/apis/edp/v1alpha1"
-
-	"github.com/pkg/errors"
-	k8sErrors "k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/apimachinery/pkg/runtime"
-	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
 const (
@@ -177,7 +178,7 @@ func (r *ReconcileAdminConsole) updateStatus(ctx context.Context, instance *admi
 	log := r.log.WithValues("Request.Namespace", instance.Namespace, "Request.Name", instance.Name).WithName("status_update")
 	currentStatus := instance.Status.Status
 	instance.Status.Status = newStatus
-	instance.Status.LastTimeUpdated = time.Now()
+	instance.Status.LastTimeUpdated = metav1.Now()
 
 	if err := r.client.Status().Update(ctx, instance); err != nil {
 		if err := r.client.Update(ctx, instance); err != nil {
@@ -192,7 +193,7 @@ func (r *ReconcileAdminConsole) updateStatus(ctx context.Context, instance *admi
 func (r ReconcileAdminConsole) updateAvailableStatus(ctx context.Context, instance *adminConsoleApi.AdminConsole, value bool) error {
 	if instance.Status.Available != value {
 		instance.Status.Available = value
-		instance.Status.LastTimeUpdated = time.Now()
+		instance.Status.LastTimeUpdated = metav1.Now()
 		if err := r.client.Status().Update(ctx, instance); err != nil {
 			if err := r.client.Update(ctx, instance); err != nil {
 				return err

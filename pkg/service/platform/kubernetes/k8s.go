@@ -4,13 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/epam/edp-admin-console-operator/v2/pkg/helper"
-	ctrl "sigs.k8s.io/controller-runtime"
 	"strconv"
 	"strings"
 
-	"github.com/epam/edp-admin-console-operator/v2/pkg/apis/edp/v1alpha1"
-	platformHelper "github.com/epam/edp-admin-console-operator/v2/pkg/service/platform/helper"
 	edpCompApi "github.com/epam/edp-component-operator/pkg/apis/v1/v1alpha1"
 	keycloakV1Api "github.com/epam/edp-keycloak-operator/pkg/apis/v1/v1alpha1"
 	"github.com/pkg/errors"
@@ -24,8 +20,13 @@ import (
 	networkingV1Client "k8s.io/client-go/kubernetes/typed/networking/v1"
 	authV1Client "k8s.io/client-go/kubernetes/typed/rbac/v1"
 	"k8s.io/client-go/rest"
+	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
+
+	adminConsoleApi "github.com/epam/edp-admin-console-operator/v2/pkg/apis/edp/v1"
+	"github.com/epam/edp-admin-console-operator/v2/pkg/helper"
+	platformHelper "github.com/epam/edp-admin-console-operator/v2/pkg/service/platform/helper"
 )
 
 var log = ctrl.Log.WithName("platform")
@@ -39,7 +40,7 @@ type K8SService struct {
 	AuthClient         authV1Client.RbacV1Client
 }
 
-func (service K8SService) GenerateDbSettings(ac v1alpha1.AdminConsole) ([]coreV1Api.EnvVar, error) {
+func (service K8SService) GenerateDbSettings(ac adminConsoleApi.AdminConsole) ([]coreV1Api.EnvVar, error) {
 	if !ac.Spec.DbSpec.Enabled {
 		return []coreV1Api.EnvVar{
 			{
@@ -76,7 +77,7 @@ func (service K8SService) GenerateDbSettings(ac v1alpha1.AdminConsole) ([]coreV1
 
 }
 
-func (service K8SService) GenerateKeycloakSettings(ac v1alpha1.AdminConsole, keycloakUrl string) ([]coreV1Api.EnvVar, error) {
+func (service K8SService) GenerateKeycloakSettings(ac adminConsoleApi.AdminConsole, keycloakUrl string) ([]coreV1Api.EnvVar, error) {
 
 	log.V(1).Info("Generating Keycloak settings for Admin Console",
 		"Namespace", ac.Namespace, "Name", ac.Name)
@@ -119,7 +120,7 @@ func (service K8SService) GenerateKeycloakSettings(ac v1alpha1.AdminConsole, key
 	}, nil
 }
 
-func (service K8SService) PatchDeploymentEnv(ac v1alpha1.AdminConsole, env []coreV1Api.EnvVar) error {
+func (service K8SService) PatchDeploymentEnv(ac adminConsoleApi.AdminConsole, env []coreV1Api.EnvVar) error {
 	if len(env) == 0 {
 		return nil
 	}
@@ -171,11 +172,11 @@ func (service K8SService) GetExternalUrl(namespace string, name string) (*string
 	return &u, nil
 }
 
-func (service K8SService) IsDeploymentReady(instance v1alpha1.AdminConsole) (bool, error) {
+func (service K8SService) IsDeploymentReady(instance adminConsoleApi.AdminConsole) (bool, error) {
 	return helper.IsDeploymentReady(service.AppsClient, instance.Name, instance.Namespace)
 }
 
-func (service K8SService) CreateSecret(ac v1alpha1.AdminConsole, name string, data map[string][]byte) error {
+func (service K8SService) CreateSecret(ac adminConsoleApi.AdminConsole, name string, data map[string][]byte) error {
 	labels := platformHelper.GenerateLabels(ac.Name)
 
 	consoleSecretObject := &coreV1Api.Secret{
@@ -213,7 +214,7 @@ func (service K8SService) CreateSecret(ac v1alpha1.AdminConsole, name string, da
 	return nil
 }
 
-func (s K8SService) UpdateAdminConsole(ac v1alpha1.AdminConsole) (*v1alpha1.AdminConsole, error) {
+func (s K8SService) UpdateAdminConsole(ac adminConsoleApi.AdminConsole) (*adminConsoleApi.AdminConsole, error) {
 	if err := s.client.Update(context.TODO(), &ac); err != nil {
 		return nil, err
 	}
@@ -291,7 +292,7 @@ func (service K8SService) GetKeycloakClient(name string, namespace string) (keyc
 	return out, nil
 }
 
-func (s K8SService) CreateEDPComponentIfNotExist(ac v1alpha1.AdminConsole, url string, icon string) error {
+func (s K8SService) CreateEDPComponentIfNotExist(ac adminConsoleApi.AdminConsole, url string, icon string) error {
 	if _, err := s.getEDPComponent(ac.Name, ac.Namespace); err != nil {
 		if k8serrors.IsNotFound(err) {
 			return s.createEDPComponent(ac, url, icon)
@@ -314,7 +315,7 @@ func (s K8SService) getEDPComponent(name, namespace string) (*edpCompApi.EDPComp
 	return c, nil
 }
 
-func (s K8SService) createEDPComponent(ac v1alpha1.AdminConsole, url string, icon string) error {
+func (s K8SService) createEDPComponent(ac adminConsoleApi.AdminConsole, url string, icon string) error {
 	obj := &edpCompApi.EDPComponent{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      ac.Name,

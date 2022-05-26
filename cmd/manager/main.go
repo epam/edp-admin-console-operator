@@ -4,7 +4,8 @@ import (
 	"flag"
 	"os"
 
-	adminConsoleApi "github.com/epam/edp-admin-console-operator/v2/pkg/apis/edp/v1alpha1"
+	adminConsoleApiV1 "github.com/epam/edp-admin-console-operator/v2/pkg/apis/edp/v1"
+	adminConsoleApiV1aplpha1 "github.com/epam/edp-admin-console-operator/v2/pkg/apis/edp/v1alpha1"
 	"github.com/epam/edp-admin-console-operator/v2/pkg/controller/adminconsole"
 	"github.com/epam/edp-admin-console-operator/v2/pkg/controller/helper"
 	buildInfo "github.com/epam/edp-common/pkg/config"
@@ -39,7 +40,9 @@ const adminConsoleOperatorLock = "edp-admin-console-operator-lock"
 func init() {
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
 
-	utilruntime.Must(adminConsoleApi.AddToScheme(scheme))
+	utilruntime.Must(adminConsoleApiV1.AddToScheme(scheme))
+
+	utilruntime.Must(adminConsoleApiV1aplpha1.AddToScheme(scheme))
 
 	utilruntime.Must(keycloakV1Api.AddToScheme(scheme))
 

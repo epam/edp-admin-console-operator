@@ -2,9 +2,8 @@ package e2e
 
 import (
 	"context"
-	adminConsoleApi "github.com/epam/edp-admin-console-operator/v2/pkg/apis/edp/v1alpha1"
-	"github.com/epam/edp-admin-console-operator/v2/pkg/controller/helper"
-	testHelper "github.com/epam/edp-admin-console-operator/v2/test/helper"
+	"time"
+
 	edpCompApi "github.com/epam/edp-component-operator/pkg/apis/v1/v1alpha1"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -16,7 +15,10 @@ import (
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	k8sClient "sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/envtest"
-	"time"
+
+	adminConsoleApi "github.com/epam/edp-admin-console-operator/v2/pkg/apis/edp/v1"
+	"github.com/epam/edp-admin-console-operator/v2/pkg/controller/helper"
+	testHelper "github.com/epam/edp-admin-console-operator/v2/test/helper"
 )
 
 const (

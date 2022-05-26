@@ -1,12 +1,9 @@
-package v1alpha1
+package v1
 
 import (
 	coreV1Api "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
-
-// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
-// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
 // AdminConsoleSpec defines the desired state of AdminConsole
 type AdminConsoleSpec struct {
@@ -22,7 +19,6 @@ type AdminConsoleSpec struct {
 	DbSpec AdminConsoleDbSettings `json:"dbSpec,omitempty"`
 	// +optional
 	BasePath string `json:"basePath,omitempty"`
-	// Add custom validation using kubebuilder tags: https://book.kubebuilder.io/beyond_basics/generating_crd.html
 }
 
 type EdpSpec struct {
@@ -58,12 +54,11 @@ type AdminConsoleStatus struct {
 	LastTimeUpdated metav1.Time `json:"lastTimeUpdated,omitempty"`
 	// +optional
 	Status string `json:"status,omitempty"`
-	// Add custom validation using kubebuilder tags: https://book.kubebuilder.io/beyond_basics/generating_crd.html
 }
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
-// +kubebuilder:deprecatedversion
+// +kubebuilder:storageversion
 
 // AdminConsole is the Schema for the adminconsoles API
 type AdminConsole struct {
@@ -74,7 +69,7 @@ type AdminConsole struct {
 	Status AdminConsoleStatus `json:"status,omitempty"`
 }
 
-// +kubebuilder:object:root=true
+//+kubebuilder:object:root=true
 
 // AdminConsoleList contains a list of AdminConsole
 type AdminConsoleList struct {
