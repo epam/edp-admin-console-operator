@@ -8,7 +8,7 @@ import (
 	"os"
 
 	"github.com/dchest/uniuri"
-	keycloakV1Api "github.com/epam/edp-keycloak-operator/pkg/apis/v1/v1alpha1"
+	keycloakV1Api "github.com/epam/edp-keycloak-operator/pkg/apis/v1/v1"
 	keycloakHelper "github.com/epam/edp-keycloak-operator/pkg/controller/helper"
 	"github.com/pkg/errors"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -139,7 +139,6 @@ func (s AdminConsoleServiceImpl) ExposeConfiguration(instance adminConsoleApi.Ad
 		keycloakClient.Spec.DirectAccess = true
 		keycloakClient.Spec.WebUrl = *u
 		keycloakClient.Spec.Secret = adminConsoleSpec.DefaultKeycloakSecretName
-		keycloakClient.Spec.AudRequired = true
 		keycloakClient.Spec.ServiceAccount = &keycloakV1Api.ServiceAccount{Enabled: true,
 			RealmRoles: []string{"developer"}}
 		keycloakClient.Spec.DefaultClientScopes = []string{"edp"}

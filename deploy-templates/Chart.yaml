@@ -34,12 +34,12 @@ annotations:
   artifacthub.io/operatorCapabilities: Full Lifecycle
   artifacthub.io/crds: |
     - kind: AdminConsole
-      version: v2.edp.epam.com/v1alpha1
+      version: v2.edp.epam.com/v1
       name: adminconsole
       displayName: AdminConsole
       description: AdminConsole configuration for Epam Delivery Platform
   artifacthub.io/crdsExamples: |
-    - apiVersion: v2.edp.epam.com/v1alpha1
+    - apiVersion: v2.edp.epam.com/v1
       kind: AdminConsole
       metadata:
         name: edp-admin-console
