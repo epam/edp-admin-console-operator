@@ -163,7 +163,7 @@ func retry(attempts int, sleep time.Duration, f func() (*adminConsoleApi.AdminCo
 		}
 
 		if i >= (attempts - 1) {
-			return errors.New("")
+			return errors.New("admin console status failed")
 		}
 
 		time.Sleep(sleep)

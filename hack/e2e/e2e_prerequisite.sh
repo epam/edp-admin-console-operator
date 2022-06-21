@@ -7,6 +7,8 @@ setup() {
 	helm repo add epamedp https://epam.github.io/edp-helm-charts/stable
 	helm -n $1 install edp-component-operator epamedp/edp-component-operator
 
+	kubectl apply -f https://raw.githubusercontent.com/epam/edp-component-operator/master/deploy-templates/crds/v1.edp.epam.com_edpcomponents.yaml
+
 	kubectl -n $1 create configmap edp-config \
 		--from-literal dns_wildcard=$2 \
 		--from-literal edp_name=$1 \
@@ -14,9 +16,9 @@ setup() {
 		--from-literal vcs_integration_enabled=false \
 		--from-literal perf_integration_enabled=false
 
-	 kubectl -n $1 create secret generic db-admin-console \
-		 --from-literal=username=fake_admin \
-		 --from-literal=password=fake_admin
+	kubectl -n $1 create secret generic db-admin-console \
+		--from-literal=username=fake_admin \
+		--from-literal=password=fake_admin
 }
 
 setup "$1" "$2" "$3"
