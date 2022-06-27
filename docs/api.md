@@ -92,20 +92,6 @@ AdminConsoleSpec defines the desired state of AdminConsole
         </td>
         <td>true</td>
       </tr><tr>
-        <td><b>image</b></td>
-        <td>string</td>
-        <td>
-          <br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
-        <td><b>version</b></td>
-        <td>string</td>
-        <td>
-          <br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
         <td><b>basePath</b></td>
         <td>string</td>
         <td>
@@ -115,13 +101,6 @@ AdminConsoleSpec defines the desired state of AdminConsole
       </tr><tr>
         <td><b><a href="#adminconsolespecdbspec">dbSpec</a></b></td>
         <td>object</td>
-        <td>
-          <br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b><a href="#adminconsolespecimagepullsecretsindex">imagePullSecrets</a></b></td>
-        <td>[]object</td>
         <td>
           <br/>
         </td>
@@ -161,21 +140,7 @@ AdminConsoleSpec defines the desired state of AdminConsole
         </td>
         <td>true</td>
       </tr><tr>
-        <td><b>integrationStrategies</b></td>
-        <td>string</td>
-        <td>
-          <br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
         <td><b>testReportTools</b></td>
-        <td>string</td>
-        <td>
-          <br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
-        <td><b>version</b></td>
         <td>string</td>
         <td>
           <br/>
@@ -234,33 +199,6 @@ AdminConsoleSpec defines the desired state of AdminConsole
         <td>string</td>
         <td>
           <br/>
-        </td>
-        <td>false</td>
-      </tr></tbody>
-</table>
-
-
-### AdminConsole.spec.imagePullSecrets[index]
-<sup><sup>[↩ Parent](#adminconsolespec)</sup></sup>
-
-
-
-LocalObjectReference contains enough information to let you locate the referenced object inside the same namespace.
-
-<table>
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Type</th>
-            <th>Description</th>
-            <th>Required</th>
-        </tr>
-    </thead>
-    <tbody><tr>
-        <td><b>name</b></td>
-        <td>string</td>
-        <td>
-          Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -451,7 +389,7 @@ AdminConsoleSpec defines the desired state of AdminConsole
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#adminconsolespecimagepullsecretsindex-1">imagePullSecrets</a></b></td>
+        <td><b><a href="#adminconsolespecimagepullsecretsindex">imagePullSecrets</a></b></td>
         <td>[]object</td>
         <td>
           <br/>

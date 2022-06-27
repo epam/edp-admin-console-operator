@@ -51,14 +51,10 @@ annotations:
           port: '5432'
         edpSpec:
           dnsWildcard: example.com
-          integrationStrategies: Create,Clone,Import
           name: edp-dev
           testReportTools: Allure
-          version: 2.10.2
-        image: epamedp/edp-admin-console
         keycloakSpec:
           enabled: true
-        version: 2.11.2
   artifacthub.io/links: |
     - name: EDP Documentation
       url: https://epam.github.io/edp-install/

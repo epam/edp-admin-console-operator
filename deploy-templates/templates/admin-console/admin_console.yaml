@@ -6,19 +6,9 @@ spec:
   {{- if .Values.adminConsole.basePath }}
   basePath: "{{ .Values.adminConsole.basePath }}"
   {{- end }}
-  image: {{ .Values.adminConsole.image }}
-  {{- if .Values.adminConsole.imagePullSecrets}}
-  imagePullSecrets:
-    {{- range .Values.adminConsole.imagePullSecrets }}
-    - {{. -}}
-    {{- end -}}
-  {{ end }}
-  version: {{ .Values.adminConsole.version }}
   edpSpec:
     name: {{ .Values.global.edpName }}
     dnsWildcard: {{ .Values.global.dnsWildCard }}
-    version: {{.Values.global.version}}
-    integrationStrategies: "Create,Clone,Import"
     testReportTools: "Allure"
   dbSpec:
     enabled: {{ .Values.global.database.deploy }}

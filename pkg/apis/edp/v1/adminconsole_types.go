@@ -1,17 +1,11 @@
 package v1
 
 import (
-	coreV1Api "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // AdminConsoleSpec defines the desired state of AdminConsole
 type AdminConsoleSpec struct {
-	Image   string `json:"image"`
-	Version string `json:"version"`
-	// +nullable
-	// +optional
-	ImagePullSecrets []coreV1Api.LocalObjectReference `json:"imagePullSecrets,omitempty"`
 	// +optional
 	KeycloakSpec KeycloakSpec `json:"keycloakSpec,omitempty"`
 	EdpSpec      EdpSpec      `json:"edpSpec"`
@@ -22,12 +16,10 @@ type AdminConsoleSpec struct {
 }
 
 type EdpSpec struct {
-	Version string `json:"version"`
 	// +optional
-	Name                  string `json:"name,omitempty"`
-	DnsWildcard           string `json:"dnsWildcard"`
-	IntegrationStrategies string `json:"integrationStrategies"`
-	TestReportTools       string `json:"testReportTools"`
+	Name            string `json:"name,omitempty"`
+	DnsWildcard     string `json:"dnsWildcard"`
+	TestReportTools string `json:"testReportTools"`
 }
 
 type KeycloakSpec struct {

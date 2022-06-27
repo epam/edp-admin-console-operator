@@ -101,8 +101,7 @@ var _ = Describe("edp-admin-console integration", func() {
 								Enabled: false,
 							},
 							EdpSpec: adminConsoleApi.EdpSpec{
-								IntegrationStrategies: "Create,Clone,Import",
-								TestReportTools:       "Allure",
+								TestReportTools: "Allure",
 							},
 							DbSpec: adminConsoleApi.AdminConsoleDbSettings{
 								Enabled: true,

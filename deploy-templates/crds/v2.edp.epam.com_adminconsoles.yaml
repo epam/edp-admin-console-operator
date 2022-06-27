@@ -52,45 +52,21 @@ spec:
                 properties:
                   dnsWildcard:
                     type: string
-                  integrationStrategies:
-                    type: string
                   name:
                     type: string
                   testReportTools:
                     type: string
-                  version:
-                    type: string
                 required:
                 - dnsWildcard
-                - integrationStrategies
                 - testReportTools
-                - version
                 type: object
-              image:
-                type: string
-              imagePullSecrets:
-                items:
-                  description: LocalObjectReference contains enough information to
-                    let you locate the referenced object inside the same namespace.
-                  properties:
-                    name:
-                      description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-                        TODO: Add other useful fields. apiVersion, kind, uid?'
-                      type: string
-                  type: object
-                nullable: true
-                type: array
               keycloakSpec:
                 properties:
                   enabled:
                     type: boolean
                 type: object
-              version:
-                type: string
             required:
             - edpSpec
-            - image
-            - version
             type: object
           status:
             description: AdminConsoleStatus defines the observed state of AdminConsole
