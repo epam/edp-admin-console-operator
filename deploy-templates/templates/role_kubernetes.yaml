@@ -38,13 +38,6 @@ rules:
   verbs:
     - '*'
 - apiGroups:
-  - 'storage.k8s.io'
-  resources:
-  - storageclasses
-  verbs:
-  - get
-  - list
-- apiGroups:
     - coordination.k8s.io
   resources:
     - leases
