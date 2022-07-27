@@ -61,7 +61,7 @@ A Helm chart for EDP Admin Console Operator
 | global.database.port | int | `5432` |  |
 | global.dnsWildCard | string | `nil` |  |
 | global.edpName | string | `""` |  |
-| global.openshift.deploymentType | string | `"deploymentConfigs"` |  |
+| global.openshift.deploymentType | string | `"deployments"` |  |
 | global.platform | string | `"openshift"` |  |
 | global.version | string | `"2.12.0-SNAPSHOT"` |  |
 | global.webConsole.url | string | `nil` |  |

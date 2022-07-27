@@ -13,7 +13,7 @@ global:
   webConsole:
     url:
   openshift:
-    deploymentType: "deploymentConfigs"
+    deploymentType: "deployments"
 
 name: admin-console-operator
 image:
