@@ -17,9 +17,9 @@ global:
 
 name: admin-console-operator
 image:
-  name: epamedp/admin-console-operator
+  repository: epamedp/admin-console-operator
   # if not defined then .Chart.AppVersion is used
-  version:
+  tag:
 imagePullPolicy: "IfNotPresent"
 annotations: {}
 nodeSelector: {}

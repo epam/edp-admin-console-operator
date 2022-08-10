@@ -65,8 +65,8 @@ A Helm chart for EDP Admin Console Operator
 | global.platform | string | `"openshift"` |  |
 | global.version | string | `"2.12.0-SNAPSHOT"` |  |
 | global.webConsole.url | string | `nil` |  |
-| image.name | string | `"epamedp/admin-console-operator"` |  |
-| image.version | string | `nil` |  |
+| image.repository | string | `"epamedp/admin-console-operator"` |  |
+| image.tag | string | `nil` |  |
 | imagePullPolicy | string | `"IfNotPresent"` |  |
 | name | string | `"admin-console-operator"` |  |
 | nodeSelector | object | `{}` |  |
