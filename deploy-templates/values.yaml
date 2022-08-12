@@ -1,24 +1,37 @@
 global:
+  # -- namespace or a project name (in case of OpenShift)
   edpName: ""
+  # -- platform type that can be "kubernetes" or "openshift
   platform: "openshift"
+  # -- a cluster DNS wildcard name
   dnsWildCard:
+  # -- EDP admin-console-operator Docker image tag. The released image can be found on [Dockerhub](https://hub.docker.com/r/epamedp/admin-console-operator/tags)
   version: "2.12.0-SNAPSHOT"
   database:
     deploy: true
+    # -- database host
     host: "edp-db"
+    # -- database name
     name: "edp-db"
+    # -- database port
     port: 5432
+    # -- database image
     image: "postgres:9.6"
     imagePullPolicy: "IfNotPresent"
   webConsole:
+    # -- URL to OpenShift/Kubernetes Web console
     url:
   openshift:
+    # -- Wich type of kind will be deployed to Openshift (values: deployments/deploymentConfigs)
     deploymentType: "deployments"
 
+# -- component name
 name: admin-console-operator
 image:
+  # -- EDP reconciler Docker image name. The released image can be found on [Dockerhub](https://hub.docker.com/r/epamedp/admin-console-operator)
   repository: epamedp/admin-console-operator
   # if not defined then .Chart.AppVersion is used
+  # -- EDP reconciler Docker image tag. The released image can be found on [Dockerhub](https://hub.docker.com/r/epamedp/admin-console-operator/tags)
   tag:
 imagePullPolicy: "IfNotPresent"
 annotations: {}
@@ -34,7 +47,9 @@ resources:
     memory: 64Mi
 
 adminConsole:
+  # -- EDP image. The released image can be found on [Dockerhub](https://hub.docker.com/r/epamedp/edp-admin-console)
   image: "epamedp/edp-admin-console"
+  # -- EDP image. The released image can be found on [Dockerhub](https://hub.docker.com/r/epamedp/edp-admin-console/tags)
   version: "2.12.0-SNAPSHOT"
   imagePullPolicy: "IfNotPresent"
   envs:
@@ -50,8 +65,11 @@ adminConsole:
       value: "Jenkins,GitLab CI"
     - name: PERF_DATA_SOURCES
       value: "Sonar,Jenkins,GitLab"
+  # -- Base path for Admin Console URL
   basePath: ""
+  # -- Secrets to pull from private Docker registry
   imagePullSecrets:
+  # -- Authentication Keycloak enabled/disabled
   authKeycloakEnabled: true
   projectUrlMask: "/console/project/{namespace}/overview"
   imageStreamUrlMask: "/console/project/{namespace}/browse/images/{stream}"

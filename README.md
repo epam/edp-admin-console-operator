@@ -30,43 +30,24 @@ In order to install the Admin Console operator, follow the steps below:
      ```bash
      helm search repo epamedp/admin-console-operator
      NAME                               CHART VERSION   APP VERSION     DESCRIPTION
-     epamedp/admin-console-operator      2.10.0                          Helm chart for Golang application/service deplo...
+     epamedp/admin-console-operator      2.11.0                          Helm chart for Golang application/service deplo...
      ```
 
     _**NOTE:** It is highly recommended to use the latest released version._
 
-3. Deploy operator:
+3. Full chart parameters available in [deploy-templates/README.md](deploy-templates/README.md).
 
-   Full available chart parameters list:
-   ```
-    - chart_version                                 # a version of Admin Console operator Helm chart;
-    - global.edpName                                # a namespace or a project name (in case of OpenShift);
-    - global.platform                               # openshift or kubernetes;
-    - global.dnsWildCard                            # Developers of your tenant separated by comma (,) (eg --set 'global.developers={test@example.com}');
-    - global.database.deploy                        # Deploy DB to current project or use from another;
-    - global.database.name                          # Name of DB;
-    - global.database.host                          # Host to DB (<db-name>.<namespace>);
-    - global.database.port                          # Port of DB;
-    - global.webConsole.url                         # URL to OpenShift/Kubernetes Web console;
-    - global.openshift.deploymentType               # Wich type of kind will be deployed to Openshift (values: deployments/deploymentConfigs);
-    - image.repository                              # EDP image. The released image can be found on [Dockerhub](https://hub.docker.com/r/epamedp/admin-console-operator);
-    - image.tag                                     # EDP tag. The released image can be found on [Dockerhub](https://hub.docker.com/r/epamedp/admin-console-operator/tags);
-    - adminConsole.image                            # EDP image. The released image can be found on [Dockerhub](https://hub.docker.com/r/epamedp/edp-admin-console);
-    - adminConsole.version                          # EDP image. The released image can be found on [Dockerhub](https://hub.docker.com/r/epamedp/edp-admin-console/tags);
-    - adminConsole.imagePullSecrets                 # Secrets to pull from private Docker registry;
-    - adminConsole.basePath                         # Base path for Admin Console URL.
-    - adminConsole.authKeycloakEnabled              # Authentication Keycloak enabled/disabled.
-   ```
-
-4. Install operator in the <edp_cicd_project> namespace with the helm command; find below the installation command example:
+4. Install operator in the <edp-project> namespace with the helm command; find below the installation command example:
     ```bash
-    helm install admin-console-operator epamedp/admin-console-operator --version <chart_version> --namespace <edp_cicd_project> --set name=admin-console-operator --set global.edpName=<edp_cicd_project> --set global.platform=<platform_type>
+    helm install admin-console-operator epamedp/admin-console-operator --version <chart_version> --namespace <edp-project> --set name=admin-console-operator --set global.edpName=<edp-project> --set global.platform=<platform_type>
     ```
-5. Check the <edp_cicd_project> namespace that should contain operator deployment with your operator in a running status.
+5. Check the <edp-project> namespace that should contain operator deployment with your operator in a running status.
 
 ## Local Development
 
 In order to develop the operator, first set up a local environment. For details, please refer to the [Local Development](documentation/local_development.md) page.
+
+For development process, are available snapshot versions of component. For details, please refer to the [snapshot helm chart repository](https://epam.github.io/edp-helm-charts/snapshot/) page.
 
 ### Related Articles
 

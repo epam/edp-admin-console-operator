@@ -23,8 +23,8 @@ A Helm chart for EDP Admin Console Operator
 |-----|------|---------|-------------|
 | adminConsole.affinity | object | `{}` |  |
 | adminConsole.annotations | object | `{}` |  |
-| adminConsole.authKeycloakEnabled | bool | `true` |  |
-| adminConsole.basePath | string | `""` |  |
+| adminConsole.authKeycloakEnabled | bool | `true` | Authentication Keycloak enabled/disabled |
+| adminConsole.basePath | string | `""` | Base path for Admin Console URL |
 | adminConsole.envs[0].name | string | `"INTEGRATION_STRATEGIES"` |  |
 | adminConsole.envs[0].value | string | `"Create,Clone,Import"` |  |
 | adminConsole.envs[1].name | string | `"BUILD_TOOLS"` |  |
@@ -37,9 +37,9 @@ A Helm chart for EDP Admin Console Operator
 | adminConsole.envs[4].value | string | `"Jenkins,GitLab CI"` |  |
 | adminConsole.envs[5].name | string | `"PERF_DATA_SOURCES"` |  |
 | adminConsole.envs[5].value | string | `"Sonar,Jenkins,GitLab"` |  |
-| adminConsole.image | string | `"epamedp/edp-admin-console"` |  |
+| adminConsole.image | string | `"epamedp/edp-admin-console"` | EDP image. The released image can be found on [Dockerhub](https://hub.docker.com/r/epamedp/edp-admin-console) |
 | adminConsole.imagePullPolicy | string | `"IfNotPresent"` |  |
-| adminConsole.imagePullSecrets | string | `nil` |  |
+| adminConsole.imagePullSecrets | string | `nil` | Secrets to pull from private Docker registry |
 | adminConsole.imageStreamUrlMask | string | `"/console/project/{namespace}/browse/images/{stream}"` |  |
 | adminConsole.ingress.annotations | object | `{}` |  |
 | adminConsole.ingress.pathType | string | `"Prefix"` |  |
@@ -50,25 +50,25 @@ A Helm chart for EDP Admin Console Operator
 | adminConsole.resources.requests.cpu | string | `"50m"` |  |
 | adminConsole.resources.requests.memory | string | `"64Mi"` |  |
 | adminConsole.tolerations | list | `[]` |  |
-| adminConsole.version | string | `"2.12.0-SNAPSHOT"` |  |
+| adminConsole.version | string | `"2.12.0-SNAPSHOT"` | EDP image. The released image can be found on [Dockerhub](https://hub.docker.com/r/epamedp/edp-admin-console/tags) |
 | affinity | object | `{}` |  |
 | annotations | object | `{}` |  |
 | global.database.deploy | bool | `true` |  |
-| global.database.host | string | `"edp-db"` |  |
-| global.database.image | string | `"postgres:9.6"` |  |
+| global.database.host | string | `"edp-db"` | database host |
+| global.database.image | string | `"postgres:9.6"` | database image |
 | global.database.imagePullPolicy | string | `"IfNotPresent"` |  |
-| global.database.name | string | `"edp-db"` |  |
-| global.database.port | int | `5432` |  |
-| global.dnsWildCard | string | `nil` |  |
-| global.edpName | string | `""` |  |
-| global.openshift.deploymentType | string | `"deployments"` |  |
-| global.platform | string | `"openshift"` |  |
-| global.version | string | `"2.12.0-SNAPSHOT"` |  |
-| global.webConsole.url | string | `nil` |  |
-| image.repository | string | `"epamedp/admin-console-operator"` |  |
-| image.tag | string | `nil` |  |
+| global.database.name | string | `"edp-db"` | database name |
+| global.database.port | int | `5432` | database port |
+| global.dnsWildCard | string | `nil` | a cluster DNS wildcard name |
+| global.edpName | string | `""` | namespace or a project name (in case of OpenShift) |
+| global.openshift.deploymentType | string | `"deployments"` | Wich type of kind will be deployed to Openshift (values: deployments/deploymentConfigs) |
+| global.platform | string | `"openshift"` | platform type that can be "kubernetes" or "openshift |
+| global.version | string | `"2.12.0-SNAPSHOT"` | EDP admin-console-operator Docker image tag. The released image can be found on [Dockerhub](https://hub.docker.com/r/epamedp/admin-console-operator/tags) |
+| global.webConsole.url | string | `nil` | URL to OpenShift/Kubernetes Web console |
+| image.repository | string | `"epamedp/admin-console-operator"` | EDP reconciler Docker image name. The released image can be found on [Dockerhub](https://hub.docker.com/r/epamedp/admin-console-operator) |
+| image.tag | string | `nil` | EDP reconciler Docker image tag. The released image can be found on [Dockerhub](https://hub.docker.com/r/epamedp/admin-console-operator/tags) |
 | imagePullPolicy | string | `"IfNotPresent"` |  |
-| name | string | `"admin-console-operator"` |  |
+| name | string | `"admin-console-operator"` | component name |
 | nodeSelector | object | `{}` |  |
 | resources.limits.memory | string | `"192Mi"` |  |
 | resources.requests.cpu | string | `"50m"` |  |
