@@ -28,9 +28,10 @@ In order to install the Admin Console operator, follow the steps below:
      ```
 2. Choose available Helm chart version:
      ```bash
-     helm search repo epamedp/admin-console-operator
+     helm search repo epamedp/admin-console-operator -l
      NAME                               CHART VERSION   APP VERSION     DESCRIPTION
-     epamedp/admin-console-operator      2.11.0                          Helm chart for Golang application/service deplo...
+     epamedp/admin-console-operator     2.11.0          2.11.0          A Helm chart for EDP Admin Console Operator
+     epamedp/admin-console-operator     2.10.0          2.10.0          A Helm chart for EDP Admin Console Operator
      ```
 
     _**NOTE:** It is highly recommended to use the latest released version._
