@@ -1,15 +1,46 @@
 <a name="unreleased"></a>
 ## [Unreleased]
 
+
+<a name="v2.12.0"></a>
+## [v2.12.0] - 2022-08-26
 ### Features
 
+- Switch to use V1 apis of EDP components [EPMDEDP-10079](https://jiraeu.epam.com/browse/EPMDEDP-10079)
+- Download required tools for Makefile targets [EPMDEDP-10105](https://jiraeu.epam.com/browse/EPMDEDP-10105)
 - Set default client scopes for keycloak admin-console-client [EPMDEDP-8323](https://jiraeu.epam.com/browse/EPMDEDP-8323)
 - Switch CRD to v1 version [EPMDEDP-9213](https://jiraeu.epam.com/browse/EPMDEDP-9213)
 
+### Bug Fixes
+
+- Fix e2e tests [EPMDEDP-10079](https://jiraeu.epam.com/browse/EPMDEDP-10079)
+
+### Code Refactoring
+
+- Deprecate unused Spec components for admin-console v1 [EPMDEDP-10148](https://jiraeu.epam.com/browse/EPMDEDP-10148)
+- Storageclass is no longer used by Admin Console [EPMDEDP-10228](https://jiraeu.epam.com/browse/EPMDEDP-10228)
+- Use repository and tag for image reference in chart [EPMDEDP-10389](https://jiraeu.epam.com/browse/EPMDEDP-10389)
+
 ### Routine
 
+- Upgrade go version to 1.18 [EPMDEDP-10110](https://jiraeu.epam.com/browse/EPMDEDP-10110)
+- Fix Jira Ticket pattern for changelog generator [EPMDEDP-10159](https://jiraeu.epam.com/browse/EPMDEDP-10159)
+- Bump version to 2.12.0 [EPMDEDP-10274](https://jiraeu.epam.com/browse/EPMDEDP-10274)
+- Update alpine base image to 3.16.2 version [EPMDEDP-10274](https://jiraeu.epam.com/browse/EPMDEDP-10274)
+- Update alpine base image version [EPMDEDP-10280](https://jiraeu.epam.com/browse/EPMDEDP-10280)
+- Change 'go get' to 'go install' for git-chglog [EPMDEDP-10337](https://jiraeu.epam.com/browse/EPMDEDP-10337)
+- Use deployments as default deploymentType for OpenShift [EPMDEDP-10344](https://jiraeu.epam.com/browse/EPMDEDP-10344)
+- Remove VERSION file [EPMDEDP-10387](https://jiraeu.epam.com/browse/EPMDEDP-10387)
+- Add gcflags for go build artifact [EPMDEDP-10411](https://jiraeu.epam.com/browse/EPMDEDP-10411)
 - Update current development version [EPMDEDP-8832](https://jiraeu.epam.com/browse/EPMDEDP-8832)
 - Update chart annotation [EPMDEDP-9515](https://jiraeu.epam.com/browse/EPMDEDP-9515)
+
+### Documentation
+
+- Align README.md [EPMDEDP-10274](https://jiraeu.epam.com/browse/EPMDEDP-10274)
+- Align README.md [EPMDEDP-10274](https://jiraeu.epam.com/browse/EPMDEDP-10274)
+- Fix indents in README.md [EPMDEDP-10274](https://jiraeu.epam.com/browse/EPMDEDP-10274)
+- Align README.md [EPMDEDP-10274](https://jiraeu.epam.com/browse/EPMDEDP-10274)
 
 
 <a name="v2.11.0"></a>
@@ -114,7 +145,8 @@
 <a name="v2.7.0"></a>
 ## [v2.7.0] - 2021-12-03
 
-[Unreleased]: https://github.com/epam/edp-admin-console-operator/compare/v2.11.0...HEAD
+[Unreleased]: https://github.com/epam/edp-admin-console-operator/compare/v2.12.0...HEAD
+[v2.12.0]: https://github.com/epam/edp-admin-console-operator/compare/v2.11.0...v2.12.0
 [v2.11.0]: https://github.com/epam/edp-admin-console-operator/compare/v2.10.0...v2.11.0
 [v2.10.0]: https://github.com/epam/edp-admin-console-operator/compare/v2.9.0...v2.10.0
 [v2.9.0]: https://github.com/epam/edp-admin-console-operator/compare/v2.8.2...v2.9.0
