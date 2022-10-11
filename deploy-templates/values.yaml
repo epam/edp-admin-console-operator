@@ -7,22 +7,11 @@ global:
   dnsWildCard:
   # -- EDP admin-console-operator Docker image tag. The released image can be found on [Dockerhub](https://hub.docker.com/r/epamedp/admin-console-operator/tags)
   version: "2.13.0-SNAPSHOT"
-  database:
-    deploy: true
-    # -- database host
-    host: "edp-db"
-    # -- database name
-    name: "edp-db"
-    # -- database port
-    port: 5432
-    # -- database image
-    image: "postgres:9.6"
-    imagePullPolicy: "IfNotPresent"
   webConsole:
     # -- URL to OpenShift/Kubernetes Web console
     url:
   openshift:
-    # -- Wich type of kind will be deployed to Openshift (values: deployments/deploymentConfigs)
+    # -- Which type of kind will be deployed to Openshift (values: deployments/deploymentConfigs)
     deploymentType: "deployments"
 
 # -- component name

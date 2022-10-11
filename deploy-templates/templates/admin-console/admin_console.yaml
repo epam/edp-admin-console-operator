@@ -11,9 +11,6 @@ spec:
     dnsWildcard: {{ .Values.global.dnsWildCard }}
     testReportTools: "Allure"
   dbSpec:
-    enabled: {{ .Values.global.database.deploy }}
-    name: {{ .Values.global.database.name }}
-    hostname: {{ if .Values.global.database.host }}{{ .Values.global.database.host }}{{else}}"edp-db.{{.Values.global.edpName}}"{{end}}
-    port: "{{ .Values.global.database.port }}"
+    enabled: false
   keycloakSpec:
     enabled: {{ .Values.adminConsole.authKeycloakEnabled }}

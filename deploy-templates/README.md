@@ -53,15 +53,9 @@ A Helm chart for EDP Admin Console Operator
 | adminConsole.version | string | `"2.13.0-SNAPSHOT"` | EDP image. The released image can be found on [Dockerhub](https://hub.docker.com/r/epamedp/edp-admin-console/tags) |
 | affinity | object | `{}` |  |
 | annotations | object | `{}` |  |
-| global.database.deploy | bool | `true` |  |
-| global.database.host | string | `"edp-db"` | database host |
-| global.database.image | string | `"postgres:9.6"` | database image |
-| global.database.imagePullPolicy | string | `"IfNotPresent"` |  |
-| global.database.name | string | `"edp-db"` | database name |
-| global.database.port | int | `5432` | database port |
 | global.dnsWildCard | string | `nil` | a cluster DNS wildcard name |
 | global.edpName | string | `""` | namespace or a project name (in case of OpenShift) |
-| global.openshift.deploymentType | string | `"deployments"` | Wich type of kind will be deployed to Openshift (values: deployments/deploymentConfigs) |
+| global.openshift.deploymentType | string | `"deployments"` | Which type of kind will be deployed to Openshift (values: deployments/deploymentConfigs) |
 | global.platform | string | `"openshift"` | platform type that can be "kubernetes" or "openshift |
 | global.version | string | `"2.13.0-SNAPSHOT"` | EDP admin-console-operator Docker image tag. The released image can be found on [Dockerhub](https://hub.docker.com/r/epamedp/admin-console-operator/tags) |
 | global.webConsole.url | string | `nil` | URL to OpenShift/Kubernetes Web console |
