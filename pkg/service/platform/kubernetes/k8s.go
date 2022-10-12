@@ -325,7 +325,7 @@ func (s K8SService) createEDPComponent(ac adminConsoleApi.AdminConsole, url stri
 			Type:    "admin-console",
 			Url:     url,
 			Icon:    icon,
-			Visible: true,
+			Visible: false,
 		},
 	}
 	if err := controllerutil.SetControllerReference(&ac, obj, s.Scheme); err != nil {
