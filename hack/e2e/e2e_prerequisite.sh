@@ -5,6 +5,9 @@ setup() {
 	kubectl create ns $1
 
 	helm repo add epamedp https://epam.github.io/edp-helm-charts/stable
+	helm -n $1 install edp-component-operator epamedp/edp-component-operator
+
+	kubectl apply -f https://raw.githubusercontent.com/epam/edp-component-operator/master/deploy-templates/crds/v1.edp.epam.com_edpcomponents.yaml
 
 	kubectl -n $1 create configmap edp-config \
 		--from-literal dns_wildcard=$2 \

@@ -1,7 +1,11 @@
 package admin_console
 
 import (
+	"bufio"
+	"encoding/base64"
 	"fmt"
+	"io/ioutil"
+	"os"
 
 	"github.com/dchest/uniuri"
 	keycloakV1Api "github.com/epam/edp-keycloak-operator/pkg/apis/v1/v1"
@@ -14,6 +18,12 @@ import (
 	adminConsoleApi "github.com/epam/edp-admin-console-operator/v2/pkg/apis/edp/v1"
 	adminConsoleSpec "github.com/epam/edp-admin-console-operator/v2/pkg/service/admin_console/spec"
 	"github.com/epam/edp-admin-console-operator/v2/pkg/service/platform"
+	platformHelper "github.com/epam/edp-admin-console-operator/v2/pkg/service/platform/helper"
+)
+
+const (
+	imgFolder = "img"
+	acIcon    = "admin-console.svg"
 )
 
 type AdminConsoleService interface {
@@ -145,7 +155,50 @@ func (s AdminConsoleServiceImpl) ExposeConfiguration(instance adminConsoleApi.Ad
 		return &instance, errors.Wrap(err, fmt.Sprintf("Failed to update Admin Console %s!", instance.Name))
 	}
 
+	err = s.createEDPComponent(instance)
 	return result, err
+}
+
+func (s AdminConsoleServiceImpl) createEDPComponent(ac adminConsoleApi.AdminConsole) error {
+	url, err := s.getUrl(ac)
+	if err != nil {
+		return err
+	}
+
+	icon, err := s.getIcon()
+	if err != nil {
+		return err
+	}
+
+	return s.platformService.CreateEDPComponentIfNotExist(ac, *url, *icon)
+}
+
+func (s AdminConsoleServiceImpl) getUrl(ac adminConsoleApi.AdminConsole) (*string, error) {
+	u, err := s.platformService.GetExternalUrl(ac.Namespace, ac.Name)
+	if err != nil {
+		return nil, err
+	}
+	return u, nil
+}
+
+func (j AdminConsoleServiceImpl) getIcon() (*string, error) {
+	p, err := platformHelper.CreatePathToTemplateDirectory(imgFolder)
+	if err != nil {
+		return nil, err
+	}
+
+	fp := fmt.Sprintf("%v/%v", p, acIcon)
+	f, err := os.Open(fp)
+	if err != nil {
+		return nil, err
+	}
+	reader := bufio.NewReader(f)
+	content, err := ioutil.ReadAll(reader)
+	if err != nil {
+		return nil, err
+	}
+	encoded := base64.StdEncoding.EncodeToString(content)
+	return &encoded, nil
 }
 
 func (s AdminConsoleServiceImpl) IsDeploymentReady(instance adminConsoleApi.AdminConsole) (bool, error) {

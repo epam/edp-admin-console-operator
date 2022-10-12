@@ -39,6 +39,7 @@ class LocalObjectReference {
     String name
 }
 KeycloakClient <.u. AdminConsole : "owner reference"
+EdpComponent <.u. AdminConsole : "owner reference"
 
 legend
 |= arrow   |= meaning|

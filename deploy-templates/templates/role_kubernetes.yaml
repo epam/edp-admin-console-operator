@@ -33,6 +33,7 @@ rules:
     - keycloakclients/status
     - keycloakrealms
     - keycloakrealms/status
+    - edpcomponents
     - events
   verbs:
     - '*'

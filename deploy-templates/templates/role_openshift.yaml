@@ -35,6 +35,7 @@ rules:
     - keycloakclients/status
     - keycloakrealms
     - keycloakrealms/status
+    - edpcomponents
     - codebases
     - codebasebranches
     - cdpipelines

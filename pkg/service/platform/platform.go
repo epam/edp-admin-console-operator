@@ -26,6 +26,7 @@ type PlatformService interface {
 	CreateKeycloakClient(kc *keycloakV1Api.KeycloakClient) error
 	GetExternalUrl(namespace string, name string) (*string, error)
 	IsDeploymentReady(instance adminConsoleApi.AdminConsole) (bool, error)
+	CreateEDPComponentIfNotExist(instance adminConsoleApi.AdminConsole, url string, icon string) error
 }
 
 const (

@@ -9,6 +9,7 @@ import (
 	"github.com/epam/edp-admin-console-operator/v2/pkg/controller/adminconsole"
 	"github.com/epam/edp-admin-console-operator/v2/pkg/controller/helper"
 	buildInfo "github.com/epam/edp-common/pkg/config"
+	edpCompApi "github.com/epam/edp-component-operator/pkg/apis/v1/v1"
 	keycloakV1Api "github.com/epam/edp-keycloak-operator/pkg/apis/v1/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/client-go/rest"
@@ -45,6 +46,7 @@ func init() {
 
 	utilruntime.Must(keycloakV1Api.AddToScheme(scheme))
 
+	utilruntime.Must(edpCompApi.AddToScheme(scheme))
 }
 
 func main() {
