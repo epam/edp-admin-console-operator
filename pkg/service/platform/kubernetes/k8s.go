@@ -7,7 +7,6 @@ import (
 	"strconv"
 	"strings"
 
-	edpCompApi "github.com/epam/edp-component-operator/pkg/apis/v1/v1"
 	keycloakV1Api "github.com/epam/edp-keycloak-operator/pkg/apis/v1/v1"
 	"github.com/pkg/errors"
 	coreV1Api "k8s.io/api/core/v1"
@@ -290,47 +289,4 @@ func (service K8SService) GetKeycloakClient(name string, namespace string) (keyc
 
 	// Success
 	return out, nil
-}
-
-func (s K8SService) CreateEDPComponentIfNotExist(ac adminConsoleApi.AdminConsole, url string, icon string) error {
-	if _, err := s.getEDPComponent(ac.Name, ac.Namespace); err != nil {
-		if k8serrors.IsNotFound(err) {
-			return s.createEDPComponent(ac, url, icon)
-		}
-		return errors.Wrapf(err, "failed to get edp component: %v", ac.Name)
-	}
-	log.Info("edp component already exists", "name", ac.Name)
-	return nil
-}
-
-func (s K8SService) getEDPComponent(name, namespace string) (*edpCompApi.EDPComponent, error) {
-	c := &edpCompApi.EDPComponent{}
-	err := s.client.Get(context.TODO(), types.NamespacedName{
-		Namespace: namespace,
-		Name:      name,
-	}, c)
-	if err != nil {
-		return nil, err
-	}
-	return c, nil
-}
-
-func (s K8SService) createEDPComponent(ac adminConsoleApi.AdminConsole, url string, icon string) error {
-	obj := &edpCompApi.EDPComponent{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      ac.Name,
-			Namespace: ac.Namespace,
-		},
-		Spec: edpCompApi.EDPComponentSpec{
-			Type:    "admin-console",
-			Url:     url,
-			Icon:    icon,
-			Visible: true,
-		},
-	}
-	if err := controllerutil.SetControllerReference(&ac, obj, s.Scheme); err != nil {
-		return err
-	}
-
-	return s.client.Create(context.TODO(), obj)
 }

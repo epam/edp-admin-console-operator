@@ -14,7 +14,7 @@ import (
 	adminConsoleApi "github.com/epam/edp-admin-console-operator/v2/pkg/apis/edp/v1"
 )
 
-//var k8sConfig clientcmd.ClientConfig
+// var k8sConfig clientcmd.ClientConfig
 var SchemeGroupVersion = schema.GroupVersion{Group: "v2.edp.epam.com", Version: "v1"}
 
 type EdpV1Client struct {

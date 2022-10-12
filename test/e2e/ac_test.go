@@ -4,7 +4,6 @@ import (
 	"context"
 	"time"
 
-	edpCompApi "github.com/epam/edp-component-operator/pkg/apis/v1/v1"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/pkg/errors"
@@ -49,7 +48,6 @@ func setupPrerequisite() error {
 	client, err = testHelper.InitClient(func(scheme *runtime.Scheme) {
 		utilruntime.Must(clientgoscheme.AddToScheme(scheme))
 		utilruntime.Must(adminConsoleApi.AddToScheme(scheme))
-		utilruntime.Must(edpCompApi.AddToScheme(scheme))
 	})
 	if err != nil {
 		return err
@@ -80,13 +78,6 @@ var _ = Describe("edp-admin-console integration", func() {
 						return ac, nil
 					})
 					Expect(err).ShouldNot(HaveOccurred())
-
-					ec := &edpCompApi.EDPComponent{}
-					err = client.Get(context.TODO(), types.NamespacedName{
-						Name:      acCrName,
-						Namespace: namespace,
-					}, ec)
-					Expect(err).ShouldNot(HaveOccurred())
 				})
 			})
 			Context("when admin-console cr is created by tests", func() {
@@ -104,7 +95,7 @@ var _ = Describe("edp-admin-console integration", func() {
 								TestReportTools: "Allure",
 							},
 							DbSpec: adminConsoleApi.AdminConsoleDbSettings{
-								Enabled: true,
+								Enabled: false,
 							},
 							BasePath: "",
 						},
@@ -125,12 +116,6 @@ var _ = Describe("edp-admin-console integration", func() {
 					})
 					Expect(err).ShouldNot(HaveOccurred())
 
-					ec := &edpCompApi.EDPComponent{}
-					err = client.Get(context.TODO(), types.NamespacedName{
-						Name:      acCrName,
-						Namespace: namespace,
-					}, ec)
-					Expect(err).ShouldNot(HaveOccurred())
 				})
 			})
 		})
