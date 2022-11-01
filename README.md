@@ -1,5 +1,8 @@
 [![codecov](https://codecov.io/gh/epam/edp-admin-console-operator/branch/master/graph/badge.svg?token=5EDGDQXLLA)](https://codecov.io/gh/epam/edp-admin-console-operator)
 
+|![](https://upload.wikimedia.org/wikipedia/commons/thumb/1/17/Warning.svg/156px-Warning.svg.png) | This operator is deprecated starting from EDP v2.13
+|---|---|
+
 # Admin Console Operator
 
 | :heavy_exclamation_mark: Please refer to [EDP documentation](https://epam.github.io/edp-install/) to get the notion of the main concepts and guidelines. |
