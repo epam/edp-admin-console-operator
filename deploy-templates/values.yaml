@@ -2,11 +2,11 @@ global:
   # -- namespace or a project name (in case of OpenShift)
   edpName: ""
   # -- platform type that can be "kubernetes" or "openshift
-  platform: "openshift"
+  platform: "kubernetes"
   # -- a cluster DNS wildcard name
   dnsWildCard:
-  # -- EDP admin-console-operator Docker image tag. The released image can be found on [Dockerhub](https://hub.docker.com/r/epamedp/admin-console-operator/tags)
-  version: "2.13.0-SNAPSHOT"
+  # -- EDP version
+  version: "3.1.0-SNAPSHOT"
   webConsole:
     # -- URL to OpenShift/Kubernetes Web console
     url:
@@ -39,7 +39,7 @@ adminConsole:
   # -- EDP image. The released image can be found on [Dockerhub](https://hub.docker.com/r/epamedp/edp-admin-console)
   image: "epamedp/edp-admin-console"
   # -- EDP image. The released image can be found on [Dockerhub](https://hub.docker.com/r/epamedp/edp-admin-console/tags)
-  version: "2.13.0-SNAPSHOT"
+  version: "2.14.0-SNAPSHOT"
   imagePullPolicy: "IfNotPresent"
   envs:
     - name: INTEGRATION_STRATEGIES

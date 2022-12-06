@@ -1,9 +1,26 @@
 <a name="unreleased"></a>
 ## [Unreleased]
 
+
+<a name="v2.13.0"></a>
+## [v2.13.0] - 2022-12-06
+### Features
+
+- Added a stub linter [EPMDEDP-10536](https://jiraeu.epam.com/browse/EPMDEDP-10536)
+
+### Code Refactoring
+
+- Remove db resources from deployment templates [EPMDEDP-10750](https://jiraeu.epam.com/browse/EPMDEDP-10750)
+- Set visibility to false for EDPComponent [EPMDEDP-10771](https://jiraeu.epam.com/browse/EPMDEDP-10771)
+- Revert: Do not create EDPComponent [EPMDEDP-10771](https://jiraeu.epam.com/browse/EPMDEDP-10771)
+- Do not create EDPComponent [EPMDEDP-10771](https://jiraeu.epam.com/browse/EPMDEDP-10771)
+
 ### Routine
 
 - Update current development version [EPMDEDP-10274](https://jiraeu.epam.com/browse/EPMDEDP-10274)
+- Update current development version [EPMDEDP-10274](https://jiraeu.epam.com/browse/EPMDEDP-10274)
+- Bump version to 2.14.0 [EPMDEDP-10610](https://jiraeu.epam.com/browse/EPMDEDP-10610)
+- Add deprecation warning [EPMDEDP-10764](https://jiraeu.epam.com/browse/EPMDEDP-10764)
 
 
 <a name="v2.12.0"></a>
@@ -149,7 +166,8 @@
 <a name="v2.7.0"></a>
 ## [v2.7.0] - 2021-12-03
 
-[Unreleased]: https://github.com/epam/edp-admin-console-operator/compare/v2.12.0...HEAD
+[Unreleased]: https://github.com/epam/edp-admin-console-operator/compare/v2.13.0...HEAD
+[v2.13.0]: https://github.com/epam/edp-admin-console-operator/compare/v2.12.0...v2.13.0
 [v2.12.0]: https://github.com/epam/edp-admin-console-operator/compare/v2.11.0...v2.12.0
 [v2.11.0]: https://github.com/epam/edp-admin-console-operator/compare/v2.10.0...v2.11.0
 [v2.10.0]: https://github.com/epam/edp-admin-console-operator/compare/v2.9.0...v2.10.0
