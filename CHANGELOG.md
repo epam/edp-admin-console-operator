@@ -1,6 +1,14 @@
 <a name="unreleased"></a>
 ## [Unreleased]
 
+### Routine
+
+- Update current development version [EPMDEDP-10610](https://jiraeu.epam.com/browse/EPMDEDP-10610)
+
+### Documentation
+
+- Update chart and application version in Readme file [EPMDEDP-11221](https://jiraeu.epam.com/browse/EPMDEDP-11221)
+
 
 <a name="v2.13.0"></a>
 ## [v2.13.0] - 2022-12-06
@@ -97,9 +105,9 @@
 - Update release CI pipelines [EPMDEDP-7847](https://jiraeu.epam.com/browse/EPMDEDP-7847)
 - Populate chart with Artifacthub annotations [EPMDEDP-8049](https://jiraeu.epam.com/browse/EPMDEDP-8049)
 - Update changelog [EPMDEDP-8227](https://jiraeu.epam.com/browse/EPMDEDP-8227)
-- Update artifacthub.io chart metadata [EPMDEDP-8386](https://jiraeu.epam.com/browse/EPMDEDP-8386)
 - Update artifacthub.io images metadata [EPMDEDP-8386](https://jiraeu.epam.com/browse/EPMDEDP-8386)
 - Fix artifacthub.io crdsExamples metadata [EPMDEDP-8386](https://jiraeu.epam.com/browse/EPMDEDP-8386)
+- Update artifacthub.io chart metadata [EPMDEDP-8386](https://jiraeu.epam.com/browse/EPMDEDP-8386)
 - Bump version to 2.11.0 [EPMDEDP-8832](https://jiraeu.epam.com/browse/EPMDEDP-8832)
 - Update base docker image to alpine 3.15.4 [EPMDEDP-8853](https://jiraeu.epam.com/browse/EPMDEDP-8853)
 - Update changelog [EPMDEDP-9185](https://jiraeu.epam.com/browse/EPMDEDP-9185)
