@@ -37,6 +37,8 @@ A Helm chart for EDP Admin Console Operator
 | adminConsole.envs[4].value | string | `"Jenkins,GitLab CI"` |  |
 | adminConsole.envs[5].name | string | `"PERF_DATA_SOURCES"` |  |
 | adminConsole.envs[5].value | string | `"Sonar,Jenkins,GitLab"` |  |
+| adminConsole.extraVolumeMounts | list | `[]` | Additional volumeMounts to be added to the container |
+| adminConsole.extraVolumes | list | `[]` | Additional volumes to be added to the pod |
 | adminConsole.image | string | `"epamedp/edp-admin-console"` | EDP image. The released image can be found on [Dockerhub](https://hub.docker.com/r/epamedp/edp-admin-console) |
 | adminConsole.imagePullPolicy | string | `"IfNotPresent"` |  |
 | adminConsole.imagePullSecrets | string | `nil` | Secrets to pull from private Docker registry |
