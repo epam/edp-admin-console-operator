@@ -1,9 +1,19 @@
 <a name="unreleased"></a>
 ## [Unreleased]
 
+
+<a name="v2.14.0"></a>
+## [v2.14.0] - 2023-03-25
+### Features
+
+- Add the ability to use additional volumes in helm chart [EPMDEDP-11529](https://jiraeu.epam.com/browse/EPMDEDP-11529)
+
 ### Routine
 
 - Update current development version [EPMDEDP-10610](https://jiraeu.epam.com/browse/EPMDEDP-10610)
+- Bump version to 2.14.0 [EPMDEDP-11472](https://jiraeu.epam.com/browse/EPMDEDP-11472)
+- Update git-chglog for admin-console-operator [EPMDEDP-11518](https://jiraeu.epam.com/browse/EPMDEDP-11518)
+- Upgrade alpine image version to 3.16.4 [EPMDEDP-11764](https://jiraeu.epam.com/browse/EPMDEDP-11764)
 
 ### Documentation
 
@@ -174,7 +184,8 @@
 <a name="v2.7.0"></a>
 ## [v2.7.0] - 2021-12-03
 
-[Unreleased]: https://github.com/epam/edp-admin-console-operator/compare/v2.13.0...HEAD
+[Unreleased]: https://github.com/epam/edp-admin-console-operator/compare/v2.14.0...HEAD
+[v2.14.0]: https://github.com/epam/edp-admin-console-operator/compare/v2.13.0...v2.14.0
 [v2.13.0]: https://github.com/epam/edp-admin-console-operator/compare/v2.12.0...v2.13.0
 [v2.12.0]: https://github.com/epam/edp-admin-console-operator/compare/v2.11.0...v2.12.0
 [v2.11.0]: https://github.com/epam/edp-admin-console-operator/compare/v2.10.0...v2.11.0
