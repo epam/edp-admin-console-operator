@@ -52,14 +52,14 @@ A Helm chart for EDP Admin Console Operator
 | adminConsole.resources.requests.cpu | string | `"50m"` |  |
 | adminConsole.resources.requests.memory | string | `"64Mi"` |  |
 | adminConsole.tolerations | list | `[]` |  |
-| adminConsole.version | string | `"2.14.0-SNAPSHOT"` | EDP image. The released image can be found on [Dockerhub](https://hub.docker.com/r/epamedp/edp-admin-console/tags) |
+| adminConsole.version | string | `"2.14.0"` | EDP image. The released image can be found on [Dockerhub](https://hub.docker.com/r/epamedp/edp-admin-console/tags) |
 | affinity | object | `{}` |  |
 | annotations | object | `{}` |  |
 | global.dnsWildCard | string | `nil` | a cluster DNS wildcard name |
 | global.edpName | string | `""` | namespace or a project name (in case of OpenShift) |
 | global.openshift.deploymentType | string | `"deployments"` | Which type of kind will be deployed to Openshift (values: deployments/deploymentConfigs) |
 | global.platform | string | `"kubernetes"` | platform type that can be "kubernetes" or "openshift |
-| global.version | string | `"3.1.0-SNAPSHOT"` | EDP version |
+| global.version | string | `"3.2.0"` | EDP version |
 | global.webConsole.url | string | `nil` | URL to OpenShift/Kubernetes Web console |
 | image.repository | string | `"epamedp/admin-console-operator"` | EDP reconciler Docker image name. The released image can be found on [Dockerhub](https://hub.docker.com/r/epamedp/admin-console-operator) |
 | image.tag | string | `nil` | EDP reconciler Docker image tag. The released image can be found on [Dockerhub](https://hub.docker.com/r/epamedp/admin-console-operator/tags) |
